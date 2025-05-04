@@ -1,0 +1,10 @@
+#---------------------------------------------------
+
+#if you are running this with python 3.13
+#then you sould do this
+pip install audioop-lts
+
+#---------------------------------------------------
+
+python3 -m pip install discord.py
+python3 -m pip install discord.py[voice]

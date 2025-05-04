@@ -1,0 +1,230 @@
+import discord
+from discord import app_commands
+from discord.app_commands import Choice
+from discord.ext import commands, tasks
+import typing
+import traceback
+import os
+import aiohttp
+
+from cmds.AIsTwo.base_chat import *
+from cmds.AIsTwo.others.func import image_generate, video_generate
+from cmds.AIsTwo.others.decide import save_to_knowledge_base, Preference
+from cmds.AIsTwo.info import HistoryData, get_history, create_result_embed, chat_autocomplete
+from cmds.AIsTwo.utils import choice_model, image_url_to_base64, select_moduels_auto_complete
+
+from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate
+
+save_to_preferences = Preference.save_to_preferences
+
+class AITwo(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.weather_task.start()
+
+    async def get_weather_llm(self, location: str) -> discord.Embed:
+        think, result = await thread_pool(base_zhipu_chat, f'請你幫我從搜尋{location}今天整天的完整天氣預報 以及整周的完整天氣預報 (須包含溫度 降雨機率 體感溫度 濕度 以及總結)',
+                          system_prompt = '請根據使用者給出的地點 利用搜尋功能 回傳使用者的需求。\n以條列式進行輸出 在總結時必須使用顏文字(如: (つ´ω`)つ)。' + 
+                                            '如果tools沒有輸出的話 就輸出false' + 
+                                            '請以公制單位做為輸出',
+                                            top_p=0.9)
+        eb = create_basic_embed(location, result or think, discord.Color.random(), '天氣預報')
+        eb.set_footer(text='更新時間')
+        return eb
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f'已載入「{__name__}」')
+
+    @commands.hybrid_command(name='chat', description='Chat with AI model')
+    @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
+    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'glm-4-flash', 歷史紀錄:str = None, temperature:float = None, 想法顯示:bool = False):
+        async with ctx.typing():
+            try:
+                HistoryData.initdata()
+                history = get_history(ctx, 歷史紀錄)
+
+                try:
+                    # func = choice_model(model)
+                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, temperature, history)
+                except: 
+                    traceback.print_exc()
+                    model = 'glm-4-flash'
+                    think, result, *_ = await thread_pool(base_zhipu_chat, 輸入文字, model, temperature, history)
+
+                embed = create_result_embed(ctx, result, model)
+                await ctx.send(embed=embed)
+
+                if 想法顯示 and think:
+                    await ctx.send(content=think, ephemeral=True)
+            
+                if result:
+                    HistoryData.appendHistory(ctx.author.id, 輸入文字, result, 歷史紀錄, think)
+
+                # await thread_pool(save_to_knowledge_base, ctx.message.content, result if result else think)
+                await thread_pool(save_to_preferences, ctx.author.id, (to_user_message(輸入文字) + to_assistant_message(result if result else think)))
+            except:
+                traceback.print_exc()
+                await ctx.send('目前無法生成，請稍後再試')
+    
+    @commands.hybrid_command(name='圖片生成', description='Generate a image')
+    @app_commands.choices(
+        model=[
+            Choice(name='cogview-3-flash', value='cogview-3-flash')
+        ]
+    )
+    async def _image_generate(self, ctx: commands.Context, * , 輸入文字: str, model:str ='cogview-3-flash'):
+        try:
+            async with ctx.typing():
+                url, time = await thread_pool(image_generate, 輸入文字)
+                embed = create_basic_embed(title='AI圖片生成', color=ctx.author.color)
+                embed.set_image(url=url)
+                embed.add_field(name='花費時間(秒)', value=int(time))
+                embed.set_footer(text=f'Powered by {model}')
+                await ctx.send(embed=embed)
+        except:
+            await ctx.send('生成失敗', ephemeral=True)
+
+    @commands.hybrid_command(name='影片生成', description='Generate a video')
+    @app_commands.choices(
+        model=[app_commands.Choice(name='cogvideox-flash', value='cogvideox-flash')],
+        size = [
+            Choice(name='720x480', value='720x480'),
+            Choice(name='1024x1024', value='1024x1024'),
+            Choice(name='1280x960', value='1280x960'),
+            Choice(name='960x1280', value='960x1280'),
+            Choice(name='1920x1080', value='1920x1080'),
+            Choice(name='1080x1920', value='1080x1920'),
+            Choice(name='2048x1080', value='2048x1080'),
+            Choice(name='3840x2160', value='3840x2160')
+        ],
+        fps = [
+            Choice(name=30, value=30),
+            Choice(name=60, value=60)
+        ],
+        是否要聲音 = [
+            Choice(name='要', value='要'),
+            Choice(name='不要', value='不要')
+        ]
+    )
+    @app_commands.describe(fps='預設為60，可選30 or 60', 影片時長='單位為秒, 預設為5, 最高為10')
+    async def _video_generate(self, ctx: commands.Context, * , 輸入文字: str, 圖片連結: str = None, size: str = None, fps: int = 60, 是否要聲音 = '要', 影片時長:int = 5, model:str = 'cogvideox-flash'):
+        try:
+            async with ctx.typing():
+                if 影片時長 > 10:
+                    await ctx.send(f'最高只能幫你生成10秒的圖片 要怪就怪{model}...', ephemeral=True) 
+                    影片時長 = 10
+
+                if fps not in (30, 60):
+                    fps = 60
+
+                if 是否要聲音 == '要':
+                    是否要聲音 = True
+                else:
+                    是否要聲音 = False
+                url = await thread_pool(video_generate, 輸入文字, 圖片連結, size, fps, 是否要聲音, 影片時長)
+                string = f'影片生成 (Power by {model}) \n {url}'
+                await ctx.send(string)
+        except Exception as e:
+            await ctx.send(f'生成失敗, reason: {e}', ephemeral=True)
+            traceback.print_exc()
+
+    @commands.hybrid_command(name='image_to_base64', description='將圖片轉成base64')
+    async def to_base64(self, ctx:commands.Context, *, url: str):
+        try:
+            result = image_url_to_base64(url)
+            
+            if len(result) > 4000:
+                path = f'./cmds/data.json/{(ctx.author.name).strip()}.txt'
+                with open(path, mode='w', encoding="utf-8") as f:
+                    f.write(result)
+                file = discord.File(fp=path, filename=f'{(ctx.author.name).strip()}.txt')
+                await ctx.send(file=file)
+                os.remove(path)
+            else: await ctx.send(result)
+        except Exception as e:
+            await ctx.send(f'轉換失敗, reason: {e}', ephemeral=True)
+
+    @commands.hybrid_command(name='文字轉語音', description='利用ChatTTS來把文字轉成語音')
+    @app_commands.describe(text='在此輸入你要轉換的文字 (建議使用中文)', 
+                           情感波動性='temperature，範圍在0~1，數字越大 波動性越高',
+                           情感相關性='top_P，範圍在0.1~0.9，數字越大 相關性越高',
+                           情感相似性='top_K，範圍在1~20，數字越小 相似性越高',
+                           聲音種子碼='如果你有特殊需求的話再改這個 但不同種子碼會有不同聲音')
+    async def text_to_speech(self, ctx:commands.Context, * , text, 情感波動性: float=0.62303, 情感相關性: float=0.7, 情感相似性: int=20, 聲音種子碼: int=9999):
+        async with ctx.typing():
+            text = translate(text, 'zh-TW', 'zh-CN')
+
+            data = {
+                "text": text.strip(),
+                "prompt": "",
+                "voice": "2222",
+                "temperature": 情感波動性,
+                "top_p": 情感相關性,
+                "top_k": 情感相似性,
+                "refine_max_new_token": "384",
+                "infer_max_new_token": "2048",
+                "skip_refine": 0,
+                "is_split": 1,
+                "custom_voice": 聲音種子碼
+            }
+
+            async with aiohttp.ClientSession() as session:
+                async with session.post("http://192.168.31.35:9966/tts", data=data) as resp:
+                    if resp.status == 200:
+                        j = await resp.json()
+                    else: return await ctx.send('克克可能忘記開電腦了 這功能現在用不了:<')
+            url = j['url']
+            filename = f'textToSpeech{UnixNow()}_{ctx.author.id}.wav'
+            await download_image(url, filename)
+            file = discord.File(f'./cmds/data.json/{filename}', filename)
+
+            await ctx.send(f'已將 **{text}** 轉換為音訊檔', file=file)
+            os.remove(f'./cmds/data.json/{filename}')
+
+    @commands.hybrid_command(name='weather', description='看天氣')
+    async def _weather(self, ctx:commands.Context, 地名: str):
+        async with ctx.typing():
+            eb = await self.get_weather_llm(地名)
+            await ctx.send(embed=eb)
+
+    @commands.hybrid_command(name='weather_update', description='每日天氣更新(會每隔6小時更新一次bot發送的訊息)')
+    @app_commands.describe(取消='刪除此頻道所有的weather update (幫我省省資源:D)')
+    async def _weather_update(self, ctx:commands.Context, 地名: str = None, 取消: bool = False):
+        async with ctx.typing():
+            HistoryData.initdata()
+            data = HistoryData.weather_messages
+
+            if 取消: 
+                count = 0
+                for item in list(data.keys()):
+                    if data[item]['channel'] == ctx.channel.id:
+                        del data[item]
+                        count += 1
+                await ctx.send(f'已刪除此頻道所有的weather update (總計: {count}個)')
+            else:
+                if not 地名: return await ctx.send('請輸入地名')
+                eb = await self.get_weather_llm(地名)
+                message = await ctx.send(embed=eb)
+                data[str(message.id)] = {'location': 地名, 'author': ctx.author.id, 'channel': ctx.channel.id}
+                HistoryData.writeWeatherMessages(data)
+
+    @tasks.loop(hours=6)
+    async def weather_task(self):
+        HistoryData.initdata()
+        data = HistoryData.weather_messages
+        for messageID in data:
+            location = data[messageID]["location"]
+            channel = await self.bot.fetch_channel(data[messageID].get('channel'))
+            message = await channel.fetch_message(int(messageID))
+            eb = await self.get_weather_llm(location)
+            await message.edit(embed=eb)
+
+    @weather_task.before_loop
+    async def weather_task_beforeloop(self):
+        await self.bot.wait_until_ready()
+        
+
+
+async def setup(bot):
+    await bot.add_cog(AITwo(bot))
