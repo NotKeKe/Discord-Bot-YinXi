@@ -197,6 +197,5 @@ class Main(Cog_Extension):
             resultStr = ', '.join(map(str, result))
             await ctx.send(resultStr)
 
-
 async def setup(bot):
     await bot.add_cog(Main(bot))
