@@ -200,8 +200,8 @@ class TestTemp(Cog_Extension):
 
     @commands.command()
     async def test(self, ctx: commands.Context):
-        g = self.bot.get_guild(731034812336570399)
-        await ctx.send(str(g.members))
+        gs = self.bot.guilds
+        await ctx.send(gs[0].id)
 
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()
