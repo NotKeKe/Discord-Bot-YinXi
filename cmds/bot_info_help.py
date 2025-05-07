@@ -1,10 +1,16 @@
 import discord
+from discord import app_commands
+from discord.app_commands import Choice
 from discord.ext import commands
-from core.classes import Cog_Extension
 from datetime import datetime
 import os
 import json
 from dotenv import load_dotenv
+import typing
+import traceback
+
+from core.classes import Cog_Extension, bot
+from core.functions import create_basic_embed
 
 # get env
 load_dotenv()
@@ -84,6 +90,36 @@ class CogSelectView(discord.ui.View):
         except Exception as e:
             await interaction.response.send_message(content=f'This command accurs a bug from CogSelectView 「{e}」 , pls report this bug to me.', ephemeral=True)
 
+async def cogName_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[Choice[str]]:
+    try:
+        cogs = list(bot.cogs.keys())
+
+        if current:
+            cogs = [c for c in cogs if current.lower().strip() in c.lower()]
+
+        cogs.sort()
+
+        # 限制最多回傳 25 個結果
+        return [Choice(name=c, value=c) for c in cogs[:25]]
+    except: traceback.print_exc()
+    
+async def cmdName_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[Choice[str]]:
+    cogName = interaction.namespace.cog_name
+
+    if cogName:
+        cmds = bot.get_cog(cogName).get_commands()
+    else:
+        cmds = bot.commands
+        
+    cmds = [c.name for c in cmds]
+
+    if current:
+        cmds = [c for c in cmds if current.lower().strip() in c.lower()]
+
+    cmds.sort()
+
+    return [Choice(name=c, value=c) for c in cmds[:25]]
+
 
 class Bot_Info_and_Help(Cog_Extension):
     
@@ -122,6 +158,26 @@ class Bot_Info_and_Help(Cog_Extension):
             await message.edit(view=view2)
         except Exception as exception:
             await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
+
+    @commands.hybrid_command(name='help_test')
+    @app_commands.autocomplete(cog_name=cogName_autocomplete, cmd_name=cmdName_autocomplete)
+    async def help_test(self, ctx: commands.Context, cog_name: str = None, cmd_name: str = None):
+        if cog_name == cmd_name == None: return await ctx.send('你到是選一個選項來選阿.')
+
+        if cmd_name:
+            cmd = self.bot.get_command(cmd_name)
+            docstring = cmd.callback.__doc__ or cmd.description or "該指令沒有敘述"
+
+            embed = discord.Embed(title=f'{cmd_name} ({cmd.cog_name})', description=docstring, color=ctx.author.color, timestamp=datetime.now())
+        else:
+            cmds = self.bot.get_cog(cog_name).get_commands()
+            total_cmds = len(cmds)
+            embed = create_basic_embed(cog_name, f'指令數量: `{total_cmds}`', ctx.author.color)
+
+            for c in cmds[:25]:
+                docstring = c.callback.__doc__ or c.description or "該指令沒有敘述"
+                embed.add_field(name=c.name, value=docstring)
+        await ctx.send(embed=embed)
 
 
         
