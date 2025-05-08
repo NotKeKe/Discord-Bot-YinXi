@@ -15,9 +15,10 @@ from deep_translator import GoogleTranslator
 import typing
 import os
 import xml.etree.ElementTree as ET
+import asyncio
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate
+from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY
 
 app = FastAPI()
@@ -249,6 +250,54 @@ class ApiCog(commands.Cog):
                         urls += [f"作者: [{data['user']['username']}](<{data['user']['links']['html']}>)"]
                         urls += [f"[圖片連結]({data['urls']['regular']})"]
             await ctx.send('\n'.join(urls))
+
+    @commands.hybrid_command(name='影片下載', description='Download the video or audio by yt-dlp (from youtube twitter etc.)', aliases=['yt_downlaod', 'ytdownload'])
+    @app_commands.choices(
+        type = [Choice(name=s, value=s) for s in ('mp4', 'mp3')],
+        quality = [Choice(name=s, value=s) for s in ('high', 'medium', 'low')]
+    )
+    @app_commands.describe(
+        type = '選擇你要下載mp4還是mp3 (預設: mp3)',
+        quality = '(僅在選擇mp4時 這個選項才有效) high-高，medium-中，low-低'
+    )
+    async def yt_downloader(self, ctx: commands.Context, url: str, type: str = 'mp3', quality: str = None):
+        try:
+            data = {
+                "url": url, 
+                "media_type": type, # 可以是 "mp4" 或 "mp3" 
+                "quality": quality # 僅在 media_type 為 mp4 時有效
+            }
+
+            async with aiohttp.ClientSession() as sess:
+                async with sess.post('http://192.168.31.99:6002/api/download', json=data) as resp:
+                    if resp.status == 404: return await ctx.send('目前無法下載影片或音訊 (原因: 我也不知道 可能我壞掉了(?) )')
+                    resp_json = await resp.json()
+                    task_id = resp_json.get('task_id')
+
+            await ctx.send(f'Tracking task id: {task_id}')
+
+            for _ in range(10):
+                await asyncio.sleep(3)
+
+                async with aiohttp.ClientSession() as sess:
+                    async with sess.get(f'http://192.168.31.99:6002/api/status/{task_id}') as resp:
+                        resp_json = await resp.json()
+                        status = resp_json.get('status')
+                        if status == 'error': return await ctx.send(f"出現了一個錯誤:< (原因: {resp_json.get('message')})")
+                        if status == 'started': continue
+                        url = resp_json.get('download_url')
+                        info = resp_json.get('info')
+                                    
+                eb = create_basic_embed(info.get('title'), color=ctx.author.color, 功能=f'{type.upper()}下載')
+
+                eb.add_field(name='Source_url', value=f"[來源連結(SOURCE_URL)]({resp_json.get('source_url')})")
+                eb.add_field(name='Duration', value=secondToReadable(info.get('duration')))
+                eb.set_image(url=info.get('thumbnail'))
+                eb.add_field(name='花費時間', value=int(resp_json.get('process_time')))
+
+                await ctx.send(f"[下載連結(DOWNLOAD_URL)]({resp_json.get('download_url')})", embed=eb)
+                return
+        except: traceback.print_exc()
 
 
 async def setup(bot):

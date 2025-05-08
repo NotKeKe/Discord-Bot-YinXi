@@ -69,6 +69,10 @@ def UnixToReadable(timestamp) -> str:
     formatted_time = dt_object.strftime('%Y-%m-%d %H:%M:%S')
     return formatted_time
 
+def strToDatetime(time_str: str) -> datetime:
+    dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+    return dt
+
 def FormatTime(time: datetime) -> str:
     return time.strftime('%Y/%m/%d %H:%M:%S')
 
@@ -81,7 +85,7 @@ async def thread_pool(func, *args, **kwargs):
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(executor=None, func=functools.partial(func, *args, **kwargs))
 
-def secondToReadable():
+def secondToReadable(seconds: str):
     '''將傳入的秒數轉換為01:01:01的形式'''
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
