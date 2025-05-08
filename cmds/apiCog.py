@@ -73,7 +73,7 @@ class select_autocomplete:
 
 
 
-class FlaskCog(commands.Cog):
+class ApiCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -97,6 +97,7 @@ class FlaskCog(commands.Cog):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://sv443.net/jokeapi/v2/joke/Any') as response:
+                    if response.status != 200: return await ctx.send('請稍後在試')
                     data = await response.json()
                     if data['error']: await ctx.send('Bug了:< 再重試一次')
                     joke = data['setup']
@@ -251,5 +252,5 @@ class FlaskCog(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(FlaskCog(bot))
+    await bot.add_cog(ApiCog(bot))
 
