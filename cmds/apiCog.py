@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 
 import discord
@@ -59,6 +59,10 @@ async def get_log():
     </html>
     '''.format(data=data.replace('\n', '<br>'))
 
+@app.get('/test', response_class=FileResponse)
+async def test_file_return():
+    return FileResponse('./hii.mp4')
+
 class select_autocomplete:
     countries = read_json('./cmds/data.json/country.json')
 
@@ -89,9 +93,9 @@ class ApiCog(commands.Cog):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
         try:
-            await thread_pool(uvicorn.run, app, host="192.168.31.99", port=3000, log_level="warning")
+            await thread_pool(uvicorn.run, app, host="0.0.0.0", port=3000, log_level="warning")
         except Exception as e:
-            print(f'An error accur while bind address 192.168.31.99:3000 reason: {e}')
+            print(f'An error accur while bind address 0.0.0.0:3000 reason: {e}')
     
     @commands.hybrid_command(name='joke', description='隨機抽一個笑話 (英文的)', aliases=['jokes'])
     async def _joke(self, ctx: commands.Context):
@@ -262,42 +266,50 @@ class ApiCog(commands.Cog):
     )
     async def yt_downloader(self, ctx: commands.Context, url: str, type: str = 'mp3', quality: str = None):
         try:
-            data = {
-                "url": url, 
-                "media_type": type, # 可以是 "mp4" 或 "mp3" 
-                "quality": quality # 僅在 media_type 為 mp4 時有效
-            }
-
-            async with aiohttp.ClientSession() as sess:
-                async with sess.post('http://192.168.31.99:6002/api/download', json=data) as resp:
-                    if resp.status == 404: return await ctx.send('目前無法下載影片或音訊 (原因: 我也不知道 可能我壞掉了(?) )')
-                    resp_json = await resp.json()
-                    task_id = resp_json.get('task_id')
-
-            await ctx.send(f'Tracking task id: {task_id}')
-
-            for _ in range(10):
-                await asyncio.sleep(3)
+            async with ctx.typing():
+                data = {
+                    "url": url, 
+                    "media_type": type, # 可以是 "mp4" 或 "mp3" 
+                    "quality": quality # 僅在 media_type 為 mp4 時有效
+                }
 
                 async with aiohttp.ClientSession() as sess:
-                    async with sess.get(f'http://192.168.31.99:6002/api/status/{task_id}') as resp:
+                    async with sess.post('http://192.168.31.99:6002/api/download', json=data) as resp:
+                        if resp.status == 404: return await ctx.send('目前無法下載影片或音訊 (原因: 我也不知道 可能我壞掉了(?) )')
                         resp_json = await resp.json()
-                        status = resp_json.get('status')
-                        if status == 'error': return await ctx.send(f"出現了一個錯誤:< (原因: {resp_json.get('message')})")
-                        if status == 'started': continue
-                        url = resp_json.get('download_url')
-                        info = resp_json.get('info')
-                                    
-                eb = create_basic_embed(info.get('title'), color=ctx.author.color, 功能=f'{type.upper()}下載')
+                        task_id = resp_json.get('task_id')
 
-                eb.add_field(name='Source_url', value=f"[來源連結(SOURCE_URL)]({resp_json.get('source_url')})")
-                eb.add_field(name='Duration', value=secondToReadable(info.get('duration')))
-                eb.set_image(url=info.get('thumbnail'))
-                eb.add_field(name='花費時間', value=int(resp_json.get('process_time')))
+                await ctx.send(f'Tracking task id: {task_id}')
 
-                await ctx.send(f"[下載連結(DOWNLOAD_URL)]({resp_json.get('download_url')})", embed=eb)
-                return
-        except: traceback.print_exc()
+                for _ in range(10):
+                    await asyncio.sleep(3)
+
+                    async with aiohttp.ClientSession() as sess:
+                        async with sess.get(f'http://192.168.31.99:6002/api/status/{task_id}') as resp:
+                            resp_json = await resp.json()
+                            status = resp_json.get('status')
+                            if status == 'error': 
+                                reason = resp_json.get('message')
+                                return await ctx.send(f"出現了一個錯誤:< (原因: {'yt-dlp不讓我們下載好康的影片:<' if 'NSFW' in reason else reason})")
+                            if status == 'started': continue
+                            url = resp_json.get('download_url')
+                            info = resp_json.get('info')
+                                        
+                    eb = create_basic_embed(info.get('title'), color=ctx.author.color, 功能=f'{type.upper()}下載')
+
+                    eb.add_field(name='Source_url', value=f"[來源連結(SOURCE_URL)]({resp_json.get('source_url')})")
+                    eb.add_field(name='Duration', value=secondToReadable(info.get('duration')))
+                    eb.set_image(url=info.get('thumbnail'))
+                    eb.add_field(name='花費時間(秒)', value=int(resp_json.get('process_time')))
+                    eb.set_footer(text='不建議你把它拿去商業用途窩')
+
+                    await ctx.send(f"[下載連結(DOWNLOAD_URL)]({resp_json.get('download_url')})", embed=eb)
+                    return
+                await ctx.send('Tracking failed')
+        except Exception as e: 
+            await ctx.send(f'有蟲蟲(Bug)出現了:< 請稍後再試 (reason: {str(e)})')
+            traceback.print_exc()
+            print(resp_json)
 
 
 async def setup(bot):

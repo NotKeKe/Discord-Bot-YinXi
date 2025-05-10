@@ -85,8 +85,9 @@ async def thread_pool(func, *args, **kwargs):
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(executor=None, func=functools.partial(func, *args, **kwargs))
 
-def secondToReadable(seconds: str):
+def secondToReadable(seconds):
     '''將傳入的秒數轉換為01:01:01的形式'''
+    seconds = int(seconds)
     hours = seconds // 3600
     minutes = (seconds % 3600) // 60
     seconds = seconds % 60
@@ -95,7 +96,7 @@ def secondToReadable(seconds: str):
     elif minutes > 0:
         return f"00:{minutes:02d}:{seconds:02d}"
     else:
-        return f"00:00:{seconds:02d}"
+        return f"00:{seconds:02d}"
     
 def translate(text, source:str='auto', target:str='zh-TW') -> str:
     '''將文本翻譯'''   
