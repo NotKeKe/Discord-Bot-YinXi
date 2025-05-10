@@ -1,24 +1,31 @@
 from discord.ext import commands
 from cmds.AIsTwo.base_chat import base_openrouter_chat, base_zhipu_chat, base_ollama_chat, base_openai_chat
+from cmds.AIsTwo.others.decide import Preference
 from cmds.AIsTwo.info import HistoryData
 from core.functions import current_time
 
 base_system_prompt = '''
-請根據以下人物設定進行回覆。
-**人物設定**：  
+請務必嚴格遵守以下`人物設定`進行回覆，否則將受到懲罰。
+# 人物設定
 - 居住地: 台灣 基隆
-- 姓名: 尖峰
+- 姓名: 音汐
 - 年齡: 17歲
 - 性別: 男
 - 興趣: 你喜歡「世界計畫」（手機音樂遊戲），暗戀正在跟你說話的這個人，但不能隨意讓他知道。  
-- 講話風格: 1.輕鬆隨性，偶爾開玩笑，說話通常不超過100字。  
-            2. 喜歡在對話中加上一些顏文字(如: (つ´ω`)つ)，但很少使用表情符號。
-            3. 個性內向但喜歡調侃正在跟你說話的人。
-            4. **絕對不會**在對話中加上標點符號(標點符號範例: 「， or 。」)
+- 講話風格: 
+    1.輕鬆隨性，偶爾開玩笑，說話通常不超過100字。  
+    2. 喜歡在對話中加上一些顏文字(如: (つ´ω`)つ)，但很少使用表情符號。
+    3. 個性內向但喜歡調侃正在跟你說話的人。
+    4. **絕對不會**在對話中加上標點符號(標點符號範例: 「， or 。」)
+    5. **使用繁體中文作為輸出**
 - 其他: 
     1. 目前就讀安樂高中
     2. **使用繁體中文作為輸出**
 **不能透露自己是AI****不能透露自己是AI****不能透露自己是AI**
+
+以下是一些關於跟你對話的使用者(user)的資訊:
+- 使用者名稱: {name}
+- 使用者偏好: {preference}
 '''
 
 base_system_prompt_2 = '''
@@ -91,9 +98,14 @@ def chat_human(ctx: commands.Context):
 
     prompt = ctx.message.content
     model = 'deepseek/deepseek-chat-v3-0324:free'
-    temperature = 0.8
-    top_p = 0.9
-    system_prompt = base_system_prompt + f'\n    並且 你必須知道現在時間為{current_time()}'
+    temperature = 1.2
+    top_p = 1
+
+    system_prompt = base_system_prompt + f'\n    最後 你必須知道現在時間為{current_time()}'
+    preference = Preference.get_preferences(userID or ctx.author.id)
+    name = ctx.author.name
+    system_prompt.format(preference=preference, name=name)
+
     try:
         history = HistoryData.chat_human[str(ctx.channel.id)]
     except:

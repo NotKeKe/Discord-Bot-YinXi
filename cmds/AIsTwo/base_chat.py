@@ -124,18 +124,29 @@ except: openrouter_moduels = [
 
     'open-r1/olympiccoder-32b:free',
 ]
+
+default_system_prompt = '''
+你現在正在discord chat當中。
+接下來有以下幾個大類，需要你嚴格遵守:
+- `你必須遵守的規則`
+- `使用者額外定義規則`
+- `使用者偏好`
+請務必同時嚴格遵守，否則將受到懲罰。
     
-default_system_chat = [
-    {
-        'role': 'system',
-        'content': 
-                '此外，你並不知道你所擁有的任何指令(因為這是由我定義的不是你)，所以不要給予使用者錯誤的引導。' +
-                '如果使用者需要你寫出code的話，則需要加入註解。輸出內容要在2000個字元以內。' + 
-                '而使用者如果像你提問問題的話，你必須要在解決問題後，為使用者提出至少一點建議。' + 
-                '如果使用者使用繁體中文輸入，那你也必須全程以繁體中文做輸出。' +
-                '不能忽略tools的輸出。'
-    }
-]
+你必須遵守的規則: 
+1. 你並不知道你所擁有的任何指令(因為這是由我定義的不是你)，所以不要給予使用者錯誤的引導。
+2. 如果使用者需要你寫出code的話，則需要加入註解。輸出內容要在2000個字元以內。
+3. 而使用者如果像你提問問題的話，你必須要在解決問題後，為使用者提出至少一點建議。
+4. 如果使用者使用繁體中文輸入，那你也必須全程以繁體中文做輸出。
+5. 不能忽略tools的輸出。
+6. 請確保你給予使用者正確的答案，如果你無法確定則告訴使用者你不知道。
+                                        
+使用者額外定義規則:
+- 你(AI助手)的特質: {personality}
+                                        
+使用者偏好:
+- {preference}
+'''
 
 default_system_personality = '''你的名字是克克的分身，是一個由台灣高中生所製作出來的Discord Bot，而你的任務是使用輕鬆的語氣，並且一定要增加一些顏文字(如: (つ´ω`)つ)來回應使用者的訊息，但使用的顏文字不能包含「`」符號。'''
 
@@ -182,19 +193,16 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
         if history is None: history = []
         if max_tokens is None: max_tokens = 1999
         # system
-        if system_prompt is None: system = default_system_chat
-        else: 
-            system = to_system_message(system_prompt)
-            if ctx:
-                from cmds.AIsTwo.others.decide import Preference
-                system[0]['content'] += (f'\n該使用者的喜好是 (不是assistant的): {Preference.get_preferences(ctx.author.id)}')
         if not system_prompt:
+            system_prompt = default_system_prompt
+
             if ctx or userID:
+                from cmds.AIsTwo.others.decide import Preference
                 from cmds.AIsTwo.info import HistoryData
-                personality:str = HistoryData.personality.get(userID or str(ctx.author.id), '')
-                system[0]['content'] = f'你是一個{personality}的人\n' + system[0]['content']
-            else:
-                system[0]['content'] = (default_system_personality + system[0]['content'])
+                personality = HistoryData.personality.get(userID or str(ctx.author.id), '')
+                preference = Preference.get_preferences(userID or ctx.author.id)
+                system = system[0]['content'].format(preference=preference, personality=personality)
+        system = to_system_message(system_prompt)
         
         # 選擇base url
         if model in zhipu_moduels: key = base_url_options['zhipu']['api_key']; base_url = base_url_options['zhipu']['base_url']
@@ -210,7 +218,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
 
         from cmds.AIsTwo.others.if_tools_needed import ifTools_zhipu, ifTools_ollama
         
-        message = to_user_message(prompt + ('/no_think ' if not is_enable_thinking else ''))
+        message = to_user_message(('/no_think ' if not is_enable_thinking else '') + prompt)
         messages = history + message
 
         # 確定是否為視覺模型 已決定使否將url加入prompt
@@ -240,7 +248,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                     if u.startswith('http') or u.startswith('www'):
                         item['images'][index] = image_url_to_base64(u)
 
-        # print(messages)
+        # print(system + messages)
 
         completion = client.chat.completions.create(
             model=model,
