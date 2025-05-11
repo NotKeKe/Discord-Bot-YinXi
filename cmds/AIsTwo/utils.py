@@ -82,7 +82,7 @@ def choice_model(model:str):
 
 def halfToFull(content: str) -> str:
     '''將文字中的全形標點符號轉為半形'''
-    return content.replace('，', '  ').replace('。', '\n').replace('？', '? ').replace('！', '! ').replace('：', ': ')
+    return content.replace('，', '  ').replace('？', '? ').replace('！', '! ').replace('：', ': ')
 
 def is_vision_model(model: str, client) -> bool:
     from cmds.AIsTwo.base_chat import gemini_moduels, ollama_modules, openrouter_moduels, true_ollama

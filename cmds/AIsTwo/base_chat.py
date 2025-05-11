@@ -310,9 +310,8 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                     if u.startswith('http') or u.startswith('www'):
                         item['images'][index] = image_url_to_base64(u)
             if 'time' in item:
-                time = item['time']
+                item['content'] = item['time'] + ': \n' + item['content']
                 del item['time']
-                item['content'] = time + ': \n' + item['content']
 
         # print(system + messages)
 

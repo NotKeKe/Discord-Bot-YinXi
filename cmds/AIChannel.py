@@ -34,7 +34,7 @@ resting = False # 每隔一段時間就讓bot休息不讀訊息(模擬人類下�
 cal = parsedatetime.Calendar()
 reminder_tasks = []
 
-async def to_history(channel, limit: int = 10):
+async def to_history(channel: discord.TextChannel, limit: int = 10):
     histories = []
     messages = [m async for m in channel.history(limit=limit)]
     messages.reverse()
@@ -49,7 +49,7 @@ async def to_history(channel, limit: int = 10):
             pre = 'bot'
         else:
             if m.content.startswith('['): continue
-            content = '`user_ID: {userID}; user_name: {userName}` said: {mcontent}\n'.format(userID=m.author.id, userName=m.author.global_name, mcontent=m.content) if isinstance(channel, discord.DMChannel) else '`user_name: {userName}` said: {mcontent}'.format(userName=m.author.global_name, mcontent=m.content)
+            content = '`user_ID: {userID}; user_name: {userName}` said: {mcontent}\n'.format(userID=m.author.id, userName=m.author.global_name, mcontent=m.content) if not channel.guild else '`user_name: {userName}` said: {mcontent}'.format(userName=m.author.global_name, mcontent=m.content)
             if pre == 'user':
                 histories[-1]["content"] = content + '\n'
             else:
@@ -128,8 +128,10 @@ class AIChannel(commands.Cog):
             async with ctx.typing():
                 think, result = await thread_pool(chat_human, ctx, history)
                 if not result and not is_stop: await ctx.send('你說啥 再說一次'); return # 如果是因為使用者打斷對話 就不用傳送這個訊息
-                await ctx.send(halfToFull(result))
-
+                result = halfToFull(result)
+                item = result.split('。')
+                for i in item:
+                    await ctx.send(i)
         except:
             traceback.print_exc()
 
