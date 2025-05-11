@@ -79,9 +79,7 @@ class AIChannel(commands.Cog):
                 isTalkToMe = await thread_pool(is_talking_with_me, message.content, HistoryData.chat_human[channelID])
                 if not isTalkToMe:
                     if (self.bot.user not in message.mentions and not message.reference and '尖峰' not in message.content): 
-                        data[channelID] += to_user_message(f'「使用者ID: {message.author.id}，使用者名稱: {message.author.global_name}」說了: `{message.content}`」' 
-                                               if message.guild else message.content, userID)
-                        data[channelID] += to_assistant_message('...')
+                        data[channelID][-1] += to_user_message(f'「使用者ID: {message.author.id}，使用者名稱: {message.author.global_name}」說了: `{message.content}`」\n' , userID)
                         HistoryData.writeChatHuman(data)
                         return
                     
@@ -99,17 +97,17 @@ class AIChannel(commands.Cog):
             ctx = await self.bot.get_context(message)
             async with ctx.typing():
                 think, result = await thread_pool(chat_human, ctx)
-                if result in ('', None) and is_stop: await ctx.send('你說啥 再說一次'); return # 如果是因為使用者打斷對話 就不用傳送這個訊息
+                if not result and not is_stop: await ctx.send('你說啥 再說一次'); return # 如果是因為使用者打斷對話 就不用傳送這個訊息
                 await ctx.send(halfToFull(result))
 
             data[channelID] += (
                 to_user_message(f'「使用者ID: {message.author.id}，使用者名稱: {message.author.global_name}」說了: `{message.content}`」' 
-                                if message.guild else message.content, userID) + 
+                                if message.guild else message.content, userID, time=current_time()) + 
                 to_assistant_message(result, think)
             )
             HistoryData.writeChatHuman(data)
             # await thread_pool(save_to_knowledge_base, message.content, result if result else think)
-            await thread_pool(save_to_preferences, userID, data[channelID][-2:])
+            # await thread_pool(save_to_preferences, userID, data[channelID][-2:])
         except:
             traceback.print_exc()
 
@@ -174,7 +172,7 @@ class AIChannel(commands.Cog):
 
             HistoryData.appendHistoryForChannel(channelID, f'{ctx.author.id}: {輸入文字}', result, think, message.author.id, attachments)
             # await thread_pool(save_to_knowledge_base, message.content, result if result else think)
-            await thread_pool(save_to_preferences, message.author.id, data[channelID][-2:])
+            # await thread_pool(save_to_preferences, message.author.id, data[channelID][-2:])
         except Exception as e:
             traceback.print_exc()
             await ctx.send(f"目前無法使用此功能，請稍後再試 (model={model}) {'bot沒有輸出' if think == result == '' else ''}\n {current_time()}")
@@ -324,7 +322,7 @@ class AIChannel(commands.Cog):
         embed.add_field(name='注意事項', value='接下來在此頻道的每個訊息 (除了指令和圖片以外)都會被AI看到，所以不建議你透露太多個人資訊', inline=False)
         embed.add_field(name='如果不希望繼續讓ai自動回覆你的訊息的話，可以使用 [取消ai頻道', value=' ')
         await ctx.send(embed=embed)
-        data['chatting_with_human'].append(channelID)
+        data['chatting_with_human'].append(ctx.channel.id)
         HistoryData.writeChatHuman(data)
 
     @commands.hybrid_command(name='取消人類對話', description='取消跟AI偽裝的人類對話')
@@ -485,8 +483,8 @@ class AIChannel(commands.Cog):
 
     @commands.command(name='force_online')
     async def force_online(self, ctx):
+        if str(ctx.author.id) not in admins: return
         async with ctx.typing():
-            if str(ctx.author.id) != admins: return
             global resting
             resting = False
             activity = await thread_pool(ActivitySelector.activity_select())

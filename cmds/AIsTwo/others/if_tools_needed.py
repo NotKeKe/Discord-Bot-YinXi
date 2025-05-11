@@ -98,7 +98,7 @@ def ifTools_ollama(messages: list, delete_func_name: Union[str, list] = None):
     if delete_func_name:
         tmp_tools_descrip = delete_func(tmp_tools_descrip, delete_func_name)
     response = ollama.chat.completions.create(
-        model='qwen3:4b',
+        model='qwen3:4b-q8_0',
         messages=to_system_message(system_prompt) + messages,
         stream=False,
         tool_choice="auto",

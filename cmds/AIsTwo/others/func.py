@@ -15,6 +15,7 @@ def image_generate(prompt: str):
     return response.data[0].url, time.total_seconds()
 
 def video_generate(prompt: str, image_url = None, size=None, fps=60, with_audio: bool=True, duration: int=5):
+    imageBase64 = None
     if image_url is not None:
         imageBase64 = image_url_to_base64(image_url)
         if size is None:
@@ -71,8 +72,9 @@ def summarize(history: list, system_prompt: str = None):
                 輸出結果將會在1000字內
                 如果對話內容中包含使用者ID或者使用者名稱，則都一定要記錄下來。
                 而在總結當中，你認為重要的地方，也一定要使用markdown語法來加粗。
-                請使用**絕對客觀**的方式進行總結，不要對對話做出任何評價。
-            ''')
+                **使用`絕對客觀`的方式進行總結，不要對對話做出任何評價。**
+                **不要總結出影響AI之後對話的內容**
+                ''')
     else: message = to_system_message(system_prompt)
     messages = message + history
 

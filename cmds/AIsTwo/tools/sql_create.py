@@ -28,3 +28,16 @@ def user_preferences():
     connection.commit()
     return connection, cursor
 
+def user_info():
+    connection = sqlite3.connect("./cmds/AIsTwo/data/userInfos.db")
+    cursor = connection.cursor()
+    cursor.execute('''
+                   CREATE TABLE IF NOT EXISTS infos (
+                    id INTEGER PRIMARY KEY, 
+                    user_id INTEGER,
+                    info TEXT
+                   ) 
+                   ''')
+    connection.commit()
+    return connection, cursor
+

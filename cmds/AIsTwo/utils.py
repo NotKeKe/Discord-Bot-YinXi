@@ -34,8 +34,8 @@ def on_timeout(time):
     if t.total_seconds() > 1200:
         return True
     
-def to_user_message(prompt: str, userID: str = None, attachments: list = None) -> list:
-    return [{'role': 'user', 'content': prompt, **({'userID': userID} if userID else {}), **({'images': attachments} if attachments else {})}]
+def to_user_message(prompt: str, userID: str = None, attachments: list = None, time: str = None) -> list:
+    return [{'role': 'user', 'content': prompt, **({'userID': userID} if userID else {}), **({'images': attachments} if attachments else {}), **({'time': time} if time else {})}]
 
 def to_system_message(prompt: str) -> list:
     return [{'role': 'system', 'content': prompt}]
@@ -44,8 +44,8 @@ def to_assistant_message(prompt: str, reasoning: str = None) -> list:
     return [{'role': 'assistant', 'content': prompt, **({'reasoning': reasoning} if reasoning is not None and reasoning != '' else {})}]
 
 def clean_text(text):
-    '''清除deepseek的think'''
-    clean_text = re.sub(r'<think>(.*?)</think>', '', text, flags=re.DOTALL)
+    '''清除工具調用以及think'''
+    clean_text = re.sub(r'<[^>]+>.*?</[^>]+>', '', text, flags=re.DOTALL)
     return clean_text
 
 def get_thinking(text):
@@ -54,6 +54,22 @@ def get_thinking(text):
 
     if think_content:
         return think_content.group(1).strip()
+    else: return ''
+
+def get_pref(text: str):
+    '''從文字中提取使用者喜好'''
+    pref = re.search(r'<preference>(.*?)</preference>', text, re.DOTALL)
+
+    if pref:
+        return pref.group(1).strip()
+    else: return ''
+
+def get_user_data(text: str):
+    '''從文字中提取使用者的資訊'''
+    data = re.search(r'<data>(.*?)</data>', text, re.DOTALL)
+
+    if data:
+        return data.group(1).strip()
     else: return ''
 
 def choice_model(model:str):

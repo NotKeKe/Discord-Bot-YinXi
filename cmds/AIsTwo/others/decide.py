@@ -2,14 +2,14 @@ import discord
 import random
 import traceback
 import orjson
-from cmds.AIsTwo.base_chat import base_zhipu_chat, base_openrouter_chat, true_zhipu, ollama, base_ollama_chat
+from cmds.AIsTwo.base_chat import base_zhipu_chat, base_openrouter_chat, true_zhipu, ollama, base_ollama_chat, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
 from core.functions import translate, current_time
 # tools
 from cmds.AIsTwo.others.if_tools_needed import get_tool_results
 from cmds.AIsTwo.tool_map import tools_descrip
 from cmds.AIsTwo.others.func import summarize
-from cmds.AIsTwo.tools.sql_create import user_preferences
+from cmds.AIsTwo.tools.sql_create import user_preferences, user_info
 
 
 def is_talking_with_me(prompt:str, history:list) -> bool:
@@ -72,7 +72,7 @@ class ActivitySelector:
                 或者在上某節課的時候你完全聽不懂 所以覺得不開心
             '''.format(time = cur_time)
             
-            result = base_zhipu_chat(f'根據以下人物設定，生成一個你希望你現在是什麼狀態，或者你現在正在玩什麼遊戲。\n\n\n{characterSettings}', 'glm-4-flash', temperature=1,
+            result = base_openai_chat(f'根據現在的時間，幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，要像Instagram (IG)那種中二文青語氣，最好有比喻，句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力', 'glm-4-flash', temperature=1,
                                     system_prompt=system_prompt.strip(), is_enable_tools=False, max_tokens=30, top_p=0.9)[1]
             result = translate(result)
             result = halfToFull(result)
@@ -185,6 +185,24 @@ class Preference:
             traceback.print_exc()
             print(f'Error in get_preferences: {e}')
             return ''
+        
+    @staticmethod
+    def save_to_db(*, preference: str, userID: int):
+        connection, cursor = user_preferences()
+        cursor.execute("SELECT * FROM preferences WHERE user_id = ?", (userID,))
+        result = cursor.fetchone()
+
+        if result:
+            # 如果存在，則更新
+            preference += str(result[2])
+            cursor.execute("UPDATE preferences SET preference = ? WHERE user_id = ?", (preference, userID))
+        else:
+            # 如果不存在，則插入
+            cursor.execute("INSERT INTO preferences (user_id, preference) VALUES (?, ?)", (userID, preference))
+        
+        # 提交更改
+        connection.commit()
+        connection.close()
 
     @staticmethod
     def save_to_preferences(userID, messages: list):
@@ -211,23 +229,6 @@ class Preference:
                 }
             }
         }
-
-        def save(preference: str):
-            connection, cursor = user_preferences()
-            cursor.execute("SELECT * FROM preferences WHERE user_id = ?", (userID,))
-            result = cursor.fetchone()
-
-            if result:
-                # 如果存在，則更新
-                preference += result[0]
-                cursor.execute("UPDATE preferences SET preference = ? WHERE user_id = ?", (preference, userID))
-            else:
-                # 如果不存在，則插入
-                cursor.execute("INSERT INTO preferences (user_id, preference) VALUES (?, ?)", (userID, preference))
-            
-            # 提交更改
-            connection.commit()
-            connection.close()
 
         try:
             response = ollama.chat(
@@ -261,5 +262,45 @@ class Preference:
             args = orjson.loads(arguments) if type(arguments) != dict else arguments
             print(f'{tool_name=}: {arguments=}')
 
-            save(**args)
+            Preference.save_to_db(userID=userID, **args)
         except: traceback.print_exc()
+
+class UserInfo:
+    def __init__(self, userID: int):
+        self.userID = userID
+        connection, cursor = user_info()
+        self.connection = connection
+        self.cursor = cursor
+    
+    def get_info(self):
+        try:
+            userID = int(self.userID)
+            connection, cursor = self.connection, self.cursor
+            cursor.execute('SELECT info FROM infos WHERE user_id = ?', (userID,))
+            result = cursor.fetchone()
+            connection.close()
+            print(result)
+            return ''.join(result)
+        except Exception as e:
+            traceback.print_exc()
+            print(f'Error in get_info: {e}')
+            return ''
+        
+    def save_to_db(self, *, info: str):
+        try: userID = int(self.userID)
+        except: traceback.print_exc(); return
+        connection, cursor = self.connection, self.cursor
+        cursor.execute("SELECT * FROM infos WHERE user_id = ?", (userID,))
+        result = cursor.fetchone()
+
+        if result:
+            # 如果存在，則更新
+            preference += result[2]
+            cursor.execute("UPDATE infos SET info = ? WHERE user_id = ?", (info, userID))
+        else:
+            # 如果不存在，則插入
+            cursor.execute("INSERT INTO infos (user_id, info) VALUES (?, ?)", (userID, info))
+        
+        # 提交更改
+        connection.commit()
+        connection.close()

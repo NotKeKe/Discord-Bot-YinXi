@@ -62,7 +62,7 @@ class AITwo(commands.Cog):
                     HistoryData.appendHistory(ctx.author.id, 輸入文字, result, 歷史紀錄, think)
 
                 # await thread_pool(save_to_knowledge_base, ctx.message.content, result if result else think)
-                await thread_pool(save_to_preferences, ctx.author.id, (to_user_message(輸入文字) + to_assistant_message(result if result else think)))
+                # await thread_pool(save_to_preferences, ctx.author.id, (to_user_message(輸入文字) + to_assistant_message(result if result else think)))
             except:
                 traceback.print_exc()
                 await ctx.send('目前無法生成，請稍後再試')
