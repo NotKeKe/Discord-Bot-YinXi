@@ -179,8 +179,9 @@ class Preference:
             cursor.execute('SELECT preference FROM preferences WHERE user_id = ?', (userID,))
             result = cursor.fetchone()
             connection.close()
-            print(result)
-            return ''.join(result)
+            # print(result)
+            if result: return ''.join(result)
+            else: return ''
         except Exception as e:
             traceback.print_exc()
             print(f'Error in get_preferences: {e}')
@@ -279,8 +280,9 @@ class UserInfo:
             cursor.execute('SELECT info FROM infos WHERE user_id = ?', (userID,))
             result = cursor.fetchone()
             connection.close()
-            print(result)
-            return ''.join(result)
+            # print(result)
+            if result: return ''.join(result)
+            else: return ''
         except Exception as e:
             traceback.print_exc()
             print(f'Error in get_info: {e}')

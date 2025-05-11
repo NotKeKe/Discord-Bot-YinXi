@@ -188,9 +188,9 @@ stop_flag = {} # 不是每個程序都會用到stop_flag
 
 def get_extra(text: str, userID):
     try:
-        pref = get_pref(text) + '   '
-        info = get_user_data(text) + '   '
-        print(f'{pref=}\n{info=}')
+        pref = get_pref(text) + ''
+        info = get_user_data(text) + ''
+        # print(f'{pref=}\n{info=}')
 
         if isinstance(userID, commands.Context):
             userID = userID.author.id
@@ -200,10 +200,10 @@ def get_extra(text: str, userID):
         
         if pref:
             from cmds.AIsTwo.others.decide import Preference
-            Preference.save_to_db(preference=pref, userID=userID)
+            Preference.save_to_db(preference=pref + '   ', userID=userID)
         if info:
             from cmds.AIsTwo.others.decide import UserInfo
-            UserInfo(userID).save_to_db(info=info)
+            UserInfo(userID).save_to_db(info=info + '   ')
     except: traceback.print_exc()
     
 
@@ -280,6 +280,8 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
         
         message = to_user_message(('/no_think ' if not is_enable_thinking and 'qwen3' in model else '') + prompt)
         messages = history + message
+
+        print(messages)
 
         # 確定是否為視覺模型 已決定使否將url加入prompt
         if url:

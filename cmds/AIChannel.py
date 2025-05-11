@@ -25,6 +25,7 @@ from cmds.AIsTwo.others.decide import is_talking_with_me, save_to_knowledge_base
 from cmds.AIsTwo.utils import choice_model, halfToFull, select_moduels_auto_complete
 
 from core.functions import thread_pool, create_basic_embed, current_time, KeJCID, current_time, get_attachment, admins
+from core.classes import bot
 
 save_to_preferences = Preference.save_to_preferences
 
@@ -32,6 +33,31 @@ resting = False # 每隔一段時間就讓bot休息不讀訊息(模擬人類下�
 
 cal = parsedatetime.Calendar()
 reminder_tasks = []
+
+async def to_history(channel, limit: int = 10):
+    histories = []
+    messages = [m async for m in channel.history(limit=limit)]
+    messages.reverse()
+    pre = str()
+    for m in messages:
+        if m.author == bot.user:
+            if m.content == '嘗試重啟bot...': continue
+            if pre == 'bot':
+                histories[-1]['content'] += m.content + '\n'
+            else:
+                histories.extend(to_assistant_message(m.content + '\n'))
+            pre = 'bot'
+        else:
+            if m.content.startswith('['): continue
+            content = '`user_ID: {userID}; user_name: {userName}` said: {mcontent}\n'.format(userID=m.author.id, userName=m.author.global_name, mcontent=m.content) if isinstance(channel, discord.DMChannel) else '`user_name: {userName}` said: {mcontent}'.format(userName=m.author.global_name, mcontent=m.content)
+            if pre == 'user':
+                histories[-1]["content"] = content + '\n'
+            else:
+                attachment = get_attachment(m)
+                histories.extend(to_user_message(content + '\n', time=current_time(), attachments=attachment))
+            pre = 'user'
+
+    return histories
 
 class AIChannel(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -74,13 +100,17 @@ class AIChannel(commands.Cog):
 
             if channelID not in data: data[channelID] = [] # 對私訊
 
+            try:
+                summaried = HistoryData.chat_human_summary[channelID].get('summary', ' ')
+            except: 
+                summaried = ''
+
+            history = to_user_message(summaried) + await to_history(message.channel)
             
             if message.guild:
-                isTalkToMe = await thread_pool(is_talking_with_me, message.content, HistoryData.chat_human[channelID])
+                isTalkToMe = await thread_pool(is_talking_with_me, message.content, history)
                 if not isTalkToMe:
                     if (self.bot.user not in message.mentions and not message.reference and '尖峰' not in message.content): 
-                        data[channelID][-1] += to_user_message(f'「使用者ID: {message.author.id}，使用者名稱: {message.author.global_name}」說了: `{message.content}`」\n' , userID)
-                        HistoryData.writeChatHuman(data)
                         return
                     
             if message.content.startswith('提醒我'): return await ctx.send('我幹嘛提醒你 我是人欸')
@@ -92,22 +122,14 @@ class AIChannel(commands.Cog):
                     # await message.channel.send('Stop')
                     if channelID in stop_flag: stop_flag[channelID].append(userID)
                     else: stop_flag[channelID] = [userID]
-                    await asyncio.sleep(0.1)
+                    await asyncio.sleep(1)
             
             ctx = await self.bot.get_context(message)
             async with ctx.typing():
-                think, result = await thread_pool(chat_human, ctx)
+                think, result = await thread_pool(chat_human, ctx, history)
                 if not result and not is_stop: await ctx.send('你說啥 再說一次'); return # 如果是因為使用者打斷對話 就不用傳送這個訊息
                 await ctx.send(halfToFull(result))
 
-            data[channelID] += (
-                to_user_message(f'「使用者ID: {message.author.id}，使用者名稱: {message.author.global_name}」說了: `{message.content}`」' 
-                                if message.guild else message.content, userID, time=current_time()) + 
-                to_assistant_message(result, think)
-            )
-            HistoryData.writeChatHuman(data)
-            # await thread_pool(save_to_knowledge_base, message.content, result if result else think)
-            # await thread_pool(save_to_preferences, userID, data[channelID][-2:])
         except:
             traceback.print_exc()
 
@@ -452,6 +474,26 @@ class AIChannel(commands.Cog):
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
         except: traceback.print_exc()
 
+    @tasks.loop(minutes=5)
+    async def summary_history_for_ChatHuman(self):
+        HistoryData.initdata()
+        changed = False
+        data = HistoryData.chat_human_summary
+        for channel in HistoryData.chat_human:
+            if channel == 'chatting_with_human': continue
+            cn = self.bot.get_channel(int(channel)) or await self.bot.fetch_channel(int(channel))
+            history = await to_history(cn, 7)
+            if history == data[channel]['history']: return
+            changed = True
+            
+            summary = summarize(history)
+            
+            data[channel]['history'] = history
+            data[channel]['summary'] = summary
+            data[channel]['time'] = current_time()
+
+        if changed: HistoryData.writeChatHumanSummary(data)
+
     @tasks.loop(minutes=1)
     async def timed_history_save(self):
         HistoryData.timed_storage()
@@ -467,6 +509,10 @@ class AIChannel(commands.Cog):
     
     @timed_history_save.before_loop
     async def before_timed_history_save(self):
+        await self.bot.wait_until_ready()
+
+    @summary_history_for_ChatHuman.before_loop
+    async def summary_history_for_ChatHuman_before_loop(self):
         await self.bot.wait_until_ready()
         
 
