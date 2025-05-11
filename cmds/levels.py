@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import traceback
 
 from core.classes import Cog_Extension
@@ -45,6 +45,7 @@ def sortMsgCount(data):
 
 class Levels(Cog_Extension):
     data = None
+    update = False
 
     @classmethod
     def initdata(cls):
@@ -55,15 +56,15 @@ class Levels(Cog_Extension):
     def savedata(cls, data):
         if cls.data is not None:
             cls.data = data
-            write_json(cls.data, path)
+        cls.update = True
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
         self.initdata()
+        self.save_data_task.start()
 
-    @commands.Cog.listener()
-    async def on_message(self, ctx):
+    async def on_message_level(self, ctx):
         try:
             if ctx.author.bot: return
             if not ctx.guild: return
@@ -99,6 +100,10 @@ class Levels(Cog_Extension):
             self.savedata(data)
         except:
             traceback.print_exc()
+
+    @commands.Cog.listener()
+    async def on_message(self, ctx):
+        await self.on_message_level(ctx)
 
     @commands.hybrid_command(aliases=['rank', 'ranks', '等級'], name='聊天等級')
     async def rank(self, ctx):
@@ -151,7 +156,16 @@ class Levels(Cog_Extension):
 
         write_json(self.__class__.data, path)
     
+    @tasks.loop(minutes=1.5)
+    async def save_data_task(self):
+        if not self.__class__.update: return
+        self.initdata()
+        write_json(self.__class__.data, path)
+        self.__class__.update = False
 
+    @save_data_task.before_loop
+    async def save_data_task_before_loop(self):
+        await self.bot.wait_until_ready()
 
 async def setup(bot):
     await bot.add_cog(Levels(bot))
