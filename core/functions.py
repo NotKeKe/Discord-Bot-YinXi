@@ -6,8 +6,6 @@ import functools
 from typing import Optional, Any
 from deep_translator import GoogleTranslator
 import aiohttp
-import ast
-import inspect
 import re
 import traceback
 
