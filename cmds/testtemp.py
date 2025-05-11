@@ -200,15 +200,8 @@ class TestTemp(Cog_Extension):
 
     @commands.command()
     async def test(self, ctx: commands.Context):
-        from pyngrok import ngrok
-        tunnel = ngrok.connect('3000')
-        await ctx.send(tunnel)
-
-    @commands.command()
-    async def kill_ngrok(self, ctx):
-        from pyngrok import ngrok
-        ngrok.kill()
-        await ctx.send("killed")
+        async for m in ctx.channel.history(limit=5):
+            await ctx.send(m.content)
 
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()
