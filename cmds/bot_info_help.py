@@ -128,41 +128,68 @@ class Bot_Info_and_Help(Cog_Extension):
         print(f'已載入「{__name__}」')
 
     # bot info
-    @commands.hybrid_command(name="bot資訊", description="bot info")
+    @commands.hybrid_command(name="機器人資訊", description="Bot info")
     async def botinfo(self, ctx):
         '''為什麼你需要幫助:thinking:'''
-        指令類別 = ", ".join([cogname for cogname in self.bot.cogs])
+        指令類別 = ", ".join(sorted([cogname for cogname in self.bot.cogs]))
         embed=discord.Embed(title=' ', description=" ", color=discord.Color.blue(), timestamp=datetime.now())
         embed.set_author(name="Bot資訊", url=None, icon_url=embed_link)
-        embed.add_field(name="作者: ", value="克克 KeJC", inline=True)
-        embed.add_field(name="已知指令類別", value=指令類別, inline=True)
-        embed.add_field(name="Github連結:",value="[NotKeKe](https://github.com/NotKeKe)", inline=True)
+        embed.add_field(name='🤖 **名字**', value='音汐')
+        embed.add_field(name="👨 **作者**", value="克克 KeJC", inline=True)
+        embed.add_field(name="⚙️ **已知指令類別**", value=指令類別, inline=True)
+        embed.add_field(name="🐙 **我的Github連結**",value="[NotKeKe](https://github.com/NotKeKe)", inline=True)
+        embed.add_field(name='🔗 **此專案連結**', value=f'[音汐](https://github.com/NotKeKe/Discord-Bot-YinXi)')
         await ctx.send(embed=embed)
 
     # Commands help
-    @commands.hybrid_command(aliases=['helping'], name="指令幫助", description="Commands help")
-    async def choose(self, ctx:commands.Context):
-        '''為什麼你需要幫助:thinking:'''
-        try:
-            # 第一個 View (讓使用者選擇cog)
-            view = CogSelectView(self.bot)
-            message = await ctx.send("Your option", view=view)
+    # @commands.hybrid_command(aliases=['helping'], name="指令幫助", description="Commands help")
+    # async def choose(self, ctx:commands.Context):
+    #     '''為什麼你需要幫助:thinking:'''
+    #     try:
+    #         # 第一個 View (讓使用者選擇cog)
+    #         view = CogSelectView(self.bot)
+    #         message = await ctx.send("Your option", view=view)
 
-            await view.wait()
+    #         await view.wait()
 
-            # 如果cog name bug的話就return
-            # if view.cogname is None: await ctx.send('你選的東西呢:thinking:', ephemeral=True); return
+    #         # 如果cog name bug的話就return
+    #         # if view.cogname is None: await ctx.send('你選的東西呢:thinking:', ephemeral=True); return
 
-            # 第二個 View (在使用者選擇完cog後 裡面的指令們)
-            view2 = CommandSelectView(self.bot, view.cogname)
-            await message.edit(view=view2)
-        except Exception as exception:
-            await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
+    #         # 第二個 View (在使用者選擇完cog後 裡面的指令們)
+    #         view2 = CommandSelectView(self.bot, view.cogname)
+    #         await message.edit(view=view2)
+    #     except Exception as exception:
+    #         await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
 
     @commands.hybrid_command(name='help_test')
     @app_commands.autocomplete(cog_name=cogName_autocomplete, cmd_name=cmdName_autocomplete)
     async def help_test(self, ctx: commands.Context, cog_name: str = None, cmd_name: str = None):
-        if cog_name == cmd_name == None: return await ctx.send('你到是選一個選項來選阿.')
+        if cog_name == cmd_name == None:
+            eb = create_basic_embed(color=ctx.author.color, 功能='指令幫助')
+            eb.add_field(
+                name='**特點**', 
+                value='''
+                ✅ 與 AI 結合的 Discord Bot
+                ✅ 提供許多實用小功能
+                ''', 
+                inline=False
+            )
+            eb.add_field(
+                name='**使用方式**', 
+                value='''
+                **🌟 AI 功能**
+                > `/chat` —— 與 AI 交流
+                > `/ai頻道` —— 設定 AI 頻道，無需輸入指令即可對話
+                > `/圖片生成` —— 使用 AI 生成圖片 (cogview-3-flash)
+                **🔧 實用工具**
+                > `/世界頻道` —— 與其他設定該功能的使用者交流
+                > `/數數頻道` —— 與伺服器成員接力數字
+                > `[nasa` —— 獲取 NASA 提供的每日圖片
+                > `/qrcode生成器` —— 轉換連結為 QR Code
+                ''', 
+                inline=False
+            )
+            return await ctx.send(embed=eb)
 
         if cmd_name:
             cmd = self.bot.get_command(cmd_name)

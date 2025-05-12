@@ -31,7 +31,8 @@ bot = commands.Bot(command_prefix='[', intents=intents)
 
 # Bot's help default command
 ending_note = "這是 {ctx.bot.user.name} 的commands help\n輸入 {help.clean_prefix}{help.invoked_with} 或是 [helping 來尋求幫助"
-bot.help_command = PrettyHelp(color=discord.Color.blue(), ending_note=ending_note)
+# bot.help_command = PrettyHelp(color=discord.Color.blue(), ending_note=ending_note)
+bot.help_command = None
 
 # 錯誤追蹤
 @bot.event
