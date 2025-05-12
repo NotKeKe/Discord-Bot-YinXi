@@ -131,6 +131,7 @@ class AIChannel(commands.Cog):
                 result = halfToFull(result)
                 item = result.split('。')
                 for i in item:
+                    await asyncio.sleep(random.uniform(0.3, 2))
                     await ctx.send(i)
         except:
             traceback.print_exc()
@@ -417,6 +418,7 @@ class AIChannel(commands.Cog):
                 if len(conversation1) > 10:
                     history = conversation1[:-4]
                     summarized = await thread_pool(summarize, history)
+                    if not summarized: continue
                     channelHistoryData[channelID][:-4] = [{
                         'role': 'user',
                         'content': summarized
@@ -434,6 +436,7 @@ class AIChannel(commands.Cog):
                     if len(conversation2) > 10:
                         history = conversation2[:-4]
                         summarized = await thread_pool(summarize, history)
+                        if not summarized: continue
                         userHistorydata[userID][title][:-4] = [{
                             'role': 'user',
                             'content': summarized
@@ -448,6 +451,7 @@ class AIChannel(commands.Cog):
                 if len(conversation3) > 10:
                     history = conversation3[:-4]
                     summarized = await thread_pool(summarize, history)
+                    if not summarized: continue
                     chatHuman[aID][:-4] = [{
                         'role': 'user',
                         'content': summarized

@@ -119,7 +119,7 @@ class YoutubeNotification(commands.Cog):
     @app_commands.describe(youtuber = '貼上你要通知的youtuber的連結')
     async def ytnotice(self, ctx: commands.Context, youtuber:str = None):
         '''
-        [設定yt通知 youtuber(貼上你要的youtuber的連結) 選擇狀態(開啟代表你要通知，關閉代表你不要通知)
+        [設定yt通知 youtuber(貼上你要的youtuber的連結)
         '''
 
         j = read_json(path)

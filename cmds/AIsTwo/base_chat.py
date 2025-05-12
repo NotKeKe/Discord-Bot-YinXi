@@ -281,7 +281,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
         message = to_user_message(('/no_think ' if not is_enable_thinking and 'qwen3' in model else '') + prompt)
         messages = history + message
 
-        print(messages)
+        # print(messages)
 
         # 確定是否為視覺模型 已決定使否將url加入prompt
         if url:

@@ -75,7 +75,7 @@ class ActivitySelector:
             result = base_openai_chat(f'根據現在的時間，幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，要像Instagram (IG)那種中二文青語氣，最好有比喻，句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力', 'glm-4-flash', temperature=1,
                                     system_prompt=system_prompt.strip(), is_enable_tools=False, max_tokens=30, top_p=0.9)[1]
             result = translate(result)
-            result = halfToFull(result)
+            result = halfToFull(result).replace('。', '\n')
             cls.past_status.append((f'{cur_time} 正在玩 ' + result))
             activity = discord.Game(name=result)
         # Setting `Listening ` status
