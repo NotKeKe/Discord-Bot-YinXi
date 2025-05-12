@@ -161,32 +161,48 @@ class Bot_Info_and_Help(Cog_Extension):
     #     except Exception as exception:
     #         await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
 
-    @commands.hybrid_command(name='help_test')
+    @commands.hybrid_command(name='help', description="指令幫助", aliases=['helping'])
     @app_commands.autocomplete(cog_name=cogName_autocomplete, cmd_name=cmdName_autocomplete)
     async def help_test(self, ctx: commands.Context, cog_name: str = None, cmd_name: str = None):
         if cog_name == cmd_name == None:
             eb = create_basic_embed(color=ctx.author.color, 功能='指令幫助')
             eb.add_field(
                 name='**特點**', 
-                value='''
-                ✅ 與 AI 結合的 Discord Bot
-                ✅ 提供許多實用小功能
-                ''', 
+                value=
+'''
+✅ 與 AI 結合的 Discord Bot
+✅ 提供許多實用小功能
+''', 
                 inline=False
             )
             eb.add_field(
                 name='**使用方式**', 
-                value='''
-                **🌟 AI 功能**
-                > `/chat` —— 與 AI 交流
-                > `/ai頻道` —— 設定 AI 頻道，無需輸入指令即可對話
-                > `/圖片生成` —— 使用 AI 生成圖片 (cogview-3-flash)
-                **🔧 實用工具**
-                > `/世界頻道` —— 與其他設定該功能的使用者交流
-                > `/數數頻道` —— 與伺服器成員接力數字
-                > `[nasa` —— 獲取 NASA 提供的每日圖片
-                > `/qrcode生成器` —— 轉換連結為 QR Code
-                ''', 
+                value=
+'''
+**🌟 AI 功能**
+> `/chat` —— 與 AI 交流
+> `/ai頻道` —— 設定 AI 頻道，**無需輸入指令**即可對話
+> `/圖片生成` —— 使用 **AI 生成圖片** (cogview-3-flash)
+**👥 伺服器功能**
+> `/伺服器資訊` —— 快速取得這個**伺服器的資訊**
+> `/世界頻道` —— 與其他設定該功能的使用者**跨伺服器**交流
+> `/數數頻道` —— 與伺服器成員玩**數字接力**
+> `/取得伺服器預設頻道` —— 如名
+> `/avatar` —— 趁別人不注意的時候取得別人的**頭像**w
+**🔧 實用小功能**
+> `[nasa` —— 獲取 NASA 提供的**每日圖片**
+> `[cat` —— 獲得每日的**貓貓知識**🐱
+> `/qrcode生成器` —— 轉換連結為 **QR Code**
+> `/keep` —— 設定好時間後，會在同個頻道**提醒**你要做什麼!
+> `/設定yt通知` —— 通知你追蹤的**YouTuber**更新了! (如果在youtuber欄位不輸入的話就會取消)
+**🤫 一般人用不到的功能**
+> `/convert_timestamp` 將**timestamp**轉換為可讀的時間
+''', 
+                inline=False
+            )
+            eb.add_field(
+                name='其他:', 
+                value='> 還有更多功能等著你去探索!',
                 inline=False
             )
             return await ctx.send(embed=eb)
