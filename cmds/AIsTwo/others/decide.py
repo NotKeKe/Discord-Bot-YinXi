@@ -30,7 +30,7 @@ def is_talking_with_me(prompt:str, history:list) -> bool:
     Consider your past conversations and the user's personality when deciding whether to respond.
     """
     think, result, *_ = base_zhipu_chat(prompt, 'glm-4-flash', history=history, system_prompt=system_prompt, is_enable_tools=False)
-    print(f'{think=}\n{result=}')
+    # print(f'{think=}\n{result=}')
     if 'false' in (result.lower(), think.lower()): return False
     else: return True
 

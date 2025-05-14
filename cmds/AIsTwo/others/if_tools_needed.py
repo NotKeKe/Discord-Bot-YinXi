@@ -17,7 +17,7 @@ UnixToReadable : convert Unix timestamp into readable format(e.g 1640932875 -> 2
 image_read: to let you know what is the image describing.
 knowledge_search, knowledge_save: to search and save information in a knowledge database. (every arguments must in Chinese)
 
-if there is no need to use the tools, just return "".
+if there is no need to use the tools, just return "false".
 
 '''
 
@@ -99,7 +99,7 @@ def ifTools_ollama(messages: list, delete_func_name: Union[str, list] = None):
         tmp_tools_descrip = delete_func(tmp_tools_descrip, delete_func_name)
     response = ollama.chat.completions.create(
         model='qwen3:4b-q8_0',
-        messages=to_system_message(system_prompt) + messages,
+        messages=to_system_message(system_prompt) + messages[-2:],
         stream=False,
         tool_choice="auto",
         tools=tools_descrip

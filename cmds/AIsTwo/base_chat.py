@@ -236,7 +236,8 @@ def stop_flag_process(ctx:commands.Context):
 # 因為後來要一次修改3 4個base..._chat有點麻煩 所以就整合成同一個 
 def base_openai_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, 
                          system_prompt:str = None, max_tokens:int = None, is_enable_tools:bool = True, 
-                         top_p:int = None, ctx:commands.Context = None, timeout:float = None, userID: str = None, 
+                         top_p:int = None, frequency_penalty:float = None, presence_penalty:float = None,
+                         ctx:commands.Context = None, timeout:float = None, userID: str = None, 
                          url: list = None, is_enable_thinking: bool = True):
     '''
     url: for vision model, or add it into prompt
@@ -286,7 +287,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
         # 確定是否為視覺模型 已決定使否將url加入prompt
         if url:
             vision = is_vision_model(model, client)
-            print(vision)
+            # print(vision)
             if not vision:
                 prompt += f'\n\n url: {url}'
             else:
@@ -322,7 +323,9 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
             temperature=temperature,
             top_p=top_p,
             stream=True,
-            timeout=timeout
+            timeout=timeout, 
+            frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
         )
 
         result = []

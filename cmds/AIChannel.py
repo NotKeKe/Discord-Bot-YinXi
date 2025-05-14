@@ -105,12 +105,12 @@ class AIChannel(commands.Cog):
             except: 
                 summaried = ''
 
-            history = to_user_message(summaried) + await to_history(message.channel)
+            history = to_user_message(summaried) + await to_history(message.channel, 8)
             
             if message.guild:
                 isTalkToMe = await thread_pool(is_talking_with_me, message.content, history)
                 if not isTalkToMe:
-                    if (self.bot.user not in message.mentions and not message.reference and '尖峰' not in message.content): 
+                    if (self.bot.user not in message.mentions and not message.reference and '音汐' not in message.content): 
                         return
                     
             if message.content.startswith('提醒我'): return await ctx.send('我幹嘛提醒你 我是人欸')
@@ -131,8 +131,11 @@ class AIChannel(commands.Cog):
                 result = halfToFull(result)
                 item = result.split('。')
                 for i in item:
-                    await asyncio.sleep(random.uniform(0.3, 2))
+                    if not i: return
                     await ctx.send(i)
+                    item.remove(i)
+                    if not i: return
+                    await asyncio.sleep(random.uniform(0.3, 2))
         except:
             traceback.print_exc()
 
