@@ -40,14 +40,14 @@ class Load(Cog_Extension):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
         
-        await ctx.send(f'嘗試載入「{extension}」')
+        await ctx.send(f'嘗試載入「{extension}」', ephemeral=True)
         try:
             await self.bot.load_extension(f'cmds.{extension}')
         except Exception as e:
-            await ctx.send(f"「{extension}」 未被載入")
+            await ctx.send(f"「{extension}」 未被載入", ephemeral=True)
             print("出錯 when loading: ", e)
             return
-        await ctx.send(f"「{extension}」 已被載入")
+        await ctx.send(f"「{extension}」 已被載入", ephemeral=True)
 
     #unload command
     @commands.hybrid_command()
@@ -58,14 +58,14 @@ class Load(Cog_Extension):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
 
-        await ctx.send(f'嘗試卸載「{extension}」')
+        await ctx.send(f'嘗試卸載「{extension}」', ephemeral=True)
         try:
             await self.bot.unload_extension(f'cmds.{extension}')
         except Exception as e:
-            await ctx.send(f"「{extension}」 未被卸載")
+            await ctx.send(f"「{extension}」 未被卸載", ephemeral=True)
             print("出錯 when unloading: ", e)
             return
-        await ctx.send(f"「{extension}」 已被卸載")
+        await ctx.send(f"「{extension}」 已被卸載", ephemeral=True)
         
     #reload command
     @commands.hybrid_command()
@@ -76,14 +76,14 @@ class Load(Cog_Extension):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
         
-        message1 = await ctx.send(f'嘗試重載「{extension}」')
+        message1 = await ctx.send(f'嘗試重載「{extension}」', ephemeral=True)
         try:
             await self.bot.reload_extension(f'cmds.{extension}')
         except Exception as e:
-            message2 = await ctx.send(f"「{extension}」 未被重載")
+            message2 = await ctx.send(f"「{extension}」 未被重載", ephemeral=True)
             print("出錯 when reloading: ", e)
             return
-        message2 = await ctx.send(f"「{extension}」 已被重載")
+        message2 = await ctx.send(f"「{extension}」 已被重載", ephemeral=True)
 
         await asyncio.sleep(30)
         try:
@@ -100,7 +100,7 @@ class Load(Cog_Extension):
 
         embed=discord.Embed(color=discord.Color.blue(), timestamp= datetime.now())
         embed.set_author(name="Reload All commands", icon_url=embed_link)
-        message = await ctx.send(embed=embed)
+        message = await ctx.send(embed=embed, ephemeral=True)
         for filename in os.listdir('./cmds'):
             try:
                 if filename.endswith('.py'):
@@ -115,12 +115,12 @@ class Load(Cog_Extension):
     @commands.has_permissions(administrator=True)
     async def reloadsync(self, ctx):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
-        if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
+        if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令", ephemeral=True); return
 
-        await ctx.send("trying to reload sync")
+        await ctx.send("trying to reload sync", ephemeral=True)
         try:
             synced_bot = await self.bot.tree.sync()
-            await ctx.send(f'Synced {len(synced_bot)} commands.')
+            await ctx.send(f'Synced {len(synced_bot)} commands.', ephemeral=True)
         except Exception as e:
             print("出錯 when synced: ", e)
 
@@ -128,11 +128,11 @@ class Load(Cog_Extension):
     @commands.hybrid_command(name="reload_all", description = "重載全部指令並sync一遍")
     async def reload_all_sync(self, ctx):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
-        if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
+        if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令", ephemeral=True); return
         
         embed=discord.Embed(color=discord.Color.blue(), timestamp= datetime.now())
         embed.set_author(name="Reload All commands and Sync", icon_url=embed_link)
-        message = await ctx.send(embed=embed)
+        message = await ctx.send(embed=embed, ephemeral=True)
     
         error = []
 
@@ -150,7 +150,7 @@ class Load(Cog_Extension):
         if error: 
             errors = '\n'.join(error)
             ed = discord.Embed(title='錯誤', description=errors, color=discord.Color.blue(), timestamp=datetime.now())
-            await ctx.send(embed=ed)
+            await ctx.send(embed=ed, ephemeral=True)
         
         synced_bot = await self.bot.tree.sync()
         embed.add_field(name=f'Synced {len(synced_bot)} commands.', value=' ')
@@ -161,7 +161,7 @@ class Load(Cog_Extension):
     async def restart(self, ctx):
         if str(ctx.author.id) != KeJCID: return
 
-        message = await ctx.send('嘗試重啟bot...')
+        message = await ctx.send('嘗試重啟bot...', ephemeral=True)
         os.system('pm2 restart DiscordBot')
         await asyncio.sleep(10)
         try: await message.delete()
@@ -171,14 +171,14 @@ class Load(Cog_Extension):
     async def clear(self, ctx):
         if str(ctx.author.id) != KeJCID: return
 
-        await ctx.send('正在清除日誌')
+        await ctx.send('正在清除日誌', ephemeral=True)
         os.system('pm2 flush')
 
     @commands.command(name='系統指令')
     async def system_command(self, ctx, * , command):
         if str(ctx.author.id) != KeJCID: return
         
-        await ctx.send(f'Running command: {command}')
+        await ctx.send(f'Running command: {command}', ephemeral=True)
         try:
             os.system(command)
         except:
