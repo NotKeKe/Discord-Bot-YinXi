@@ -1,5 +1,6 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 import uvicorn
 
 import discord
@@ -16,23 +17,66 @@ import typing
 import os
 import xml.etree.ElementTree as ET
 import asyncio
+import sqlite3
+
+import uvicorn.protocols
 
 from core.classes import Cog_Extension
 from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY
 
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+# Create SQLite database and table
+def init_snoymous_messages_db():
+    conn = sqlite3.connect('./data/anonymous_messages.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            message TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
     return """
+    <!DOCTYPE html>
     <html>
-        <head>
-            <title>Discord Bot</title>
-        </head>
-        <body>
-            <h1>Discord Bot is online.</h1>
-        </body>
+    <head>
+        <title>Discord Bot</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            h1 {
+                color: #333;
+            }
+            button {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Discord Bot</h1>
+        <p>Welcome to the Discord Bot!</p>
+        <a href="/anonymous"><button>匿名留言板</button></a>
+    </body>
     </html>
     """
 
@@ -59,9 +103,50 @@ async def get_log():
     </html>
     '''.format(data=data.replace('\n', '<br>'))
 
+@app.get('/discord', response_class=RedirectResponse)
+async def direct_to_discord_server():
+    return RedirectResponse('https://discord.gg/MhtxWJu')
+
+@app.get('/github', response_class=RedirectResponse)
+async def direct_to_yinxi_github():
+    return RedirectResponse('https://github.com/NotKeKe/Discord-Bot-YinXi')
+
 @app.get('/test', response_class=FileResponse)
 async def test_file_return():
-    return FileResponse('./hii.mp4')
+    return FileResponse('./image/discord_embed_author.png')
+
+@app.get('/anonymous', response_class=HTMLResponse)
+async def anonymous_messages(request: Request):
+    # Retrieve all messages from the database
+    conn = sqlite3.connect('./data/anonymous_messages.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM messages')
+    messages = c.fetchall()
+    conn.close()
+
+    # Convert messages to a list of dictionaries
+    message_list = []
+    for message in messages:
+        message_list.append({
+            "id": message[0],
+            "name": message[1],
+            "message": message[2],
+            "timestamp": message[3]
+        })
+
+    return templates.TemplateResponse("anonymous.html", {"request": request, "messages": message_list})
+
+@app.post('/anonymous', response_class=HTMLResponse)
+async def submit_message(request: Request, name: str = Form(...), message: str = Form(...)):
+    # Insert the new message into the database
+    conn = sqlite3.connect('./data/anonymous_messages.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO messages (name, message) VALUES (?, ?)', (name, message))
+    conn.commit()
+    conn.close()
+
+    # Redirect back to the anonymous message board
+    return RedirectResponse(url='/anonymous', status_code=303)
 
 class select_autocomplete:
     countries = read_json('./cmds/data.json/country.json')
@@ -91,6 +176,7 @@ class ApiCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
+        init_snoymous_messages_db()
         print(f'已載入「{__name__}」')
         try:
             await thread_pool(uvicorn.run, app, host="0.0.0.0", port=3000, log_level="warning")
@@ -314,4 +400,3 @@ class ApiCog(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(ApiCog(bot))
-
