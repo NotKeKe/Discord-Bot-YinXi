@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import uvicorn
@@ -22,7 +22,7 @@ import sqlite3
 import uvicorn.protocols
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime
+from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime, BASE_DIR
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY
 
 app = FastAPI()
@@ -37,7 +37,7 @@ def init_snoymous_messages_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             message TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            timestamp DATETIME DEFAULT (datetime('now', 'localtime'))
         )
     ''')
     conn.commit()
@@ -102,6 +102,13 @@ async def get_log():
         </body>
     </html>
     '''.format(data=data.replace('\n', '<br>'))
+
+@app.get('/api/image/')
+async def get_image_from_path(path: str = Query(..., min_length=5)):
+    if os.path.isfile(path) and path.startswith(BASE_DIR):
+        return FileResponse(path)
+    else:
+        raise HTTPException(404, f'檔案不存在 ({path=}) (使用絕對路徑試試看)')
 
 @app.get('/discord', response_class=RedirectResponse)
 async def direct_to_discord_server():
