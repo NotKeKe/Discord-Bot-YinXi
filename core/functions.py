@@ -6,7 +6,7 @@ import functools
 from typing import Optional, Any
 from deep_translator import GoogleTranslator
 import aiohttp
-import re
+import os
 import traceback
 
 import os
@@ -14,7 +14,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-embed_link = os.getenv('embed_default_link')
+# embed_link = os.getenv('embed_default_link')
+yinxi_base_url = os.getenv('yinxi_base_url') # 這是我網域的基礎連結 https://yinxi.keketw.dpdns.org
+def get_embed_link() -> str:
+    # 取得自己的圖片，並使用連結獲得
+    path = f'./image/self.png'
+    absolute_path = os.path.abspath(path)
+
+    base_url = f'{yinxi_base_url}/api/image/?path='
+    base_url += absolute_path
+    return base_url
+
+BASE_DIR = os.path.abspath(os.path.dirname(__name__))
+embed_link = get_embed_link()
 KeJCID = os.getenv('KeJC_ID')
 TempHypixelApiKey = os.getenv('tmp_hypixel_api_key')
 NewsApiKEY = os.getenv("news_api_KEY")
@@ -118,12 +130,23 @@ def math_round(x: float, ndigits: int = 0) -> int:
     if x >= 0: return int(x * factor + 0.5) / factor
     else: return int(x * factor - 0.5) / factor
 
-async def download_image(url: str, filename: str):
+async def download_image(url: str, filename: str = None, path: str = None):
+    """下載圖片
+
+    Args:
+        url (str): 圖片連結
+        filename (str, optional): 預設下載到`./cmds/data.json/{filename}`，filename必須包括副檔名，跟path二選一輸入. Defaults to None.
+        path (str, optional): 下載到`{path}`，跟filename二選一輸入. Defaults to None.
+    """    
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status == 200:
-                with open(f'./cmds/data.json/{filename}', "wb") as f:
+                with open(f'./cmds/data.json/{filename}' if not path else path, "wb") as f:
                     f.write(await response.read())
+
+def to_abspath(path: str) -> str:
+    '''將相對路徑轉為絕對路徑'''
+    return os.path.abspath(path)
 
 settings = read_json('setting.json')
 admins = read_json('./cmds/data.json/admins.json')['admins']
