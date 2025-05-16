@@ -15,13 +15,10 @@ import asyncio
 import traceback
 from dotenv import load_dotenv
 
-from core.functions import read_json, thread_pool
+from core.functions import read_json, thread_pool, embed_link, KeJCID
 
 # get env
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-KeJC_ID = int(os.getenv('KeJC_ID'))
-embed_link = os.getenv('embed_default_link')
 
 with open("setting.json", 'r', encoding='utf8') as jfile:
     jdata = json.load(jfile)
@@ -46,6 +43,8 @@ class PersistentView(discord.ui.View):
     async def grey(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message('This is grey.', ephemeral=True)
 
+def promision_check(interaction: discord.Interaction,):
+    return str(interaction.user.id) == KeJCID
 
 class TestTemp(Cog_Extension):
     def __init__(self, bot):
@@ -65,7 +64,7 @@ class TestTemp(Cog_Extension):
     async def embedtest(self, ctx):
         try:
             embed=discord.Embed(title="title", description="description", color=0xff0000, timestamp=datetime.now())
-            embed.set_author(name="name", url="https://discord.gg/MhtxWJu", icon_url="https://cdn.discordapp.com/attachments/772296176451846174/1315200328479674438/image.png?ex=67568b41&is=675539c1&hm=0552942becb85c24176c25059a96f6b5d1f9da33b64fa01e6328711f3e058b81&")
+            embed.set_author(name="name", url="https://discord.gg/MhtxWJu", icon_url=embed_link)
             embed.set_thumbnail(url="https://cdn.discordapp.com/avatars/584213384409382953/4438fe5d2f91ddd873407e759ff23116.png?size=512")
             embed.add_field(name="field", value="- value", inline=False)
             embed.set_footer(text="footer")
@@ -95,7 +94,7 @@ class TestTemp(Cog_Extension):
             
     @commands.command()
     async def systemchannel(self, ctx):
-        if ctx.author.id != KeJC_ID: return
+        if str(ctx.author.id) != KeJCID: return
 
         channel = ctx.guild.system_channel
         if channel is None:
@@ -181,7 +180,7 @@ class TestTemp(Cog_Extension):
 
     @commands.command()
     async def cmd(self, ctx):
-        if str(ctx.author.id) != KeJC_ID: return
+        if str(ctx.author.id) != KeJCID: return
         print('hello\n')
 
     @commands.command()
@@ -198,10 +197,10 @@ class TestTemp(Cog_Extension):
         channels = [channel.name for channel in guild.channels if str(channel.type) == 'text']
         await ctx.send(', '.join(channels))
 
-    @commands.command()
+    @commands.hybrid_command()
+    @app_commands.check(promision_check)
     async def test(self, ctx: commands.Context):
-        async for m in ctx.channel.history(limit=5):
-            await ctx.send(m.content)
+        ...
 
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()
