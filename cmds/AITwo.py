@@ -38,19 +38,26 @@ class AITwo(commands.Cog):
 
     @commands.hybrid_command(name='chat', description='Chat with AI model')
     @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
-    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'glm-4-flash', 歷史紀錄:str = None, temperature:float = None, 想法顯示:bool = False):
+    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'glm-4-flash', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment):
         async with ctx.typing():
             try:
                 HistoryData.initdata()
                 history = get_history(ctx, 歷史紀錄)
+                
+                if 文字檔案:
+                    try:
+                        f_content = (await 文字檔案.read()).decode('utf-8')
+                    except:
+                        await ctx.send('無法讀取文字檔案')
 
                 try:
                     # func = choice_model(model)
-                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, temperature, history)
+                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content)
                 except: 
                     traceback.print_exc()
+                    await ctx.send(f'您使用的model({model})出錯，因此此次用glm-4-flash代替，並且無法閱讀檔案')
                     model = 'glm-4-flash'
-                    think, result, *_ = await thread_pool(base_zhipu_chat, 輸入文字, model, temperature, history)
+                    think, result, *_ = await thread_pool(base_zhipu_chat, 輸入文字, model, history=history)
 
                 embed = create_result_embed(ctx, result, model)
                 await ctx.send(embed=embed)

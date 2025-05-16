@@ -1,3 +1,4 @@
+import discord
 from openai import OpenAI
 from ollama import Client
 from zhipuai import ZhipuAI
@@ -238,7 +239,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                          system_prompt:str = None, max_tokens:int = None, is_enable_tools:bool = True, 
                          top_p:int = None, frequency_penalty:float = None, presence_penalty:float = None,
                          ctx:commands.Context = None, timeout:float = None, userID: str = None, 
-                         url: list = None, is_enable_thinking: bool = True):
+                         url: list = None, is_enable_thinking: bool = True, text_file_content: discord.Attachment = None):
     '''
     url: for vision model, or add it into prompt
     '''
@@ -279,7 +280,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
 
         from cmds.AIsTwo.others.if_tools_needed import ifTools_zhipu, ifTools_ollama
         
-        message = to_user_message(('/no_think ' if not is_enable_thinking and 'qwen3' in model else '') + prompt)
+        message = to_user_message(('/no_think ' if not is_enable_thinking and 'qwen3' in model else '') + prompt + (f'\n\n以下為使用者提供的文字檔案:\n{text_file_content}' if text_file_content else ''))
         messages = history + message
 
         # print(messages)
