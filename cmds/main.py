@@ -1,16 +1,20 @@
 import discord
-from discord.ext import commands, tasks
+from discord import app_commands
+from discord.ext import commands
 from discord.utils import get
 import json
-import time
-from datetime import datetime, timedelta
+from datetime import datetime
 import random
-
 import os
 from dotenv import load_dotenv
+import uuid
+import asyncio
+
+from cmds.AIsTwo.others.func import image_read
+from cmds.AIsTwo.utils import image_url_to_base64
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable
+from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow
 
 # get env
 load_dotenv()
@@ -168,9 +172,39 @@ class Main(Cog_Extension):
             readable = UnixToReadable(unix_second)
             await ctx.send(readable)
 
+    @commands.hybrid_command(name='高中生總分計算機', description='This function is for Taiwan high school students to calculate their total score')
+    @app_commands.describe(image='上傳一張圖片', prompt='你想讓AI幫你什麼(僅在你有上傳圖片時，會使用此欄)')
+    async def high_school_totalScore_calculate(self, ctx: commands.Context, 國文: float = 0.0, 英文: float = 0.0, 數學: float = 0.0, 化學: float = 0.0, 生物: float = 0.0, 物理: float = 0.0, 歷史: float = 0.0, 地理: float = 0.0, 公民: float = 0.0, 體育: float = 0.0, image: discord.Attachment = None, prompt: str = None):
+        async with ctx.typing():
+            eb = create_basic_embed(功能='總分計算機', color=ctx.author.color, time=False)
+
+            if not image:
+                weight_total = (國文 + 數學 + 英文) * 4 + (化學 + 生物 + 物理 + 歷史 + 地理 + 公民 + 體育) * 2
+                total = 國文 + 數學 + 英文 + 化學 + 生物 + 物理 + 歷史 + 地理 + 公民 + 體育
+                eb.add_field(name='加權總分', value=f'`{weight_total}`')
+                eb.add_field(name='未加權總分', value=f'`{total}`')
+                await ctx.send(embed=eb)
+            else:
+                if not prompt: return await ctx.send('請輸入你要讓AI幹嘛的`prompt`', ephemeral=True)
+                os.makedirs('./data/upload', exist_ok=True)
+                path = f'./data/upload/{ctx.author.id}_{UnixNow()}_{uuid.uuid4()}.jpg'
+                absolute_path = os.path.abspath(path)
+                final_url = f'https://yinxi.keketw.dpdns.org/api/image/?path={absolute_path}'
+                await ctx.send(final_url)
+
+                await download_image(image.url, path=path)
+
+                result = await thread_pool(image_read, prompt, final_url)
+                eb.add_field(name='**AI response**', value=result)
+                eb.set_footer(text='Powered by glm-4v-flash')
+                await ctx.send(embed=eb)
+
+                await asyncio.sleep(300)
+                os.remove(path)
+
     @commands.hybrid_command(name = "random_number", description = "從範圍中隨機選取整數")
-    @discord.app_commands.describe(range1 = '輸入你要隨機取數的起始數字', range2 = '輸入你要隨機取數的終止數字', times = "你要在這個範圍內隨機選出多少數字 (未輸入則預設為1)")
-    async def random_number(self, ctx, range1: int, range2: int, times:int = None):
+    @app_commands.describe(range1 = '輸入你要隨機取數的起始數字', range2 = '輸入你要隨機取數的終止數字', times = "你要在這個範圍內隨機選出多少數字 (未輸入則預設為1)")
+    async def random_number(self, ctx: commands.Context, range1: int, range2: int, times:int = None):
         async with ctx.typing():
             if times is None:
                 times = 1
