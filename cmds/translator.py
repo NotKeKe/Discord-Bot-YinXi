@@ -14,13 +14,10 @@ class Translator(Cog_Extension):
 
     @commands.hybrid_command(name='翻譯', description='Translate some text')
     @app_commands.describe(content='輸入你要翻譯的文字 Enter the text you wanna translate', 
-                            target='選擇目標語言（你希望翻譯成哪種語言） Select the language you want to translate into'  
+                            target='選擇目標語言（你希望翻譯成哪種語言，預設為zh-TW） Select the language you want to translate into'  
                             )
-    async def translate(self, ctx, content: str, target:str = None):
+    async def translate(self, ctx, content: str, target:str = 'zh-TW'):
         async with ctx.typing():
-            if target is None:
-                target = 'zh-TW'
-
             think, translated = await thread_pool(translate, content, target)
             
             embed = create_basic_embed(功能='翻譯', color=ctx.author.color)
