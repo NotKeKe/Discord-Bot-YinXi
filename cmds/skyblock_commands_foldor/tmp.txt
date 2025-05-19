@@ -1,0 +1,64 @@
+{
+    "data_update_time": "2025/02/03 00:17:23",
+    "sb_year": "400",
+    "Jacob's Farming Contest": {
+        "Start": "2080/03/07 16:32:23",
+        "End": "2080/03/07 16:52:23",
+        "Time Left": "40m 12s",
+        "Skyblock Date": "17/10/4294"
+    },
+    "Dark Auction": {
+        "Start": "2080/03/07 17:12:23",
+        "End": "2080/03/07 17:12:57",
+        "Time Left": "20m 12s",
+        "Skyblock Date": "19/10/4294"
+    },
+    "Election Start": {
+        "Start": "2080/03/08 18:32:23",
+        "End": "2080/03/08 18:32:23",
+        "Time Left": "40m 12s",
+        "Skyblock Date": "2/1/4295"
+    },
+    "Special Mayor Election": {
+        "Start": "2080/03/08 18:32:23",
+        "End": "2080/03/12 15:32:23",
+        "Time Left": "40m 12s",
+        "Skyblock Date": "2/1/4295"
+    },
+    "Spooky Festival": {
+        "Start": "2080/03/09 15:52:23",
+        "End": "2080/03/09 16:52:23",
+        "Time Left": "0m 12s",
+        "Skyblock Date": "4/3/4295"
+    },
+    "Traveling Zoo": {
+        "Start": "2080/03/12 17:12:23",
+        "End": "2080/03/12 18:12:23",
+        "Time Left": "20m 12s",
+        "Skyblock Date": "7/10/4295"
+    },
+    "Jerry's Workshop": {
+        "Start": "2080/03/10 23:52:23",
+        "End": "2080/03/11 10:12:23",
+        "Time Left": "0m 12s",
+        "Skyblock Date": "7/6/4295"
+    },
+    "Season Of Jerry": {
+        "Start": "2080/03/11 07:32:23",
+        "End": "2080/03/11 08:32:23",
+        "Time Left": "40m 12s",
+        "Skyblock Date": "30/6/4295"
+    },
+    "New Year Cake": {
+        "Start": "2080/03/11 09:12:23",
+        "End": "2080/03/11 10:12:23",
+        "Time Left": "20m 12s",
+        "Skyblock Date": "4/7/4295"
+    },
+    "Election Over": {
+        "Start": "2080/03/12 15:32:23",
+        "End": "2080/03/12 15:32:23",
+        "Time Left": "40m 12s",
+        "Skyblock Date": "2/10/4295"
+    }
+}

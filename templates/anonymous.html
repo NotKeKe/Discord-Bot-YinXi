@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匿名留言板</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        :root {
+            --primary-color: #5DADE2; /* 主題色 - 柔和淺藍 */
+            --primary-color-dark: #3498DB; /* 主題色深色調，用於漸變或懸停 */
+            --primary-color-light: #A9CCE3; /* 主題色淺色調 */
+            --secondary-color: #F4F8FA; /* 背景色 - 非常淺的藍灰色 */
+            --text-color: #34495E; /* 主要文字顏色 - 深藍灰 */
+            --light-text-color: #7F8C8D; /* 次要文字顏色 - 淺灰藍 */
+            --card-bg: #FFFFFF; /* 卡片背景 - 白色 */
+            --border-color: #D6EAF8; /* 邊框顏色 - 淺藍 */
+            --success-color: #2ECC71; /* 成功色，可根據需求調整 */
+            --error-color: #E74C3C; /* 錯誤色，可根據需求調整 */
+            --shadow-color: rgba(93, 173, 226, 0.15); /* 陰影顏色 - 帶有淺藍調 */
+            --font-family: 'Noto Sans TC', Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--secondary-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        h1 {
+            color: var(--primary-color-dark); /* 標題使用深一點的藍色增加對比 */
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        form {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            margin-bottom: 40px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--light-text-color);
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: #FBFCFC; /* 輸入框微調背景 */
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(93, 173, 226, 0.25);
+            outline: none;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        input[type="submit"],
+        .show-more-btn { /* Style for Show More button */
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-color-dark));
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 8px rgba(93, 173, 226, 0.4);
+            text-align: center; /* Ensure text is centered for button tag */
+        }
+
+        input[type="submit"]:hover,
+        .show-more-btn:hover {
+            background: linear-gradient(45deg, var(--primary-color-dark), #2E86C1 ); /* 懸停時顏色加深 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(93, 173, 226, 0.5);
+        }
+
+        input[type="submit"]:active,
+        .show-more-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(93, 173, 226, 0.4);
+        }
+
+        .show-more-btn { /* Specific adjustments for show more button */
+            margin-top: 20px; /* Add some space above it */
+            background: var(--primary-color-light); /* Lighter background for distinction */
+            color: var(--primary-color-dark);
+            box-shadow: 0 2px 8px rgba(93, 173, 226, 0.2);
+        }
+        .show-more-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+
+        h2 {
+            color: var(--text-color);
+            text-align: left;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            animation: fadeIn 0.8s ease-out 0.4s backwards;
+        }
+
+        .message-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .message {
+            background-color: var(--card-bg);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            border-left: 5px solid var(--primary-color);
+            /* Animation will be controlled by JS for initially hidden items */
+            /* For initially visible items, CSS animation can still apply */
+            opacity: 0;
+            transform: translateY(20px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .message.visible { /* Class to make messages visible and trigger animation */
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+
+        /*
+        This CSS animation delay part from the template loop will apply
+        to messages that are initially visible. For messages shown by
+        "Show More", we'll trigger animation via JS.
+        */
+        {% for message in messages %}
+        .message:nth-child({{ loop.index }}) {
+            /* animation-delay: {{ loop.index * 0.1 }}s; */ /* We'll manage delay or just animate on show */
+        }
+        {% endfor %}
+
+        .message-hidden {
+            display: none !important;
+        }
+
+
+        .message:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 5px 15px rgba(93, 173, 226, 0.25);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .message-name {
+            font-weight: bold;
+            color: var(--primary-color-dark); /* 留言者名稱顏色調整 */
+            font-size: 1.1em;
+        }
+
+        .message-timestamp {
+            font-size: 0.85em;
+            color: var(--light-text-color);
+        }
+
+        .message-content {
+            color: var(--text-color);
+            word-wrap: break-word;
+        }
+
+        /* 動畫 Keyframes */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            h1 { font-size: 2em; }
+            form { padding: 20px; }
+            input[type="text"], textarea, input[type="submit"], .show-more-btn { font-size: 0.95em; }
+            .message { padding: 15px; }
+            .message-name { font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>匿名留言板 <span style="font-size: 0.6em; color: var(--primary-color); display: block; margin-top: 5px;">- 偷偷留下你想說的話 -</span></h1>
+        <form action="/anonymous" method="post">
+            <label for="name">你的大名:</label>
+            <input type="text" id="name" name="name" placeholder="為你自己取的好看的名字~" required>
+
+            <label for="message">想說的話:</label>
+            <textarea id="message" name="message" placeholder="乘著微風，寫下你的心情～" required></textarea>
+
+            <input type="submit" value="送出留言">
+        </form>
+
+        <h2>蔚藍回音</h2>
+        <div class="message-list">
+            {% if messages %}
+                {% for message in messages | reverse %}
+                    <div class="message"> {# Initially all messages have this class #}
+                        <div class="message-header">
+                            <span class="message-name">{{ message.name }}</span>
+                            <span class="message-timestamp">{{ message.timestamp }}</span>
+                        </div>
+                        <p class="message-content">{{ message.message }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; color: var(--light-text-color); animation: fadeIn 1s ease;">天空很藍，但還沒有回音，期待你的第一句話！</p>
+            {% endif %}
+        </div>
+        {% if messages and messages|length > 5 %} {# Arbitrary initial limit, adjust as needed #}
+            <button class="show-more-btn" id="showMoreBtn">顯示更多回音</button>
+        {% endif %}
+    </div>
+
+    <script>
+        // Function to apply animation to a newly shown message
+        function animateMessageIn(messageElement) {
+            // Ensure it's ready for animation
+            messageElement.style.opacity = '0';
+            messageElement.style.transform = 'translateY(20px)';
+            // Force reflow to restart animation if it was already applied
+            void messageElement.offsetWidth;
+            // Add class that triggers animation
+            messageElement.classList.add('visible');
+            // Optional: if you want a slight delay for batch items
+            // setTimeout(() => messageElement.classList.add('visible'), delay);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const messagesContainer = document.querySelector('.message-list');
+            if (!messagesContainer) return;
+
+            const allMessages = Array.from(messagesContainer.querySelectorAll('.message'));
+            const showMoreBtn = document.getElementById('showMoreBtn');
+
+            const initialMessagesToShow = 5; // Number of messages to show initially
+            const messagesPerClick = 5;   // Number of messages to show per click
+            let currentlyShownCount = 0;
+
+            function updateVisibleMessages() {
+                let newlyShownCount = 0;
+                for (let i = 0; i < allMessages.length; i++) {
+                    if (i < currentlyShownCount) {
+                        if (allMessages[i].classList.contains('message-hidden')) {
+                            allMessages[i].classList.remove('message-hidden');
+                            animateMessageIn(allMessages[i]);
+                            newlyShownCount++;
+                        } else if (!allMessages[i].classList.contains('visible') && i < initialMessagesToShow) {
+                            // For the very first batch, ensure they are animated
+                             animateMessageIn(allMessages[i]);
+                        }
+                    } else {
+                        allMessages[i].classList.add('message-hidden');
+                    }
+                }
+
+                if (showMoreBtn) {
+                    if (currentlyShownCount >= allMessages.length) {
+                        showMoreBtn.style.display = 'none'; // Hide button if all shown
+                    } else {
+                        showMoreBtn.style.display = 'block';
+                    }
+                }
+            }
+
+            if (allMessages.length > 0) {
+                currentlyShownCount = initialMessagesToShow;
+                updateVisibleMessages(); // Initial display
+            } else if (showMoreBtn) {
+                showMoreBtn.style.display = 'none'; // No messages, no button
+            }
+
+
+            if (showMoreBtn) {
+                showMoreBtn.addEventListener('click', function() {
+                    currentlyShownCount += messagesPerClick;
+                    // Ensure we don't try to show more than available
+                    currentlyShownCount = Math.min(currentlyShownCount, allMessages.length);
+                    updateVisibleMessages();
+                });
+            }
+
+            // This function is for when a new message is added via the form (if you implement AJAX later)
+            // For now, it's not directly used by the "Show More" but is good to keep.
+            function addNewMessageAnimation(newMessageElement) {
+                // This function might need to be adapted if you add messages dynamically
+                // For now, our 'animateMessageIn' handles the "show more" case
+                animateMessageIn(newMessageElement);
+            }
+        });
+    </script>
+</body>
+</html>

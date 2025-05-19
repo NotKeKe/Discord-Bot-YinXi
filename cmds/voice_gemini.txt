@@ -1,0 +1,225 @@
+import discord
+from discord.ext import commands
+import yt_dlp
+import asyncio
+
+class MusicCog(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.song_queue = {}
+        self.current_song_info = {}  # 儲存當前歌曲資訊
+        self.looping = False         # 單曲循環
+        self.queue_looping = False   # 列表循環
+        self.ytdlp_format = 'bestaudio/best'
+        self.ydl_opts = {
+            'format': self.ytdlp_format,  # 選擇最佳音頻格式
+            'noplaylist': True,          # 只處理單個視頻
+            'quiet': True,               # 靜音模式，避免大量輸出
+            'simulate': True,            # 模擬下載，而不真正下載
+            'forceurl': True
+        }
+        self.ffmpeg_options = {
+            'options': '-vn'
+        }
+
+    def _get_voice_client(self, ctx):
+        return discord.utils.get(self.bot.voice_clients, guild=ctx.guild)
+
+    def _play_next_song(self, ctx):
+        if ctx.guild.id not in self.song_queue:
+            return
+
+        if self.looping:
+            song = self.current_song_info[ctx.guild.id]
+            asyncio.run_coroutine_threadsafe(self._play_song(ctx, song), self.bot.loop) # 使用協程安全地播放
+            return
+
+        if self.song_queue[ctx.guild.id]:
+            if self.queue_looping:
+                song = self.song_queue[ctx.guild.id].pop(0)
+                self.song_queue[ctx.guild.id].append(song) # 移到隊列末尾
+            else:
+                song = self.song_queue[ctx.guild.id].pop(0)
+            asyncio.run_coroutine_threadsafe(self._play_song(ctx, song), self.bot.loop) # 使用協程安全地播放
+        else:
+            asyncio.run_coroutine_threadsafe(self._disconnect_voice(ctx), self.bot.loop)
+
+    async def _play_song(self, ctx, song):
+        """實際播放歌曲"""
+        try:
+            vc = self._get_voice_client(ctx)
+            if vc and vc.is_connected():
+                # 將 yt-dlp 搜尋結果儲存到 current_song_info
+                self.current_song_info[ctx.guild.id] = song
+                vc.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(song['url'], **self.ffmpeg_options)), after=lambda e: self._play_next_song(ctx))
+                vc.source.volume = 0.5  # 預設音量
+                await ctx.send(f"現在播放: {song['title']}")
+            else:
+                await ctx.send("我沒有連接到語音頻道")
+        except Exception as e:
+            print(f"播放歌曲時發生錯誤: {e}")
+            await ctx.send(f"播放歌曲時發生錯誤: {e}")
+
+    async def _disconnect_voice(self, ctx):
+        """斷開語音連線並清理隊列"""
+        vc = self._get_voice_client(ctx)
+        if vc:
+            await vc.disconnect()
+            if ctx.guild.id in self.song_queue:
+                del self.song_queue[ctx.guild.id]
+            if ctx.guild.id in self.current_song_info:
+                del self.current_song_info[ctx.guild.id]
+            self.looping = False
+            self.queue_looping = False
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f'已載入「{__name__}」')
+
+    @commands.command(name="join", help="讓機器人加入語音頻道")
+    async def join(self, ctx):
+        if ctx.author.voice is None:
+            await ctx.send("你必須先加入語音頻道")
+        else:
+            channel = ctx.author.voice.channel
+            vc = self._get_voice_client(ctx)
+            if vc:
+                await vc.move_to(channel)
+            else:
+                await channel.connect()
+            await ctx.send(f"已加入 {channel}")
+
+    @commands.command(name="leave", help="讓機器人離開語音頻道")
+    async def leave(self, ctx):
+        await self._disconnect_voice(ctx)
+        await ctx.send("已離開語音頻道")
+
+    @commands.command(name="play", help="播放音樂")
+    async def play(self, ctx, *, url):
+        try:
+            voice_channel = ctx.author.voice.channel
+        except AttributeError:
+            return await ctx.send("請先加入語音頻道")
+
+        vc = self._get_voice_client(ctx)
+        if not vc or not vc.is_connected():
+            await voice_channel.connect()
+            vc = self._get_voice_client(ctx)
+
+        try:
+            with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                if 'entries' in info:
+                    info = info['entries'][0]  # 如果是播放列表，只取第一個
+                song_data = {
+                    'url': info['url'],
+                    'title': info['title'],
+                    'thumbnail': info.get('thumbnail'),
+                    'duration': info.get('duration'),
+                }
+                if ctx.guild.id not in self.song_queue:
+                    self.song_queue[ctx.guild.id] = []
+
+                self.song_queue[ctx.guild.id].append(song_data)
+                await ctx.send(f"已將 {song_data['title']} 加入隊列")
+
+                if not vc.is_playing():
+                    self._play_next_song(ctx)
+
+        except Exception as e:
+            print(f"播放時發生錯誤: {e}")
+            await ctx.send(f"播放時發生錯誤: {e}")
+
+    @commands.command(name="pause", help="暫停播放")
+    async def pause(self, ctx):
+        vc = self._get_voice_client(ctx)
+        if vc and vc.is_playing():
+            vc.pause()
+            await ctx.send("已暫停")
+
+    @commands.command(name="resume", help="恢復播放")
+    async def resume(self, ctx):
+        vc = self._get_voice_client(ctx)
+        if vc and vc.is_paused():
+            vc.resume()
+            await ctx.send("已恢復播放")
+
+    @commands.command(name="skip", help="跳過目前歌曲")
+    async def skip(self, ctx):
+        vc = self._get_voice_client(ctx)
+        if vc and vc.is_playing():
+            vc.stop()
+            await ctx.send("已跳過")
+
+    @commands.command(name="queue", help="顯示歌曲隊列")
+    async def queue(self, ctx):
+        if ctx.guild.id not in self.song_queue or not self.song_queue[ctx.guild.id]:
+            return await ctx.send("隊列是空的")
+
+        queue_list = ""
+        for i, song in enumerate(self.song_queue[ctx.guild.id]):
+            queue_list += f"{i+1}. {song['title']}\n"
+
+        embed = discord.Embed(title="歌曲隊列", description=queue_list)
+        await ctx.send(embed=embed)
+
+    @commands.command(name="nowplaying", aliases=["np"], help="顯示目前播放的歌曲")
+    async def nowplaying(self, ctx):
+        if ctx.guild.id not in self.current_song_info or not self.current_song_info[ctx.guild.id]:
+            return await ctx.send("目前沒有播放任何歌曲")
+
+        song = self.current_song_info[ctx.guild.id]
+        embed = discord.Embed(title="現在播放", description=song['title'])
+        if song.get('thumbnail'):
+            embed.set_thumbnail(url=song['thumbnail'])
+        if song.get('duration'):
+            embed.add_field(name="時長", value=str(song['duration']) + "秒", inline=False)
+        await ctx.send(embed=embed)
+
+    @commands.command(name="loop", help="單曲循環")
+    async def loop(self, ctx):
+        self.looping = not self.looping
+        if self.looping:
+            await ctx.send("已啟用單曲循環")
+        else:
+            await ctx.send("已關閉單曲循環")
+
+    @commands.command(name="queueloop", help="列表循環")
+    async def queueloop(self, ctx):
+        self.queue_looping = not self.queue_looping
+        if self.queue_looping:
+            await ctx.send("已啟用列表循環")
+        else:
+            await ctx.send("已關閉列表循環")
+
+    @commands.command(name="volume", help="調整音量 (0-100)")
+    async def volume(self, ctx, volume: int):
+        vc = self._get_voice_client(ctx)
+        if vc:
+            vc.source.volume = volume / 100
+            await ctx.send(f"音量已調整為 {volume}%")
+
+    @commands.command(name="prev", help="播放上一首歌")
+    async def prev(self, ctx):
+        if ctx.guild.id not in self.song_queue:
+            return await ctx.send("沒有播放歷史")
+
+        if not self.song_queue[ctx.guild.id]:
+            return await ctx.send("沒有播放歷史")
+
+        # 將目前歌曲加回隊列最前面
+        if ctx.guild.id in self.current_song_info and self.current_song_info[ctx.guild.id]:
+            self.song_queue[ctx.guild.id].insert(0, self.current_song_info[ctx.guild.id])
+
+        # 獲取並播放上一首歌
+        last_song = self.song_queue[ctx.guild.id].pop()
+        self.song_queue[ctx.guild.id].insert(0, last_song) # 重新將上一首歌加回隊列, 確保順序正確
+        vc = self._get_voice_client(ctx)
+        if vc and vc.is_playing():
+            vc.stop() # 停止目前播放
+        self._play_next_song(ctx) # 播放上一首歌
+        await ctx.send("正在播放上一首")
+
+
+async def setup(bot):
+    await bot.add_cog(MusicCog(bot))
