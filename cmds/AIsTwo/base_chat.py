@@ -14,6 +14,7 @@ openrouter_KEY = os.getenv('openrouter_KEY')
 zhipu_KEY = os.getenv('zhipuAI_KEY')
 hugging_KEY = os.getenv('huggingFace_KEY')
 gemini_KEY = os.getenv("gemini_KEY")
+mistral_KEY = os.getenv('mistral_KEY')
 
 zhipu_moduels = [
     'glm-4-flash',
@@ -49,12 +50,16 @@ base_url_options = {
         'api_key': zhipu_KEY
     },
     'ollama': {
-        'base_url': 'http://192.168.31.35:11434/v1',
+        'base_url': 'http://192.168.31.199:11434/v1',
         'api_key': 'ollama'
     },
     'gemini': {
         'base_url': "https://generativelanguage.googleapis.com/v1beta/openai/",
         'api_key': gemini_KEY
+    },
+    'mistral': {
+        'base_url': 'https://api.mistral.ai/v1',
+        'api_key': mistral_KEY
     }
 }
 
@@ -73,17 +78,22 @@ true_zhipu = ZhipuAI(
 )
 
 true_ollama = Client(
-    host='http://192.168.31.35:11434'
+    host='http://192.168.31.199:11434'
 )
 
 ollama = OpenAI(
-    base_url='http://192.168.31.35:11434/v1',
+    base_url='http://192.168.31.199:11434/v1',
     api_key='ollama'
 )
 
 gemini = OpenAI(
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
     api_key=gemini_KEY
+)
+
+mistral = OpenAI(
+    api_key=mistral_KEY,
+    base_url='https://api.mistral.ai/v1'
 )
 
 # 最多重試3次，每次間隔2秒
@@ -124,6 +134,13 @@ except: openrouter_moduels = [
     'cognitivecomputations/dolphin3.0-mistral-24b:free',
 
     'open-r1/olympiccoder-32b:free',
+]
+
+mistral_models = [
+    'mistral-small-latest',
+    'pixtral-12b-2409',
+    'open-mistral-nemo',
+    'open-codestral-mamba'
 ]
 
 default_system_prompt = '''
@@ -239,7 +256,8 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                          system_prompt:str = None, max_tokens:int = None, is_enable_tools:bool = True, 
                          top_p:int = None, frequency_penalty:float = None, presence_penalty:float = None,
                          ctx:commands.Context = None, timeout:float = None, userID: str = None, 
-                         url: list = None, is_enable_thinking: bool = True, text_file_content: discord.Attachment = None):
+                         url: list = None, is_enable_thinking: bool = True, text_file_content: discord.Attachment = None,
+                         no_extra_system_prompt: bool = False):
     '''
     url: for vision model, or add it into prompt
     '''
@@ -264,13 +282,14 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                 preference = Preference.get_preferences(userID)
                 info = UserInfo(userID).get_info()
                 system = system_prompt.format(preference=preference, personality=personality, info=info)
-        system = to_system_message(system_prompt + other_calls_prompts)
+        system = to_system_message(system_prompt + (other_calls_prompts if not no_extra_system_prompt else ''))
         
         # 選擇base url
-        if model in zhipu_moduels: key = base_url_options['zhipu']['api_key']; base_url = base_url_options['zhipu']['base_url']
+        if model in zhipu_moduels: key = base_url_options['zhipu']['api_key']; base_url = base_url_options['zhipu']['base_url']        
         elif model in ollama_modules: key = base_url_options['ollama']['api_key']; base_url = base_url_options['ollama']['base_url']
         elif model in openrouter_moduels: key = base_url_options['openrouter']['api_key']; base_url = base_url_options['openrouter']['base_url']
-        elif model in gemini_moduels: key = base_url_options['gemini']['api_key']; base_url = base_url_options['gemini']['base_url']
+        elif model in gemini_moduels: key = base_url_options['gemini']['api_key']; base_url = base_url_options['gemini']['base_url']        
+        elif model in mistral_models: key = base_url_options['mistral']['api_key']; base_url = base_url_options['mistral']['base_url']
         else: return '', f'找不到此模型 如果你在discord看到這個訊息 請回報給克克 (model: {model})'
 
         client = OpenAI(
@@ -353,7 +372,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
         return think, result
     except Exception as e:
         traceback.print_exc()
-        raise(f'API限制中，需要重試 (reason: {str(e)})')
+        raise ValueError(f'API限制中，需要重試 (reason: {str(e)})')
 
 # 棄用
 def base_openrouter_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, 

@@ -6,7 +6,7 @@ import uvicorn
 import discord
 from discord import app_commands
 from discord.app_commands import Choice
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import aiohttp
 from pprint import pp
@@ -18,15 +18,19 @@ import os
 import xml.etree.ElementTree as ET
 import asyncio
 import sqlite3
-
-import uvicorn.protocols
+import time
+import base64
+from PIL import Image
+import io
+import re
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime, BASE_DIR
-from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY
+from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime, BASE_DIR, current_time, translate
+from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+alive = time.time()
 
 # Create SQLite database and table
 def init_snoymous_messages_db():
@@ -85,23 +89,23 @@ async def get_tools():
     data = read_json('./cmds/AIsTwo/data/tools_descrip.json')
     return data
 
-@app.get('/log', response_class=HTMLResponse)
-async def get_log():
-    with open("./nas_log/error.log", "rb") as f:
-        f.seek(-3000, 2)
-        data_bytes = f.read()
-        data = data_bytes.decode("utf-8")
-    return '''
-    <html>
-       <head>
-            <title>Discord Bot logs</title>
-        </head>
-        <body style="background-color: #003E3E;">
-            <h1 style="color: white; font-family: Arial, Helvetica, sans-serif;">Bot error logs:</h1>
-            <p style="color: white; font-family: 'Lucida Console', 'Courier New', monospace; font-size: 17px;">{data}</p>
-        </body>
-    </html>
-    '''.format(data=data.replace('\n', '<br>'))
+# @app.get('/log', response_class=HTMLResponse)
+# async def get_log():
+#     with open("./nas_log/error.log", "rb") as f:
+#         f.seek(-3000, 2)
+#         data_bytes = f.read()
+#         data = data_bytes.decode("utf-8")
+#     return '''
+#     <html>
+#        <head>
+#             <title>Discord Bot logs</title>
+#         </head>
+#         <body style="background-color: #003E3E;">
+#             <h1 style="color: white; font-family: Arial, Helvetica, sans-serif;">Bot error logs:</h1>
+#             <p style="color: white; font-family: 'Lucida Console', 'Courier New', monospace; font-size: 17px;">{data}</p>
+#         </body>
+#     </html>
+#     '''.format(data=data.replace('\n', '<br>'))
 
 @app.get('/api/image/')
 async def get_image_from_path(path: str = Query(..., min_length=5)):
@@ -155,6 +159,14 @@ async def submit_message(request: Request, name: str = Form(...), message: str =
     # Redirect back to the anonymous message board
     return RedirectResponse(url='/anonymous', status_code=303)
 
+@app.get('/ping')
+async def check_alive():
+    '''Check My bot is alive'''
+    if time.time() - alive > 90:
+        raise HTTPException(404, 'Discord Bot is offline')
+    else:
+        return {'status': 'online', 'check_time': current_time()}
+
 class select_autocomplete:
     countries = read_json('./cmds/data.json/country.json')
 
@@ -168,11 +180,34 @@ class select_autocomplete:
             ][:25]
         except: traceback.print_exc()
 
+    @staticmethod
+    async def langs_for_gifs(_, interaction: discord.Interaction, current: str) -> typing.List[Choice[str]]:
+        try:
+            langs = {
+                "Arabic": "ar", "Bengali": "bn", "Chinese Simplified": "zh-CN", "Chinese Traditional": "zh-TW",
+                "Czech": "cs", "Danish": "da", "Dutch": "nl", "English": "en", "Farsi": "fa",
+                "Filipino": "tl", "Finnish": "fi", "French": "fr", "German": "de", "Hebrew": "he",
+                "Hindi": "hi", "Hungarian": "hu", "Indonesian": "id", "Italian": "it", "Japanese": "ja",
+                "Korean": "ko", "Malay": "ms", "Norwegian": "no", "Polish": "pl", "Portuguese": "pt",
+                "Romanian": "ro", "Russian": "ru", "Spanish": "es", "Swedish": "sv", "Thai": "th",
+                "Turkish": "tr", "Ukrainian": "uk", "Vietnamese": "vi"
+            }
+
+            items = list(langs.items())
+
+            if current:
+                return [Choice(name=lang, value=code) for lang, code in items if lang in current.lower().strip()][:25]
+            else:
+                return [Choice(name=lang, value=code) for lang, code in items][:25]
+
+        except: traceback.print_exc()
+
 
 
 class ApiCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.update_alive.start()
 
     class utils:
         @staticmethod
@@ -331,7 +366,7 @@ class ApiCog(commands.Cog):
 
     @commands.hybrid_command(name='看圖', description='Get some photo from unsplash', aliases=['photo', 'image'])
     @app_commands.describe(query='輸入你要搜尋的結果', num='輸入你要幾個結果 (如果你query沒輸入的話 輸入這個也沒用)')
-    async def unsplash_image(self, ctx: commands.Context, query: str=None, num: int=3):
+    async def unsplash_image(self, ctx: commands.Context, query: str=None, num: int=1):
         async with ctx.typing():
             urls = []
             async with aiohttp.ClientSession() as session:
@@ -347,6 +382,114 @@ class ApiCog(commands.Cog):
                         urls += [f"作者: [{data['user']['username']}](<{data['user']['links']['html']}>)"]
                         urls += [f"[圖片連結]({data['urls']['regular']})"]
             await ctx.send('\n'.join(urls))
+
+    @commands.hybrid_command(name='gif', description='Get some gifs from api.giphy.com')
+    @app_commands.describe(query='輸入關鍵字(不輸入的話則隨機獲得gif)', num='輸入你要幾張gif (僅在選擇query後才有用)', lang='選擇你的語言 (僅在選擇query後才有用)')
+    @app_commands.autocomplete(lang = select_autocomplete.langs_for_gifs)
+    async def get_gifs(self, ctx: commands.Context, query: str=None, num: int=1, lang: str = None):
+        '''從api.giphy.com獲取gif。query: 輸入關鍵字，不輸入的話就會隨機找gif、num: 輸入你要幾張gif (僅在選擇query後才有用)、lang: 選擇你的語言 (僅在選擇query後才有用)'''
+        async with ctx.typing():
+            if num > 50: return await ctx.send('請輸入比50更小的數') 
+
+            search_url = 'https://api.giphy.com/v1/gifs/search'
+            random_url = 'https://api.giphy.com/v1/gifs/random'
+
+            results = []
+
+            async with aiohttp.ClientSession() as session:
+                if query:
+                    async with session.get(search_url, params={'api_key': GIPHYKEY, 'q': query, 'limit': num, **({'lang': lang} if lang else {})}) as resp:
+                        data = await resp.json()
+                        for item in data['data']:
+                            url = item['images']['original']['url']
+                            title = item['title']
+                            results.append((title, url))
+                else:
+                    async with session.get(random_url, params={'api_key': GIPHYKEY}) as resp:
+                        data = await resp.json()
+                        url = data['data']['images']['original']['url']
+                        title = data['data']['title']
+                        results.append((title, url))
+
+            await ctx.send('\n'.join([f'[{title}]({url})' for title, url in results]))
+
+    @commands.hybrid_command(name='舔狗')
+    async def 舔狗語錄(self, ctx: commands.Context):
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as sess:
+                async with sess.get('https://api.zxki.cn/api/tgrj') as resp:
+                    if resp.status != 200: return await ctx.send('API無法使用，請稍後在試', ephemeral=True)
+                    await ctx.send(translate(await resp.text(), 'zh-CN'))
+
+    @commands.hybrid_command(name='minecraft_server_status', description='獲取minecraft伺服器的狀態', aliases=['mc_status'])
+    @app_commands.choices(edition=[Choice(name=edit, value=edit) for edit in ('java', 'bedrock')])
+    async def minecraft_server_status(self, ctx: commands.Context, address: str, edition: str = 'java'):
+        try:
+            if edition not in ('java', 'bedrock'): return await ctx.send('請輸入有效的`edition`')
+            async with ctx.typing():
+                async with aiohttp.ClientSession() as sess:
+                    url = f'https://api.mcsrvstat.us/3/{address}' if edition == 'java' else f'https://api.mcsrvstat.us/bedrock/3/{address}'
+                    async with sess.get(url) as resp:
+                        if resp.status != 200: return await ctx.send('API無法使用，請稍後在試', ephemeral=True)
+                        data = await resp.json()
+                
+                    ip = data.get('ip', 'None')
+                    port = data.get('port', 'None')
+                    hostname = data.get('hostname', 'None')
+
+                    icon = data.get('icon', 'None')
+                    gamemode = data.get('gamemode', 'None')
+                    players = data.get('players', 'None') # dict
+                    version = data.get('version', 'None')
+                    plugins = data.get('plugins', 'None') # list
+                    mods = data.get('mods', 'None') # list
+                    online = None
+                    max_player = None
+                    file = None
+
+                    if plugins != 'None':
+                        plugins = [f"Name: {item['name']}, Version: {item['version']}" for item in plugins]
+                    if mods != 'None':
+                        mods = [f"Name: {item['name']}, Version: {item['version']}" for item in mods]
+                    if players != 'None':
+                        online = players.get('online')
+                        max_player = players.get('max')
+                    if icon != 'None':
+                        # 使用正則表達式去掉開頭的識別字串
+                        base64_pattern = r"^data:image\/png;base64,"
+                        clean_base64_data = re.sub(base64_pattern, "", icon)
+                        if clean_base64_data:
+                            # 解碼 Base64 並轉換為 PIL 圖像
+                            image_bytes = base64.b64decode(clean_base64_data)
+                            image = Image.open(io.BytesIO(image_bytes))
+
+                            # 轉換為 Discord 可用的文件物件
+                            image_buffer = io.BytesIO()
+                            image.save(image_buffer, format="PNG")
+                            image_buffer.seek(0)
+
+                            # 建立 Discord Embed 並設定圖片
+                            file = discord.File(image_buffer, filename="icon.png")
+
+                eb = create_basic_embed(功能='Get Minecraft Server Status', color=ctx.author.color)
+
+                eb.add_field(name='Online', value=str(data.get('online')))
+                eb.add_field(name='IP', value=f"{ip}:{port}")
+                eb.add_field(name='Hostname', value=hostname)
+                # eb.add_field(name='Icon', value=icon)
+                eb.add_field(name='Gamemode', value=gamemode)
+                eb.add_field(name='Current Players', value=online)
+                eb.add_field(name='Max Players', value=max_player)
+                eb.add_field(name='Version', value=version)
+                eb.add_field(name='Plugins', value=(', '.join(plugins) if isinstance(plugins, list) else plugins)[:5000])
+                eb.add_field(name='Mods', value=(', '.join(mods) if isinstance(mods, list) else mods)[:5000])
+                eb.set_image(url="attachment://icon.png" if file else file)
+                eb.set_footer(text=url)
+
+                await ctx.send(embed=eb, file=file)
+        except Exception as e:
+            traceback.print_exc()
+            return await ctx.send('Error, please try again later (reason: {})'.format(e))
 
     @commands.hybrid_command(name='影片下載', description='Download the video or audio by yt-dlp (from youtube twitter etc.)', aliases=['yt_downlaod', 'ytdownload'])
     @app_commands.choices(
@@ -404,6 +547,10 @@ class ApiCog(commands.Cog):
             traceback.print_exc()
             print(resp_json)
 
+    @tasks.loop(minutes=1)
+    async def update_alive(self):
+        global alive
+        alive = time.time()
 
 async def setup(bot):
     await bot.add_cog(ApiCog(bot))

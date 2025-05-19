@@ -8,6 +8,8 @@ import asyncio
 import time
 import traceback
 
+from core.functions import math_round
+
 # get env
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -119,13 +121,14 @@ async def load_another():
 
 async def load():
     for filename in os.listdir('./cmds'):
+        now = time.time()
         try:
             if filename.endswith('.py'):
                 await bot.load_extension(f'cmds.{filename[:-3]}')
-                print(f'嘗試載入cmds.{filename}')
+                print(f'嘗試載入cmds.{filename} (cost: {math_round(time.time()-now, 2)})')
         except Exception as e:
             # traceback.print_exc()
-            print(f'出錯 When loading extension: {e}')
+            print(f'出錯 When loading extension: {e} (cost: {math_round(time.time()-now, 2)})')
     
         
 async def main():

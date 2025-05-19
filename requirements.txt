@@ -22,3 +22,6 @@ tweepy==4.15.0
 uvicorn==0.34.2
 yt_dlp==2025.4.30
 zhipuai==2.1.5.20250421
+discord-pretty-help
+jinja2
+python-multipart

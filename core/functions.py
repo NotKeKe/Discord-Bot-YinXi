@@ -32,6 +32,7 @@ TempHypixelApiKey = os.getenv('tmp_hypixel_api_key')
 NewsApiKEY = os.getenv("news_api_KEY")
 nasaApiKEY = os.getenv("nasa_api_KEY")
 unsplashKEY = os.getenv('unsplash_api_access_KEY')
+GIPHYKEY = os.getenv('GIPHY_KEY')
 
 def read_json(path: str) -> Optional[Any]:
     """將path讀取成物件並回傳"""

@@ -102,7 +102,7 @@ def is_vision_model(model: str, client) -> bool:
 
 async def select_moduels_auto_complete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
     try:
-        from cmds.AIsTwo.base_chat import zhipu_moduels, openrouter_moduels, ollama_modules, gemini_moduels
+        from cmds.AIsTwo.base_chat import zhipu_moduels, openrouter_moduels, ollama_modules, gemini_moduels, mistral_models
         moduels = zhipu_moduels + openrouter_moduels
         if str(interaction.user.id) == KeJCID: moduels += ollama_modules + gemini_moduels
 

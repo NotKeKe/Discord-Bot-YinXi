@@ -39,6 +39,7 @@ async def to_history(channel: discord.TextChannel, limit: int = 10):
     messages = [m async for m in channel.history(limit=limit)]
     messages.reverse()
     pre = str()
+    
     for m in messages:
         if m.author == bot.user:
             if m.content == '嘗試重啟bot...': continue

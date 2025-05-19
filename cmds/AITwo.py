@@ -2,10 +2,11 @@ import discord
 from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands, tasks
-import typing
 import traceback
 import os
 import aiohttp
+import random
+from collections import defaultdict
 
 from cmds.AIsTwo.base_chat import *
 from cmds.AIsTwo.others.func import image_generate, video_generate
@@ -16,6 +17,8 @@ from cmds.AIsTwo.utils import choice_model, image_url_to_base64, select_moduels_
 from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate
 
 save_to_preferences = Preference.save_to_preferences
+
+numbers = defaultdict(lambda: defaultdict(list))
 
 class AITwo(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -38,12 +41,13 @@ class AITwo(commands.Cog):
 
     @commands.hybrid_command(name='chat', description='Chat with AI model')
     @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
-    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'glm-4-flash', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment):
+    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'glm-4-flash', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True):
         async with ctx.typing():
             try:
                 HistoryData.initdata()
                 history = get_history(ctx, 歷史紀錄)
-                
+
+                f_content = None
                 if 文字檔案:
                     try:
                         f_content = (await 文字檔案.read()).decode('utf-8')
@@ -52,7 +56,7 @@ class AITwo(commands.Cog):
 
                 try:
                     # func = choice_model(model)
-                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content)
+                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content, is_enable_tools=工具調用)
                 except: 
                     traceback.print_exc()
                     await ctx.send(f'您使用的model({model})出錯，因此此次用glm-4-flash代替，並且無法閱讀檔案')
@@ -177,7 +181,7 @@ class AITwo(commands.Cog):
             }
 
             async with aiohttp.ClientSession() as session:
-                async with session.post("http://192.168.31.35:9966/tts", data=data) as resp:
+                async with session.post("http://192.168.31.199:9966/tts", data=data) as resp:
                     if resp.status == 200:
                         j = await resp.json()
                     else: return await ctx.send('克克可能忘記開電腦了 這功能現在用不了:<')
@@ -215,6 +219,53 @@ class AITwo(commands.Cog):
                 message = await ctx.send(embed=eb)
                 data[str(message.id)] = {'location': 地名, 'author': ctx.author.id, 'channel': ctx.channel.id}
                 HistoryData.writeWeatherMessages(data)
+
+    @commands.hybrid_command(name='猜數字')
+    async def guess_num(self, ctx: commands.Context, range1: int, range2: int):
+        num = random.randint(range1, range2)
+        numbers[ctx.channel.id][ctx.author.id] = [range1, range2, num]
+        await ctx.send(f'使用`[guess`來猜數字\n從{range1}~{range2}之間猜一個數字')
+        await ctx.send(f'{num=}')
+
+    @commands.command()
+    async def guess(self, ctx: commands.Context, num: int):
+        async with ctx.typing():
+            if ctx.channel.id not in numbers: return await ctx.send('這個頻道沒有人在猜數字')
+            if ctx.author.id not in numbers[ctx.channel.id]: return await ctx.send('你沒有再猜數字，先使用`/猜數字`來猜')
+
+            range1, range2, target_num = numbers[ctx.channel.id][ctx.author.id]
+
+            if not (range1 <= num <= range2): return await ctx.send('現在的範圍是{}~{}，請重新猜一次'.format(range1, range2))
+            think, result = await thread_pool(base_openai_chat, f'我猜了{num}', 'qwen3:8b', no_extra_system_prompt=True, is_enable_tools=False, is_enable_thinking=True, system_prompt='''
+你現在是一個給予使用者情緒價值的AI助手，你的任務是要看使用者有沒有猜對數字，如果使用者猜了錯誤的數字，你必須告訴使用者是太大還是太小，並且重新告訴他一個範圍。
+正確數字為: `{target_num}`，而使用者現在猜了`{num}`
+預設範圍為{range1} ~ {range2}
+**不能告訴使用者正確數字**
+範例:
+    - (使用者猜錯了)使用者猜了5，但正確數字是10，預設範圍是`1~100`
+    則輸出的時候比需要說出預設範圍改為6~100，並提供一些鼓勵的話，讓使用者繼續猜。
+    - (使用者猜對了)使用者猜了10，且正確數字是10
+    則直接告訴使用者他猜對了，並且像鼓勵小孩一樣鼓勵他很棒，並且不用告知範圍。
+範例輸出:
+    - 哇塞 你居然猜對了 太屌了吧 ٩(ˊᗜˋ*)و
+    - 哎呀 你猜得有點太大了欸 再繼續挑戰看看吧～ (๑•̀ㅂ•́)و✧ (並且告知範圍)
+多多使用換行來代替換句或標點符號
+使用者名稱: {name}
+'''.format(target_num=target_num, num=num, range1=range1, range2=range2, name=ctx.author.display_name)
+    )
+            solved = False
+            if num > target_num: 
+                numbers[ctx.channel.id][ctx.author.id][1] = num-1
+            elif num < target_num:
+                numbers[ctx.channel.id][ctx.author.id][0] = num+1
+            else:
+                solved = True
+                del numbers[ctx.channel.id][ctx.author.id]
+                if not numbers[ctx.channel.id]:
+                    del numbers[ctx.channel.id]
+            await ctx.send(result or think)
+            if solved:
+                await ctx.send('再次使用`/猜數字`來猜新的數字')
 
     @tasks.loop(hours=6)
     async def weather_task(self):
