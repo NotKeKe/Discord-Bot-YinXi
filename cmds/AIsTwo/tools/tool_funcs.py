@@ -98,15 +98,15 @@ def search(keywords: str, time_range: str = 'year', language: str = 'zh-TW') -> 
     # sql_data = knowledge_base_search(keywords)
     # result = [sql_data] if sql_data else []
     result = []
-    time_range = 'day' if time_range.lower().strip() not in ('year', 'monuth', 'week', 'day') else time_range.lower().strip()
+    time_range = ('day' if time_range.lower().strip() not in ('year', 'monuth', 'week', 'day') else time_range.lower().strip()) if time_range else None
 
     url = 'http://192.168.31.99:8080'
     params = {
         'q': keywords,
         'format': 'json',
         'safesearch': 2,
-        'time_range': time_range,
-        'language': language
+        'language': language,
+        **({'time_range': time_range} if time_range is not None and time_range != '' else {}),
     }
 
     response = requests.get(url, params=params)
@@ -153,6 +153,7 @@ def wiki_searh(query: str):
     search_data = search_response.json()
 
     # 取得第一個搜尋結果的標題
+    if not search_data["query"]["search"]: return '沒有找到結果'
     first_title = search_data["query"]["search"][0]["title"]
 
     # 用 extracts 來獲取純文字內容

@@ -25,7 +25,7 @@ import io
 import re
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime, BASE_DIR, current_time, translate
+from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime, BASE_DIR, current_time, async_translate
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY
 
 app = FastAPI()
@@ -419,7 +419,7 @@ class ApiCog(commands.Cog):
             async with aiohttp.ClientSession() as sess:
                 async with sess.get('https://api.zxki.cn/api/tgrj') as resp:
                     if resp.status != 200: return await ctx.send('API無法使用，請稍後在試', ephemeral=True)
-                    await ctx.send(translate(await resp.text(), 'zh-CN'))
+                    await ctx.send(await async_translate(await resp.text(), 'zh-CN'))
 
     @commands.hybrid_command(name='minecraft_server_status', description='獲取minecraft伺服器的狀態', aliases=['mc_status'])
     @app_commands.choices(edition=[Choice(name=edit, value=edit) for edit in ('java', 'bedrock')])
@@ -490,6 +490,33 @@ class ApiCog(commands.Cog):
         except Exception as e:
             traceback.print_exc()
             return await ctx.send('Error, please try again later (reason: {})'.format(e))
+        
+    @commands.hybrid_command(name='一言', description="https://v1.hitokoto.cn/", aliases=['yiyan'])
+    async def yiyan(self, ctx: commands.Context):
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get('https://v1.hitokoto.cn/?c=d&c=e&c=f&encode=text') as resp:
+                    if not resp.status == 200: return await ctx.send('請稍後再試', ephemeral=True)
+                    data = await resp.text()
+            await ctx.send(await async_translate(data, 'zh-CN', 'zh-TW'))
+
+    @commands.hybrid_command(name='毒雞湯', description='https://api.btstu.cn')
+    async def toxic_jacket_soup(self, ctx: commands.Context):
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get('https://api.btstu.cn/yan/api.php?charset=utf-8&encode=text') as resp:
+                    if resp.status != 200: return await ctx.send('請稍後再試', ephemeral=True)
+                    text = await resp.text()
+            await ctx.send(await async_translate(text, 'zh-CN', 'zh-TW'))
+
+    @commands.hybrid_command(name='lovelive', description='https://api.lovelive.tools/api/SweetNothings', aliases=['love'])
+    async def lovelive(self, ctx: commands.Context):
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get('https://api.lovelive.tools/api/SweetNothings') as resp:
+                    if resp.status != 200: return await ctx.send('請稍後再試')
+                    text = await resp.text()
+            await ctx.send(text)
 
     @commands.hybrid_command(name='影片下載', description='Download the video or audio by yt-dlp (from youtube twitter etc.)', aliases=['yt_downlaod', 'ytdownload'])
     @app_commands.choices(

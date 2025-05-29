@@ -4,6 +4,7 @@ from discord.app_commands import Choice
 from discord.ext import commands, tasks
 import traceback
 import os
+import re
 import aiohttp
 import random
 from collections import defaultdict
@@ -13,6 +14,8 @@ from cmds.AIsTwo.others.func import image_generate, video_generate
 from cmds.AIsTwo.others.decide import save_to_knowledge_base, Preference
 from cmds.AIsTwo.info import HistoryData, get_history, create_result_embed, chat_autocomplete
 from cmds.AIsTwo.utils import choice_model, image_url_to_base64, select_moduels_auto_complete
+from cmds.AIsTwo.vector import chat_human as vt_chat_human
+from vector_data import vector
 
 from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate
 
@@ -41,7 +44,8 @@ class AITwo(commands.Cog):
 
     @commands.hybrid_command(name='chat', description='Chat with AI model')
     @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
-    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'glm-4-flash', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True):
+    @app_commands.describe(model='預設為`qwen-3-32b`', 想法顯示='預設為`False`', 工具調用='預設為`True`')
+    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'qwen-3-32b', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True):
         async with ctx.typing():
             try:
                 HistoryData.initdata()
@@ -70,7 +74,8 @@ class AITwo(commands.Cog):
                     await ctx.send(content=think, ephemeral=True)
             
                 if result:
-                    HistoryData.appendHistory(ctx.author.id, 輸入文字, result, 歷史紀錄, think)
+                    try: HistoryData.appendHistory(ctx.author.id, 輸入文字, result, 歷史紀錄, think)
+                    except: traceback.print_exc()
 
                 # await thread_pool(save_to_knowledge_base, ctx.message.content, result if result else think)
                 # await thread_pool(save_to_preferences, ctx.author.id, (to_user_message(輸入文字) + to_assistant_message(result if result else think)))
@@ -266,6 +271,51 @@ class AITwo(commands.Cog):
             await ctx.send(result or think)
             if solved:
                 await ctx.send('再次使用`/猜數字`來猜新的數字')
+
+    @commands.hybrid_command(name='向量數據庫資料搜索', description='Vector database search')
+    async def vector_search(self, ctx: commands.Context, query: str, limit: int = 3):
+        async with ctx.typing():
+            result = await vector.search(query, limit)
+            await ctx.send('\n'.join(result))
+
+    @commands.command('chat_human_vector_search')
+    async def chatHumanVector_Search(self, ctx: commands.Context, query: str, top_k: int = 2):
+        if str(ctx.author.id) != KeJCID: return
+        async with ctx.typing(ephemeral=True):
+            collection = vt_chat_human.create()
+            items = await vt_chat_human.get(collection, query, top_k)
+            await ctx.send('\n\n\n'.join(items), ephemeral=True)
+
+    @commands.command('chat_human_vector_post_path')
+    async def chatHumanVector_Post_path(self, ctx: commands.Context, file_path: str):
+        if str(ctx.author.id) != KeJCID: return
+        async with ctx.typing(ephemeral=True):
+            collection = vt_chat_human.create()
+            await vt_chat_human.add(collection, file_path)
+            await ctx.send('Successfully Add {} to chat human database'.format(file_path), ephemeral=True)
+
+    @commands.command('chat_human_vector_post_text')
+    async def chatHumanVector_Post_text(self, ctx: commands.Context, single_text: str):
+        if str(ctx.author.id) != KeJCID: return
+        async with ctx.typing(ephemeral=True):
+            collection = vt_chat_human.create()
+            await vt_chat_human.add(collection, single_text)
+            await ctx.send('Successfully Add {} to chat human database'.format(single_text), ephemeral=True)
+
+    @commands.command('chat_human_vector_delete')
+    async def chatHumanVector_Delete(self, ctx: commands.Context, text: str):
+        if str(ctx.author.id) != KeJCID: return
+        async with ctx.typing(ephemeral=True):
+            if "~" in text:  # 處理範圍
+                start, end = map(int, text.split("~"))
+                ids = list(range(start, end + 1))
+            else:  # 處理固定數字清單
+                ids = list(map(int, re.split(r"[ ,]+", text)))
+
+            collection = vt_chat_human.create()
+            await vt_chat_human.delete(collection, ids)
+            await ctx.send('Successfully Delete {} from chat human database'.format(text), ephemeral=True)
+
 
     @tasks.loop(hours=6)
     async def weather_task(self):

@@ -20,9 +20,9 @@ class Translator(Cog_Extension):
         async with ctx.typing():
             think, translated = await thread_pool(translate, content, target)
             
-            embed = create_basic_embed(功能='翻譯', color=ctx.author.color)
-            embed.add_field(name=' ', value=translated if translated else think, inline=False)
-            embed.set_footer(text='Powered by glm-4-flash')
+            embed = create_basic_embed(功能='音汐', color=ctx.author.color)
+            embed.add_field(name='**翻譯**', value=translated if translated else think, inline=False)
+            embed.set_footer(text='Powered by qwen-3-32b')
 
             await ctx.send(embed=embed)
 

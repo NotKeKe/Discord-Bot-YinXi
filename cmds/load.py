@@ -1,3 +1,5 @@
+'''some commands only for me'''
+
 from datetime import datetime
 import discord
 from discord.ext import commands
@@ -184,6 +186,23 @@ class Load(Cog_Extension):
         except:
             string = traceback.format_exc()
             await ctx.send(string)
+
+    @commands.command(name='del_msg')
+    async def del_msg(self, ctx: commands.Context, msgID: int):
+        '''
+        IF YOU CLONE THSI PROJECT FROM GITHUB, MAKE SURE YOU DON'T USE THIS COMMAND CASUALLY.
+        I did this because I'm not always sitting in front of the computer, and sometimes my bot sended some bad things.
+        '''
+        if str(ctx.author.id) != KeJCID: return
+        if ctx.guild.me.guild_permissions.manage_messages:
+            await ctx.message.delete()
+        msg = await ctx.channel.fetch_message(msgID)
+        content = msg.content.replace('`', '')
+        name = msg.author.global_name or msg.author.name
+        await msg.delete()
+        await ctx.send('已刪除訊息\nMessage ID: `{}`\nMessage Content: ```{}```\nMessage Author: `{}`'.format(msgID, content, name), ephemeral=True)
+
+
 
 async def setup(bot):
     await bot.add_cog(Load(bot))

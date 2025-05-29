@@ -11,7 +11,8 @@ func_map = {
     'UnixToReadable': UnixToReadable,
     'image_read': image_read,
     'knowledge_search': knowledge_base_search,
-    'knowledge_save': knowledge_base_save
+    'knowledge_save': knowledge_base_save,
+    'wiki_search': wiki_searh
 }
 
 tools_description_json_PATH = './cmds/AIsTwo/data/tools_descrip.json'

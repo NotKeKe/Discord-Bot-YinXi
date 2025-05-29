@@ -204,12 +204,6 @@ class TestTemp(Cog_Extension):
         response = requests.get('https://api.zxki.cn/api/tgrj')
         await ctx.send(response.text)
 
-    @commands.command()
-    async def write_data(self, ctx):
-        from vector_data.add_or_get import add
-        add()
-        await ctx.send('Done')
-
 
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()

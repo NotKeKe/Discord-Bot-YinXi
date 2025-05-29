@@ -74,7 +74,7 @@ class AIChannel(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         await self.on_AIChannelSend(message)
-        await self.on_ReplyOrTag(message)
+        # await self.on_ReplyOrTag(message)
         await self.chatWithHuman(message)
         await self.trainStyle(message)
 
@@ -106,7 +106,9 @@ class AIChannel(commands.Cog):
             except: 
                 summaried = ''
 
-            history = to_user_message(summaried) + await to_history(message.channel, 8)
+            channel_history = await to_history(message.channel, 20)
+            if not channel_history: await message.channel.send('系統偵測到你第是第一次在這個頻道跟音汐說話(〃∀〃)\n我先說喔 這功能還在實驗當中 我的提示詞還沒很完善 所以他說話有時候都會怪怪的(目前猜測是這個原因)\n但你要跟他聊天還是可以的啦d(d＇∀＇)')
+            history = to_user_message(summaried) + channel_history
             
             if message.guild:
                 isTalkToMe = await thread_pool(is_talking_with_me, message.content, history)
@@ -128,15 +130,24 @@ class AIChannel(commands.Cog):
             ctx = await self.bot.get_context(message)
             async with ctx.typing():
                 think, result = await thread_pool(chat_human, ctx, history)
-                if not result and not is_stop: await ctx.send('你說啥 再說一次'); return # 如果是因為使用者打斷對話 就不用傳送這個訊息
+                if not result and not is_stop: return # 如果是因為使用者打斷對話 就不用傳送這個訊息
                 result = halfToFull(result)
                 item = result.split('。')
                 for i in item:
-                    if not i: return
-                    await ctx.send(i)
+                    msg = await ctx.send(i)
                     item.remove(i)
-                    if not i: return
-                    await asyncio.sleep(random.uniform(0.3, 2))
+                    if i: await asyncio.sleep(random.uniform(0.3, 2))
+            view = discord.ui.View(timeout=60)
+            async def button_callback(interaction: discord.Interaction):
+                await interaction.response.edit_message(view=view)
+                await interaction.followup.send(think, ephemeral=True)
+                button.disabled = True
+            
+            button = discord.ui.Button(label='想法', style=discord.ButtonStyle.blurple)                
+            button.callback = button_callback
+            view.add_item(button)
+
+            await msg.edit(view=view)
         except:
             traceback.print_exc()
 
@@ -317,8 +328,6 @@ class AIChannel(commands.Cog):
 
         HistoryData.writeChannelSelectModel(ctx, 模型)
         await ctx.send(f'已成功將 {ctx.channel.name} 的AI模型更換成 {模型}')
-        if 模型 in openrouter_moduels:
-            await ctx.send('Powered by OpenRouter.\n (OpenRouter可能會把對話拿去訓練模型)')
 
     @commands.hybrid_command(name='訊息想法顯示', description='Show previous message assistant reasoning')
     async def _pre_reasoning_show(self, ctx: commands.Context):

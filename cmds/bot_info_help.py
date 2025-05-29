@@ -220,7 +220,7 @@ class Bot_Info_and_Help(Cog_Extension):
             for c in cmds[:25]:
                 docstring = c.callback.__doc__ or c.description or "該指令沒有敘述"
                 embed.add_field(name=c.name, value=docstring)
-        await ctx.send(embed=embed)
+        await ctx.send(embed=embed, ephemeral=True)
 
 
         

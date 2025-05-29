@@ -5,6 +5,7 @@ from cmds.AIsTwo.utils import to_user_message, to_system_message
 import orjson
 import traceback
 from typing import Union
+from openai import OpenAI
 
 system_prompt = '''
 You should decide according to the context if you need to use the following tools.
@@ -142,3 +143,21 @@ def ifTools_gemini(messages: list, delete_func_name: Union[str, list] = None):
     except: 
         traceback.print_exc()
         return messages
+    
+def ifTools_self(messages: list, client: OpenAI, model: str, delete_func_name: Union[str, list] = None):
+    tmp_tools_descrip = list(tools_descrip)
+    if delete_func_name:
+        tmp_tools_descrip = delete_func(tmp_tools_descrip, delete_func_name)
+    response = client.chat.completions.create(
+        model=model,
+        messages=to_system_message(system_prompt) + messages,
+        stream=False,
+        tool_choice="auto",
+        tools=tmp_tools_descrip
+    )
+
+    if response.choices[0] is None: raise '沒有回應'
+    if response.choices[0].message.tool_calls is None: return messages
+    func_results = get_tool_results(response.choices[0].message.tool_calls)
+    messages += to_user_message(f'tool輸出為: {func_results}')
+    return messages

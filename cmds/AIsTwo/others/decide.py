@@ -2,6 +2,7 @@ import discord
 import random
 import traceback
 import orjson
+import requests
 from cmds.AIsTwo.base_chat import base_zhipu_chat, base_openrouter_chat, true_zhipu, ollama, base_ollama_chat, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
 from core.functions import translate, current_time
@@ -38,9 +39,9 @@ class ActivitySelector:
     past_status = []
     
     @classmethod
-    def activity_select(cls):
+    def activity_select(cls, status: int = None):
         cur_time = current_time()
-        status = random.randint(1, 3)
+        status = random.randint(1, 3) if not status else status
 
         system_prompt = '''
         你現在要幫助一個**人**生成一個不重複的他的狀態。
@@ -66,20 +67,25 @@ class ActivitySelector:
 
         # Setting `Playing ` status
         if status == 1:
-            system_prompt += '''
-            現在時間為 {time}，你需要根據這個時間去決定你現在的狀態。
-                - 例如: 在晚上6點 你可能正在約會 或者是自己在家吃飯，早上的時候可能在上學(因為你是一個高中生)。
-            或者 你可以根據現在時間模擬你可能的情緒
-                - 例如: 早上7:00 你要起床上課 感覺很累
-                - 或者在上某節課的時候你完全聽不懂 所以覺得不開心
-            '''.format(time = cur_time)
-            
-            result = base_openai_chat(f'根據現在的時間，幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，要像Instagram (IG)那種中二文青語氣，最好有比喻，句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力', 'glm-4-flash', temperature=1,
-                                    system_prompt=system_prompt.strip(), is_enable_tools=False, max_tokens=60, top_p=0.9)[1]
-            result = translate(result)
-            result = halfToFull(result).replace('。', '\n')
-            cls.past_status.append((f'{cur_time} 正在玩 ' + result))
-            activity = discord.Game(name=result)
+            resp = requests.get('https://api.lovelive.tools/api/SweetNothings')
+            if resp.status_code == 200:
+                result = translate(resp.text, 'zh-CN', 'zh-TW')
+                activity = discord.Game(name=result)
+            else:
+                system_prompt += '''
+                現在時間為 {time}，你需要根據這個時間去決定你現在的狀態。
+                    - 例如: 在晚上6點 你可能正在約會 或者是自己在家吃飯，早上的時候可能在上學(因為你是一個高中生)。
+                或者 你可以根據現在時間模擬你可能的情緒
+                    - 例如: 早上7:00 你要起床上課 感覺很累
+                    - 或者在上某節課的時候你完全聽不懂 所以覺得不開心
+                '''.format(time = cur_time)
+                
+                result = base_openai_chat(f'根據現在的時間，幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，要像Instagram (IG)那種中二文青語氣，最好有比喻，句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力', 'glm-4-flash', temperature=1,
+                                        system_prompt=system_prompt.strip(), is_enable_tools=False, max_tokens=60, top_p=0.9)[1]
+                result = translate(result)
+                result = halfToFull(result).replace('。', '\n')
+                cls.past_status.append((f'{cur_time} 正在玩 ' + result))
+                activity = discord.Game(name=result)
         # Setting `Listening ` status
         elif status == 2:
             random_num = random.randint(0, 1) 
@@ -298,6 +304,7 @@ class UserInfo:
         connection, cursor = self.connection, self.cursor
         cursor.execute("SELECT * FROM infos WHERE user_id = ?", (userID,))
         result = cursor.fetchone()
+        preference = []
 
         if result:
             # 如果存在，則更新

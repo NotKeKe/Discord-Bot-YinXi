@@ -54,6 +54,7 @@ def write_json(obj, path: str):
     """將物件寫入path當中， indent=4, ensure_ascii=False"""
     with open(path, mode='w', encoding='utf8') as f:
         json.dump(obj, f, indent=4, ensure_ascii=False)
+        f.flush()
 
 
 def create_basic_embed(title = None, description = None, color = discord.Color.blue(), 功能:str = None, time=True):
@@ -115,6 +116,9 @@ def translate(text, source:str='auto', target:str='zh-TW') -> str:
     translated_text = translator.translate(text) 
     return translated_text
 
+async def async_translate(text: str, source:str='auto', target:str='zh-TW'):
+    return await asyncio.to_thread(translate, text, source, target)
+
 def get_attachment(msg: discord.Message, to_base64:bool=False) -> list:
     a = [
         attachment.url
@@ -148,6 +152,9 @@ async def download_image(url: str, filename: str = None, path: str = None):
 def to_abspath(path: str) -> str:
     '''將相對路徑轉為絕對路徑'''
     return os.path.abspath(path)
+
+def is_KeJC(userID: int):
+    return str(userID) == KeJCID
 
 settings = read_json('setting.json')
 admins = read_json('./cmds/data.json/admins.json')['admins']

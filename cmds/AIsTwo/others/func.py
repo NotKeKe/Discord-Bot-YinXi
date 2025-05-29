@@ -1,4 +1,4 @@
-from cmds.AIsTwo.base_chat import true_zhipu, base_zhipu_chat, openrouter, true_ollama
+from cmds.AIsTwo.base_chat import true_zhipu, base_zhipu_chat, openrouter, true_ollama, base_openai_chat
 from cmds.AIsTwo.utils import image_url_to_base64, image_size, on_timeout, to_system_message, to_user_message
 from datetime import datetime
 import time
@@ -100,7 +100,8 @@ def translate(prompt: str, to_lang: str = '英文'):
 
     prompt = f'請你幫我把`{prompt}`翻譯成`{to_lang}`'
 
-    think, result = base_zhipu_chat(prompt, 'glm-4-flash', 0.7, system_prompt=system_prompt, is_enable_tools=False)
+    # think, result = base_zhipu_chat(prompt, 'glm-4-flash', 0.7, system_prompt=system_prompt, is_enable_tools=False)
+    think, result = base_openai_chat(prompt, 'qwen-3-32b', system_prompt=system_prompt, is_enable_tools=False, is_enable_thinking=False, no_extra_system_prompt=True)
         
     return think, result
 

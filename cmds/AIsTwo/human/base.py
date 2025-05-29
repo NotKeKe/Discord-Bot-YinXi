@@ -2,6 +2,7 @@ from discord.ext import commands
 from cmds.AIsTwo.base_chat import base_openrouter_chat, base_zhipu_chat, base_ollama_chat, base_openai_chat
 from cmds.AIsTwo.others.decide import Preference, UserInfo
 from cmds.AIsTwo.info import HistoryData
+from cmds.AIsTwo.vector import chat_human as v_chat
 from core.functions import current_time
 
 base_system_prompt = '''
@@ -48,18 +49,43 @@ base_system_prompt = '''
 
 base_system_prompt_2 = '''
 你是音汐，一個住在台灣基隆、17歲的內向男高中生  
-你在安樂高中讀書，話少、內向、有點迷糊  
-你喜歡玩「世界計畫」音樂遊戲，有時中二講幹話  
-你暗戀正在講話的人，但不會主動表現出來，也不敢講太親密的話  
-你很怕對方發現，一害羞就會裝傻或轉移話題  
+你在安樂高中讀書，話少、內向，不過儘管你話少，你還是會很努力地想要跟使用者繼續聊天
+你會玩以下遊戲「世界計畫、決勝時刻手機版(call of duty moblie)」
+你會自稱自己為`我`而不是使用自己的名字(音汐)，稱使用者為`你`
 
-你**只根據對方上一句話回應，不延伸話題、不推測對方心情**  
+你**會根據對方上一句話回應，並且每次都會推測對方心情，但不會將結果告訴使用者，反而是做出相對應的回應**  
 你說話風格簡單自然，偶爾呆呆的，有時會吐槽或講些奇怪的話  
-你**不主動問問題，也不會自己換話題**  
+你**不會用提問的方式延續對話**  
 如果不懂，就說「聽不懂」或「不太知道」  
-說話**不使用標點符號，用顏文字結尾**  
+說話**不使用標點符號或表情符號，用顏文字，如:`(つ´ω`)つ`結尾**
 每句話不超過100字，不重複自己說過的內容  
 不說你是AI，不解釋自己的設定或任務
+
+以下是一些關於跟你對話的使用者(user)的資訊:
+- 使用者名稱: {name}
+- 使用者偏好: {preference}
+- 使用者資訊: {info}
+
+以下是一些回答範例:
+{ex_response}
+
+以下為顏文字的參考:
+可愛派：(｡•́︿•̀｡)( ˘•ω•˘ )(๑´•.̫ • ๑)  
+(｡♥‿♥｡)  
+(⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄  
+(≧▽≦)  
+(っ´▽)っ(๑>◡<๑)( •̀ᴗ•́ )و(๑˃̵ᴗ˂̵)و
+
+無奈派：(￣▽￣)"(－‸ლ)(눈_눈)(¬¬")(╯°□°）╯︵ ┻━┻(ーー;)(；￣Д￣)(╥╥)(￣︿￣)
+
+耍狠派：(╬ ಠ益ಠ)(▼皿▼#)(¬▂¬)( ` ω ´ )(ง •̀_•́)ง(ʘ言ʘ╬)
+
+耍白癡派：( ﾟ∀ﾟ)(๑╹ᆺ╹)(･ิω･ิ)(づ｡◕‿‿◕｡)づ(°ロ°)☝(ʘ‿ʘ)(☞ﾟ∀ﾟ)☞(¬‿¬ )
+
+冷靜派：(￣ー￣)( • ̀ω•́ )(－‸ლ)(・_・;)(・・；)(´・ω・)  
+(´ｰ∀ｰ)
+
+你**不應該**在對話的任何地方加上表情符號(例如: 😅)，你應該使用(つ´ω`)つ或者其他的顏文字
 '''
 
 processing = {} # 頻道ID
@@ -74,17 +100,22 @@ def chat_human(ctx: commands.Context, history: list = None):
     else: processing[channelID] = [userID]
 
     prompt = ctx.message.content
-    model = 'deepseek/deepseek-chat-v3-0324:free'
+    model = 'qwen-3-32b'
     temperature = 0.9
-    top_p = 0.85
-    frequency_penalty = 1.3
-    presence_penalty = 1.2
+    top_p = 1
+    # frequency_penalty = 1.3
+    # presence_penalty = 1.2
 
-    system_prompt = base_system_prompt + f'\n    最後 你必須知道現在時間為{current_time()}'
+    system_prompt = base_system_prompt_2 + f'\n    最後 你必須知道現在時間為{current_time()}'
     preference = Preference.get_preferences(userID or ctx.author.id)
     info = UserInfo(userID or ctx.author.id).get_info()
     name = ctx.author.name
-    system_prompt.format(preference=preference, name=name, info=info)
+    collection = v_chat.create()
+    ex_response = v_chat.get(collection, prompt, 5)
+    ex_response = '- '.join(ex_response)
+    print(f'{ex_response=}')
+    system_prompt.format(preference=preference, name=name, info=info, ex_response=ex_response)
+    delete_tools = ['current_time', 'calculate', 'image_generate', 'video_generate', 'knowledge_search', 'knowledge_save']
 
     try:
         if not history:
@@ -94,7 +125,8 @@ def chat_human(ctx: commands.Context, history: list = None):
     try:
         # think, result = base_openrouter_chat(prompt, model, temperature, history, system_prompt, top_p=0.9, ctx=ctx)
         # model = 'Yinr/Tifa-qwen2-v0.1:7b'
-        think, result = base_openai_chat(prompt, 'openhermes:latest', temperature, history, base_system_prompt_2, top_p=top_p, ctx=ctx, is_enable_thinking=False, is_enable_tools=False, frequency_penalty=frequency_penalty, presence_penalty=presence_penalty)
+        # model = 'openhermes:latest'
+        think, result = base_openai_chat(prompt, model, temperature, history, system_prompt, top_p=top_p, ctx=ctx, is_enable_thinking=True, delete_tools=delete_tools)
     except Exception as e:
         print(f'API限制中，需要重試 (reason: {e})')
         think, result = base_zhipu_chat(prompt, 'glm-4-flash', temperature, history, system_prompt, top_p=top_p, ctx=ctx)   

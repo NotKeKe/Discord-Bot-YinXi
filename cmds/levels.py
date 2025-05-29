@@ -167,5 +167,5 @@ class Levels(Cog_Extension):
     async def save_data_task_before_loop(self):
         await self.bot.wait_until_ready()
 
-async def setup(bot):
-    await bot.add_cog(Levels(bot))
+# async def setup(bot):
+#     await bot.add_cog(Levels(bot))
