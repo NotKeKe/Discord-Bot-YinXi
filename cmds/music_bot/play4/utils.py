@@ -64,10 +64,10 @@ def query_search(query: str) -> tuple:
 
 async def leave(ctx: commands.Context):
     '''leave the voice channel and delete the player object from players dict'''
-    if not ctx.author.voice or not ctx.guild.voice_client: return await ctx.send('疑? 是你還是我不在語音頻道裡面啊')
-    if ctx.author.voice.channel != ctx.guild.voice_client.channel: return await ctx.send('疑? 我們好像在不同的頻道裡面欸')
+    if not ctx.author.voice or not ctx.guild.voice_client: await ctx.send('疑? 是你還是我不在語音頻道裡面啊'); return False
+    if ctx.author.voice.channel != ctx.guild.voice_client.channel: await ctx.send('疑? 我們好像在不同的頻道裡面欸'); return False
     from cmds.play4 import players
-    await ctx.guild.voice_client.disconnect()    
+    await ctx.guild.voice_client.disconnect()
     del players[ctx.guild.id]
 
 async def send(ctx: commands.Context | discord.Interaction, text: str = None, embed: discord.Embed = None, view: discord.ui.View = None, ephemeral: bool = False):
@@ -77,7 +77,7 @@ async def send(ctx: commands.Context | discord.Interaction, text: str = None, em
         await ctx.response.send_message(text, embed=embed, view=view, ephemeral=ephemeral)
     else: raise ValueError('Invalid context type')
 
-async def send_info_embed(player, ctx: commands.Context | discord.Interaction, index: int = None):
+async def send_info_embed(player, ctx: commands.Context | discord.Interaction, index: int = None, if_send: bool = True):
     '''Ensure index is index not id of song'''
     from cmds.music_bot.play4.player import Player
     from cmds.music_bot.play4.buttons import MusicControlButtons
@@ -93,17 +93,19 @@ async def send_info_embed(player, ctx: commands.Context | discord.Interaction, i
     user = (player.list[index]).get('user')
     thumbnail_url = player.list[index]['thumbnail_url']
     loop_status = player.loop_status
+    is_current = index == player.current_index
 
-    eb = create_basic_embed(f'{'▶️ 正在播放 ' if index == player.current_index else '以新增 '}`{title}`', color=user.color, 功能='音樂播放')
+    eb = create_basic_embed(f'{'▶️ 正在播放 ' if is_current else '以新增 '}`{title}`', color=user.color, 功能='音樂播放')
     eb.set_image(url=thumbnail_url)
     eb.add_field(name='🌐 Video url', value=f'[url]({video_url})')
     eb.add_field(name='⏱️ Duration', value=f'{duration}')
     eb.add_field(name='🔁 Loop status', value=loop_status)
-    eb.set_footer(text=f'Requested by {user.global_name}', icon_url=user.avatar.url)
+    eb.add_field(name='Progress bar', value=player.progress_bar)
+    eb.set_footer(text=f'Requested by {user.global_name}', icon_url=user.avatar.url if user.avatar else None)
 
     view = MusicControlButtons(player)
-
-    await send(ctx, embed=eb, view=view)
+    if if_send:
+        await send(ctx, embed=eb, view=view)
     return eb, view
 
 async def check_and_get_player(ctx: commands.Context, *, check_user_in_channel=True):
@@ -111,7 +113,7 @@ async def check_and_get_player(ctx: commands.Context, *, check_user_in_channel=T
     from cmds.music_bot.play4.player import Player
     
     if check_user_in_channel:
-        if not ctx.author.voice.channel: return await ctx.send('你好像不在語音頻道裡面?'), False
+        if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面?'), False
     if not ctx.voice_client: return await ctx.send('音汐不在語音頻道內欸:thinking:'), False
 
     player: Player = players.get(ctx.guild.id)

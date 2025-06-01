@@ -16,13 +16,14 @@ class Downloader:
         self.audio_url = None
         self.thumbnail_url = None
         self.duration = None
+        self.duration_int = None
 
         self.start_time = datetime.now()
         self.process_time = None
 
     def get_info(self) -> tuple:
         '''return (title, video_url, audio_url, thumbnail_url, duration)'''
-        return (self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration)
+        return (self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int)
 
     async def get_url(self):
         if utils.is_url(self.query):
@@ -40,6 +41,7 @@ class Downloader:
             self.thumbnail_url = info.get('thumbnail')
             self.title = info.get('title')
             self.duration = secondToReadable(info.get('duration'))
+            self.duration_int = info.get('duration')
 
         self.process_time = math_round((datetime.now() - self.start_time).total_seconds(), 0)
 

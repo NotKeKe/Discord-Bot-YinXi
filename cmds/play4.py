@@ -3,6 +3,7 @@ import discord
 from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands
+import traceback
 
 from cmds.music_bot.play4.player import Player, loop_option
 from cmds.music_bot.play4.utils import send_info_embed, check_and_get_player
@@ -18,27 +19,31 @@ class Music(Cog_Extension):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
 
-    @commands.hybrid_command(name='play')
+    @commands.hybrid_command(name='play', description='播放音樂', aliases=['p', '播放'])
     async def _play(self, ctx: commands.Context, *, query: str = None):
-        async with ctx.typing():
-            if not ctx.author.voice.channel: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
-            if not ctx.voice_client:
-                await ctx.author.voice.channel.connect()
+        try:
+            async with ctx.typing():
+                if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
+                if not ctx.voice_client:
+                    await ctx.author.voice.channel.connect()
 
-            if ctx.voice_client.is_paused(): return await ctx.invoke(self.bot.get_command('resume'))
-            elif not query: return await ctx.send('我沒有接收到你的關鍵字欸... 記得輸入 `query`')
+                if ctx.voice_client.is_paused(): return await ctx.invoke(self.bot.get_command('resume'))
+                elif not query: return await ctx.send('我沒有接收到你的關鍵字欸... 記得輸入 `query`')
+                if players.get(ctx.guild.id): return await ctx.invoke(self.bot.get_command('add'), query=query)
 
-            player = Player(ctx)
-            players[ctx.guild.id] = player
-            await player.add(query, ctx)
-            await player.play()
-            await send_info_embed(player, ctx)
+                player = Player(ctx)
+                players[ctx.guild.id] = player
+                await player.add(query, ctx)
+                await player.play()
+                await send_info_embed(player, ctx)
+        except: traceback.print_exc()
 
-    @commands.hybrid_command(name='add')
+    @commands.hybrid_command(name='add', description='添加歌曲到播放清單')
     async def _add(self, ctx: commands.Context, *, query: str):
         async with ctx.typing():
-            if not ctx.author.voice.channel: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
+            if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
             if not ctx.voice_client: return await ctx.send('使用 `/play` 來點播音樂吧~')
+            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send(f'你跟我不在同一個頻道裡欸... 先跟加到 {ctx.guild.voice_client.channel.mention}')
 
             player: Player = players.get(ctx.guild.id)
             if not player: return await ctx.send('音汐剛剛好像不正常退出了欸... 要不讓我重新加入看看?')
@@ -48,7 +53,7 @@ class Music(Cog_Extension):
             await send_info_embed(player, ctx, size-1)
             await ctx.send(f'已成功添加歌曲到播放清單中! 你現在有 {size} 首歌在播放清單裡了！', ephemeral=True)
 
-    @commands.hybrid_command(name='skip')
+    @commands.hybrid_command(name='skip', description='跳過當前歌曲', aliases=['s'])
     async def _skip(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -58,7 +63,7 @@ class Music(Cog_Extension):
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name='back')
+    @commands.hybrid_command(name='back', description='播放上一首歌曲')
     async def _back(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -68,46 +73,33 @@ class Music(Cog_Extension):
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name='pause')
+    @commands.hybrid_command(name='pause', description='暫停播放音樂', aliases=['ps', '暫停'])
     async def _pause(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
             if not status: return
 
-            # 修正邏輯：當正在播放時才暫停
-            if player.voice_client.is_paused():
-                return await ctx.send('音樂已經暫停了欸:thinking:')
-            if not player.voice_client.is_playing():
-                return await ctx.send('沒有正在播放的音樂呢')
-
-            player.voice_client.pause()
-            await ctx.send('已經幫你暫停音樂囉', ephemeral=True)
+            await player.pause()
     
-    @commands.hybrid_command(name='resume')
+    @commands.hybrid_command(name='resume', description='恢復播放音樂', aliases=['rs'])
     async def resume(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
             if not status: return
 
             # 修正邏輯：當暫停時才恢復播放
-            if player.voice_client.is_playing():
-                return await ctx.send('音汐正在播放中，不需要恢復喔:thinking:')
-            if not player.voice_client.is_paused():
-                return await ctx.send('這裡沒有暫停中的音樂')
+            await player.resume()
 
-            player.voice_client.resume()
-            await ctx.send('已經幫你繼續播放音樂囉~', ephemeral=True)
-
-    @commands.hybrid_command(aliases=['stop'], name="停止音樂", description='Clear the queue and leave channel')
+    @commands.hybrid_command(name="stop", description='Clear the queue and leave channel')
     async def _stop(self, ctx: commands.Context):
         async with ctx.typing():
-            player, status = await check_and_get_player(ctx)
-            if not status: return
-
+            if not (ctx.author.voice and ctx.voice_client): return await ctx.send('疑? 是你還是我不在語音頻道裡面啊')
+            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send('疑? 我們好像在不同的頻道裡面欸')
+            channel = ctx.voice_client.channel
             await utils.leave(ctx)
-            await ctx.send('已經停止音樂囉~')
+            await ctx.send(f'已經停止音樂 並離開 {channel.mention} 囉~')
 
-    @commands.hybrid_command(name='loop')
+    @commands.hybrid_command(name='loop', description='設置循環播放模式')
     @app_commands.choices(loop_type = [Choice(name=item, value=item) for item in loop_option])
     async def _loop(self, ctx: commands.Context, loop_type: str):
         async with ctx.typing():
@@ -120,7 +112,7 @@ class Music(Cog_Extension):
             player.loop(loop_type)
             await ctx.send(f'已將音樂循環模式設為 `{loop_type}`')
 
-    @commands.hybrid_command(name='current_playing')
+    @commands.hybrid_command(name='current_playing', description='顯示當前播放的歌曲', aliases=['np', '當前播放', 'now'])
     async def current_playing(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx, check_user_in_channel=False)
@@ -128,7 +120,7 @@ class Music(Cog_Extension):
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name='list')
+    @commands.hybrid_command(name='list', description='顯示播放清單', aliases=['q', '清單', 'queue'])
     async def _list(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx, check_user_in_channel=False)
@@ -138,7 +130,7 @@ class Music(Cog_Extension):
 
             await ctx.send(embed=eb)
 
-    @commands.hybrid_command(name='delete_song')
+    @commands.hybrid_command(name='delete_song', description='刪除播放清單中的歌曲', aliases=['rm', '刪除'])
     @app_commands.describe(number='輸入你要刪除第幾首歌')
     async def delete_song(self, ctx: commands.Context, number: int):
         async with ctx.typing():
@@ -149,7 +141,7 @@ class Music(Cog_Extension):
 
             await ctx.send(f"已刪除 `{item.get('title')}`，點播人: `{item.get('user').global_name}`")
 
-    @commands.hybrid_command(name='clear_queue')
+    @commands.hybrid_command(name='clear_queue', description='清除整個播放清單', aliases=['cq', '清除', 'clear'])
     async def clear_queue(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -178,11 +170,9 @@ class Music(Cog_Extension):
             eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await ctx.send(embed=eb, view=view)
 
-    @commands.hybrid_command(name='leave')
+    @commands.hybrid_command(name='leave', description='離開語音頻道')
     async def _leave(self, ctx: commands.Context):
-        async with ctx.typing():
-            if not (await utils.leave(ctx)): return
-            await ctx.send(f'已離開 {ctx.author.voice.channel.name}')
+        await ctx.invoke(self.bot.get_command('stop'))
 
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):
