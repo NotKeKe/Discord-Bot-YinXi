@@ -381,7 +381,8 @@ class ApiCog(commands.Cog):
                         data = await response.json()
                         urls += [f"作者: [{data['user']['username']}](<{data['user']['links']['html']}>)"]
                         urls += [f"[圖片連結]({data['urls']['regular']})"]
-            await ctx.send('\n'.join(urls))
+            result = '\n'.join(urls)
+            await ctx.send(result if result else '沒有查到任何結果')
 
     @commands.hybrid_command(name='gif', description='Get some gifs from api.giphy.com')
     @app_commands.describe(query='輸入關鍵字(不輸入的話則隨機獲得gif)', num='輸入你要幾張gif (僅在選擇query後才有用)', lang='選擇你的語言 (僅在選擇query後才有用)')
@@ -411,7 +412,7 @@ class ApiCog(commands.Cog):
                         title = data['data']['title']
                         results.append((title, url))
 
-            await ctx.send('\n'.join([f'[{title}]({url})' for title, url in results]))
+            await ctx.send('\n'.join([f'[{title if title else 'title'}]({url})' for title, url in results]))
 
     @commands.hybrid_command(name='舔狗')
     async def 舔狗語錄(self, ctx: commands.Context):

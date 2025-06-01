@@ -137,17 +137,19 @@ class AIChannel(commands.Cog):
                     msg = await ctx.send(i)
                     item.remove(i)
                     if i: await asyncio.sleep(random.uniform(0.3, 2))
-            view = discord.ui.View(timeout=60)
-            async def button_callback(interaction: discord.Interaction):
-                await interaction.response.edit_message(view=view)
-                await interaction.followup.send(think, ephemeral=True)
-                button.disabled = True
-            
-            button = discord.ui.Button(label='想法', style=discord.ButtonStyle.blurple)                
-            button.callback = button_callback
-            view.add_item(button)
+            if think:
+                view = discord.ui.View()
+                async def button_callback(interaction: discord.Interaction):
+                    await interaction.response.edit_message(view=view)
+                    await interaction.followup.send(think, ephemeral=True)
+                
+                button = discord.ui.Button(label='想法', style=discord.ButtonStyle.blurple)                
+                button.callback = button_callback
+                view.add_item(button)
 
-            await msg.edit(view=view)
+                msg = await msg.edit(view=view)
+                timeout = await view.wait()
+                if timeout: await msg.edit(view=None)
         except:
             traceback.print_exc()
 
@@ -208,7 +210,20 @@ class AIChannel(commands.Cog):
                 output = result if result != '' else think
                 if len(output) >= 2000:
                     await ctx.send('bot輸出了超過2000字的訊息...')
-                await ctx.send(output[-1999:])
+                msg = await ctx.send(output[-1999:])
+            if think:
+                view = discord.ui.View()
+                async def button_callback(interaction: discord.Interaction):
+                    await interaction.response.edit_message(view=view)
+                    await interaction.followup.send(think, ephemeral=True)
+                
+                button = discord.ui.Button(label='想法', style=discord.ButtonStyle.blurple)                
+                button.callback = button_callback
+                view.add_item(button)
+
+                msg = await msg.edit(view=view)
+                timeout = await view.wait()
+                if timeout: await msg.edit(view=None)
 
             HistoryData.appendHistoryForChannel(channelID, f'{ctx.author.id}: {輸入文字}', result, think, message.author.id, attachments)
             # await thread_pool(save_to_knowledge_base, message.content, result if result else think)
@@ -547,14 +562,17 @@ class AIChannel(commands.Cog):
         await ctx.send('已將對話記錄存入')
 
     @commands.command(name='force_online')
-    async def force_online(self, ctx):
-        if str(ctx.author.id) not in admins: return
+    async def force_online(self, ctx: commands.Context):
+        if ctx.author.id not in admins: return
         async with ctx.typing():
             global resting
             resting = False
             activity = await thread_pool(ActivitySelector.activity_select())
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
-            await ctx.send('Bot 已從閒置模式轉為Online')
+            await ctx.send('Bot 已從閒置模式轉為Online', ephemeral=True)
+        try:
+            await ctx.message.delete()
+        except: return
 
 async def setup(bot):
     await bot.add_cog(AIChannel(bot))

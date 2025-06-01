@@ -8,13 +8,14 @@ import asyncio
 import time
 import traceback
 
-from core.functions import math_round
+from core.functions import math_round, current_time
 
 # get env
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
 embed_link = os.getenv('embed_default_link')
+online_time = None
 
 #setting.json
 with open('setting.json', 'r', encoding = 'utf8') as jfile:
@@ -58,6 +59,8 @@ async def on_ready():
 
     # user = await bot.fetch_user(KeJC_ID)
     # await user.send("我上線了")
+    global online_time
+    online_time = current_time()
     print('我上線了窩\n')
 
 #讓私訊也能被處理
@@ -114,6 +117,7 @@ class UpdateStatus(commands.Cog):
         channel = self.bot.get_channel(int(jdata['status_channel']['channel_ID']))
         message = await channel.fetch_message(int(jdata['status_channel']['message_ID']))       
         embed = create_basic_embed(title='Bot狀態', description=':green_circle:')
+        embed.add_field(name='上線時間', value=online_time)
         embed.set_footer(text='最後更新時間')
         await message.edit(content=None, embed=embed)
 

@@ -157,4 +157,4 @@ def is_KeJC(userID: int):
     return str(userID) == KeJCID
 
 settings = read_json('setting.json')
-admins = read_json('./cmds/data.json/admins.json')['admins']
+admins: list[int] = read_json('./cmds/data.json/admins.json')['admins']
