@@ -81,11 +81,11 @@ async def send_info_embed(player, ctx: commands.Context | discord.Interaction, i
     '''Ensure index is index not id of song'''
     from cmds.music_bot.play4.player import Player
     from cmds.music_bot.play4.buttons import MusicControlButtons
-    
+
     player: Player = player
     
     index = index or player.current_index
-    if not (0 <= index < len(player.list)): return await send(ctx, f'找不到第{index+1}首歌曲')
+    if not (0 <= index < len(player.list)): return await send(ctx, f'找不到第{index+1}首歌曲', ephemeral=True)
 
     title = player.list[index]['title']
     video_url = player.list[index]['video_url']

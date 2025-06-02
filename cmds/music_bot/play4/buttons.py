@@ -21,7 +21,8 @@ class MusicControlButtons(View):
             await self.player.resume()
         else:
             await self.player.pause()
-        await send_info_embed(self.player, interaction)
+        embed, view = await send_info_embed(self.player, interaction, if_send=False)
+        await interaction.response.edit_message(embed=embed, view=view)
 
     @button(label='下一首歌', emoji='⏭️')
     async def next_callback(self, interaction: Interaction, button: Button):
@@ -36,17 +37,21 @@ class MusicControlButtons(View):
         if not interaction.guild.voice_client: return await interaction.response.send_message('音汐不在語音頻道內欸:thinking:')
 
         player: Player = players.get(interaction.guild.id)
+        user = interaction.user.global_name
 
         if not player: return await interaction.response.send_message('音汐剛剛好像不正常退出了呢:thinking:')
         del players[interaction.guild.id]
 
         await interaction.guild.voice_client.disconnect()
-        await interaction.response.send_message('已經停止音樂囉~')
+        await interaction.response.send_message(f'( {user} ) 已經停止音樂囉~')
 
     @button(label='循環', emoji='🔁')
     async def loop_callback(self, interaction: Interaction, button: Button):
+        msg = interaction.message
         self.player.turn_loop()
-        await interaction.response.send_message(f'已將循環狀態改為 `{self.player.loop_status}`')
+        eb, view = await send_info_embed(self.player, interaction, if_send=False)
+        await msg.edit(embed=eb, view=view)
+        await interaction.response.send_message(f'已將循環狀態改為 `{self.player.loop_status}`', ephemeral=True)
     
     @button(label='列表', emoji='📄')
     async def queue_callback(self, interaction: Interaction, button: Button):

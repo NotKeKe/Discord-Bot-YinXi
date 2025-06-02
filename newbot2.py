@@ -134,6 +134,7 @@ class UpdateStatus(commands.Cog):
     @update_status.before_loop
     async def before_task(self):
         await self.bot.wait_until_ready()
+        await asyncio.sleep(1)
 
     @change_activity.before_loop
     async def before_change_activity(self):

@@ -22,7 +22,7 @@ class Music(Cog_Extension):
     @commands.hybrid_command(name='play', description='播放音樂', aliases=['p', '播放'])
     async def _play(self, ctx: commands.Context, *, query: str = None):
         try:
-            async with ctx.typing():
+            async with ctx.typing(ephemeral=True):
                 if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
                 if not ctx.voice_client:
                     await ctx.author.voice.channel.connect()
@@ -176,7 +176,7 @@ class Music(Cog_Extension):
 
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):
-        await ctx.send(f'目前共有 {str(len(players))} 個伺服器正在播放音樂\nServers: {", ".join(players.keys())}')
+        await ctx.send(f'目前共有 {str(len(players))} 個伺服器正在播放音樂\nServers: {", ".join([self.bot.get_guild(id) for id in players.keys()])}')
         player: Player = players.get(ctx.guild.id)
         if not player: return
         await send_info_embed(player, ctx)

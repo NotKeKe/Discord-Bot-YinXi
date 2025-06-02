@@ -235,7 +235,7 @@ class Player:
         利用符號組成進度條
         - 已播放部分：■
         - 當前播放位置：🔵
-        - 剩餘部分：□
+        - 剩餘部分：□ (因大小不依 已刪除)
         如果處於暫停狀態，末端會顯示 ⏸️ 表示暫停
         """
         current = self.passed_time
@@ -249,7 +249,7 @@ class Player:
         if filled_length >= bar_length:
             bar = "■" * bar_length
         else:
-            bar = "■" * filled_length + "🔵" + "□" * (bar_length - filled_length - 1)
+            bar = "■" * filled_length + "🔵" + "■" * (bar_length - filled_length - 1)
         if paused:
             bar += " ⏸️"
 
@@ -263,18 +263,18 @@ class Player:
         Background task：
         每秒更新一次進度條訊息，如果遇到影片結束則結束迴圈
         """
-        try:
-            while True:
-                if self.paused: return
-                if self.passed_time + 1 >= self.duration_int: 
-                    self.update_progress_bar_task.cancel()
-
+        while True:
+            if self.paused:
+                self.gener_progress_bar()
+            else:
                 self.passed_time += 1
                 self.gener_progress_bar()
-                await asyncio.sleep(1)
-        except asyncio.CancelledError:
-            # 如果被取消 (例如歌曲被切換)，結束 task
-            return
+
+                if self.passed_time >= self.duration_int:
+                    self.update_progress_bar_task.cancel()
+                    break
+
+            await asyncio.sleep(1)
             
     def cleanup(self):
         """釋放資源並取消所有任務"""

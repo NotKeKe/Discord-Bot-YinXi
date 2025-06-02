@@ -567,7 +567,7 @@ class AIChannel(commands.Cog):
         async with ctx.typing():
             global resting
             resting = False
-            activity = await thread_pool(ActivitySelector.activity_select())
+            activity = await thread_pool(ActivitySelector.activity_select)
             await self.bot.change_presence(status=discord.Status.online, activity=activity)
             await ctx.send('Bot 已從閒置模式轉為Online', ephemeral=True)
         try:
