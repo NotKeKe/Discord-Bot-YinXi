@@ -50,7 +50,7 @@ async def to_history(channel: discord.TextChannel, limit: int = 10):
             pre = 'bot'
         else:
             if m.content.startswith('['): continue
-            content = '`user_ID: {userID}; user_name: {userName}` said: {mcontent}\n'.format(userID=m.author.id, userName=m.author.global_name, mcontent=m.content) if not channel.guild else '`user_name: {userName}` said: {mcontent}'.format(userName=m.author.global_name, mcontent=m.content)
+            content = '`user_ID: {userID}; user_name: {userName}; at: {time}` said: {mcontent}\n '.format(userID=m.author.id, userName=m.author.global_name, mcontent=m.content, time=m.created_at.strftime('%Y-%m-%d %H:%M:%S')) if not channel.guild else '`user_name: {userName}; at: {time}` said: {mcontent}'.format(userName=m.author.global_name, mcontent=m.content, time=m.created_at.strftime('%Y-%m-%d %H:%M:%S'))
             if pre == 'user':
                 histories[-1]["content"] = content + '\n'
             else:

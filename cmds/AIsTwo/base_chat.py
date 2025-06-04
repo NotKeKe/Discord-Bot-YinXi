@@ -6,6 +6,7 @@ from huggingface_hub import InferenceClient
 import os
 from tenacity import retry, stop_after_attempt, wait_fixed
 import traceback
+import asyncio
 from discord.ext import commands
 
 from cmds.AIsTwo.utils import to_assistant_message, to_system_message, to_user_message, get_thinking, clean_text, image_url_to_base64, is_vision_model, get_pref, get_user_data
@@ -109,15 +110,26 @@ mistral = OpenAI(
     base_url='https://api.mistral.ai/v1'
 )
 
+ollama_modules = []
 # 最多重試3次，每次間隔2秒
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))
 def get_ollama_models() -> list:
     return [item.id for item in ollama.models.list()]
 
-def safe_get_ollama_models() -> list:
-    try: return get_ollama_models()
-    except: return []
-ollama_modules = safe_get_ollama_models()
+async def safe_get_ollama_models() -> list:
+    global ollama_modules
+    try:
+        ollama_modules = await asyncio.to_thread(get_ollama_models)
+        return ollama_modules
+    except Exception as e:
+        print("Failed to get Ollama models; ", e)
+
+
+def run_safe_get_ollama_models():
+    loop = asyncio.get_event_loop()
+    loop.create_task(safe_get_ollama_models())
+
+run_safe_get_ollama_models()
 
 try: openrouter_moduels = [x.id for x in openrouter.models.list().data if x.id.endswith('free')]
 except: openrouter_moduels = [

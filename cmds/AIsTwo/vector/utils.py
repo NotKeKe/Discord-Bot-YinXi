@@ -3,7 +3,6 @@
 # 导入所需库
 import chromadb  # ChromaDB 向量数据库
 from openai import OpenAI, AsyncOpenAI  # OpenAI 客户端
-from cmds.AIsTwo.others.embedding import get_embeddings as async_eb
 
 
 # 初始化 OpenAI 客户端 (替换成自己的 API 信息)
@@ -21,7 +20,8 @@ def get_embeddings(texts, model="nomic-embed-text") -> list[float]:
     """将文本转换为向量表示"""
     response = client.embeddings.create(
         input=texts,
-        model=model
+        model=model,
+        timeout=(3, None)
     )
     return [item.embedding for item in response.data]
 
@@ -29,7 +29,8 @@ async def async_get_embeddings(texts, model="nomic-embed-text") -> list[list[flo
     """异步处理多个文本，确保返回的 embedding 数量与 texts 长度匹配"""
     response = await async_client.embeddings.create(
         input=texts,
-        model=model
+        model=model,
+        timeout=(3, None)
     )
     return [item.embedding for item in response.data]
 

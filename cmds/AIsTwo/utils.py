@@ -72,6 +72,12 @@ def get_user_data(text: str):
         return data.group(1).strip()
     else: return ''
 
+def get_something(text: str, tag: str) -> str:
+    '''從文字中提取指定的內容 (如<tag>...</tag>)'''
+    data = re.search(rf'<{tag}`>(.*?)</{tag}>', text, re.DOTALL)
+    if data: return data.group(1).strip()
+    else: return ''
+
 def choice_model(model:str):
     from cmds.AIsTwo.base_chat import zhipu_moduels, openrouter_moduels, ollama_modules, gemini_moduels
     from cmds.AIsTwo.base_chat import base_openrouter_chat, base_zhipu_chat, base_ollama_chat, base_gemini_chat

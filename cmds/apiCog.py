@@ -482,8 +482,8 @@ class ApiCog(commands.Cog):
                 eb.add_field(name='Current Players', value=online)
                 eb.add_field(name='Max Players', value=max_player)
                 eb.add_field(name='Version', value=version)
-                eb.add_field(name='Plugins', value=(', '.join(plugins) if isinstance(plugins, list) else plugins)[:5000])
-                eb.add_field(name='Mods', value=(', '.join(mods) if isinstance(mods, list) else mods)[:5000])
+                eb.add_field(name='Plugins', value=(', '.join(plugins) if isinstance(plugins, list) else plugins)[:1020])
+                eb.add_field(name='Mods', value=(', '.join(mods) if isinstance(mods, list) else mods)[:1020])
                 eb.set_image(url="attachment://icon.png" if file else file)
                 eb.set_footer(text=url)
 

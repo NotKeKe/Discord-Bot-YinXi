@@ -2,7 +2,7 @@ from discord import Interaction, SelectOption
 from discord.ui import View, button, select, Button
 
 from cmds.music_bot.play4.player import Player
-from cmds.music_bot.play4.utils import send_info_embed
+from cmds.music_bot.play4.utils import send_info_embed, create_basic_embed
 
 
 class MusicControlButtons(View):
@@ -42,8 +42,10 @@ class MusicControlButtons(View):
         if not player: return await interaction.response.send_message('音汐剛剛好像不正常退出了呢:thinking:')
         del players[interaction.guild.id]
 
+        channel = interaction.guild.voice_client.channel
+
         await interaction.guild.voice_client.disconnect()
-        await interaction.response.send_message(f'( {user} ) 已經停止音樂囉~')
+        await interaction.response.send_message(f'( {user} ) 已經停止音樂 並離開 {channel.mention} 囉 ~')
 
     @button(label='循環', emoji='🔁')
     async def loop_callback(self, interaction: Interaction, button: Button):
@@ -62,3 +64,16 @@ class MusicControlButtons(View):
     async def refresh_callback(self, interaction: Interaction, button: Button):
         eb, view = await send_info_embed(self.player, interaction, if_send=False)
         await interaction.response.edit_message(embed=eb, view=view)
+
+    @button(label='歌曲推薦')
+    async def recommend_callback(self, interaction: Interaction, button: Button):
+        from cmds.play4 import music_data
+        item = music_data.data['recommend'].get(str(interaction.user.id))
+        if not item: return await interaction.response.send_message('你沒有開啟音樂推薦功能，使用 `/音樂推薦` 來開啟此功能!')
+
+        recommend: list = item.get('recommend')
+        if not recommend: return await interaction.response.send_message('目前沒有推薦歌曲')
+
+        eb = create_basic_embed('歌曲推薦', color=interaction.user.color, 功能='音樂播放')
+        eb.add_field(name='推薦歌曲', value='\n'.join( [ f'[{song[0]}]({song[3]}) - {song[1]}' for song in recommend ] ), inline=False)
+        await interaction.response.send_message(embed=eb)

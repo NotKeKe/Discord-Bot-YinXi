@@ -107,6 +107,8 @@ class Player:
         except Exception as e:
             print(f'播放錯誤: {e}')
             traceback.print_exc()
+            await self.ctx.send(f'播放失敗，可能因為你播放太久了，導致音訊連結過期  或者其他原因，建議使用 `[rm` 刪除後再重新加入音樂。\n(reason: {str(e)})\n(如果你不確定原因的話可以使用 `/錯誤回報` 進行回報。)')
+
 
     def loop(self, loop_type: str):
         if loop_type not in loop_option: return 'Invalid loop type'

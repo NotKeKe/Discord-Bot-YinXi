@@ -25,3 +25,4 @@ zhipuai==2.1.5.20250421
 discord-pretty-help
 jinja2
 python-multipart
+chromadb

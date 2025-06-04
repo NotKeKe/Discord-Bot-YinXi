@@ -45,7 +45,7 @@ class AITwo(commands.Cog):
     @commands.hybrid_command(name='chat', description='Chat with AI model')
     @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
     @app_commands.describe(model='預設為`qwen-3-32b`', 想法顯示='預設為`False`', 工具調用='預設為`True`')
-    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'qwen-3-32b', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True):
+    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'qwen-3-32b', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True, 系統提示詞: str = None):
         async with ctx.typing():
             try:
                 HistoryData.initdata()
@@ -60,7 +60,7 @@ class AITwo(commands.Cog):
 
                 try:
                     # func = choice_model(model)
-                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content, is_enable_tools=工具調用)
+                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content, is_enable_tools=工具調用, system_prompt=系統提示詞)
                 except: 
                     traceback.print_exc()
                     await ctx.send(f'您使用的model({model})出錯，因此此次用glm-4-flash代替，並且無法閱讀檔案')
