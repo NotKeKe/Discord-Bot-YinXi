@@ -16,6 +16,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
 embed_link = os.getenv('embed_default_link')
 online_time = None
+start_time = time.time()
 
 #setting.json
 with open('setting.json', 'r', encoding = 'utf8') as jfile:
@@ -164,6 +165,7 @@ async def main():
     async with bot:
         await load()
         await load_another()
+        print(f'開啟共花費了: {math_round(time.time() - start_time, 2)}')
         await bot.start(TOKEN)
 
 asyncio.run(main())

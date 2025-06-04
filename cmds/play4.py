@@ -25,7 +25,9 @@ class Music(Cog_Extension):
         global music_data
         music_data = MusicData()
         self.data = music_data
+        self.recommend = Recommend(self.data)
         self.update_music_data.start()
+        self.update_recommendations.start()
 
     @commands.hybrid_command(name='play', description='播放音樂', aliases=['p', '播放'])
     async def _play(self, ctx: commands.Context, *, query: str = None):
@@ -41,7 +43,8 @@ class Music(Cog_Extension):
 
                 player = Player(ctx)
                 players[ctx.guild.id] = player
-                await player.add(query, ctx)
+                data = await player.add(query, ctx)
+                self.recommend.record_data(data, str(ctx.author.id))
                 await player.play()
                 await send_info_embed(player, ctx)
         except: traceback.print_exc()
@@ -56,7 +59,9 @@ class Music(Cog_Extension):
             player: Player = players.get(ctx.guild.id)
             if not player: return await ctx.send('音汐剛剛好像不正常退出了欸... 要不讓我重新加入看看?')
 
-            size, *_ = await player.add(query, ctx)
+            data = await player.add(query, ctx)
+            size = data[0]
+            self.recommend.record_data(data, str(ctx.author.id))
 
             await send_info_embed(player, ctx, size-1)
             await ctx.send(f'已成功添加歌曲到播放清單中! 你現在有 {size} 首歌在播放清單裡了！', ephemeral=True)
@@ -256,7 +261,7 @@ class Music(Cog_Extension):
     @tasks.loop(hours=10)
     async def update_recommendations(self):
         # TODO: 完成此處邏輯以及其他部分
-        recommend = Recommend(self.data)
+        recommend = self.recommend
         userIDs = self.data.data['recommend'].keys()
         for id in userIDs:
             await recommend.gener_recommendations(id)

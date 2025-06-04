@@ -1,6 +1,7 @@
 import asyncio
 import re
 import orjson
+import traceback
 
 from cmds.AIsTwo.base_chat import base_openai_chat
 
@@ -23,9 +24,9 @@ class MusicData:
     }
 
     def __init__(self):
-        self.data = self.load()
-        if not self.data:
-            self.data = {
+        self.load()
+        if not self.__class__.data:
+            self.__class__.data = {
                 'recommend': {}
             }
             self.save()
@@ -44,12 +45,27 @@ class MusicData:
     @classmethod
     def write(cls):
         if not cls.update: return
-        write_json(music_PATH, cls.data)
+        # print(f'Writing music data to file...\n {cls.data=}')
+        try: write_json(cls.data, music_PATH)
+        except: traceback.print_exc()
         cls.update = False
 
 class Recommend:
     def __init__(self, music_data: MusicData):
         self.music_data = music_data
+        self.userIDs = music_data['recommend'].keys()
+
+    def record_data(self, data: tuple, userID: str):
+        '''data: len(self.list), title, video_url, audio_url, thumbnail_url, duration\naka player.add's return data'''
+        if userID not in self.userIDs: return
+        title, author, length, video_url = data[1], 'unknown', data[5], data[2]
+
+        check_data = [ (song[0], song[3]) for song in self.music_data.data['recommend'][userID]['song'] ]
+        for item in check_data:
+            if item[0] == title and item[1] == video_url: return        
+
+        self.music_data.data['recommend'][userID]['song'].append((title, author, length, video_url))
+        self.music_data.save()
     
     async def gener_recommendations(self, userID: str) -> list:
         item: dict = self.music_data.data['recommend'].get(userID, {})
