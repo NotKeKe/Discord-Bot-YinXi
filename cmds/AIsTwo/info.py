@@ -5,7 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core.functions import read_json, write_json
-from core.functions import create_basic_embed
+from core.functions import create_basic_embed, current_time
 from cmds.AIsTwo.others.func import gener_title
 from cmds.AIsTwo.utils import to_assistant_message, to_user_message
 
@@ -145,7 +145,7 @@ class HistoryData:
         results = to_user_message(content) + to_assistant_message(result)
 
         # title = content if len(content) < 20 else content[:20]
-        title = gener_title(results) if len(content) >= 20 else content
+        title = (gener_title(results) if len(content) >= 20 else content) + f'create at: {current_time()}'
 
         if userID not in data:
             data[userID] = {
@@ -213,12 +213,14 @@ async def chat_autocomplete(interaction: discord.Interaction, current: str) -> t
     HistoryData.initdata()
     userID = str(interaction.user.id)
 
-    files = list(HistoryData.user[userID])
+    data = HistoryData.user[userID]
+    data = list(data.keys())
+    data.reverse() #由新到舊排序
     if current:
-        files = [history for history in files if current.lower().strip() in history.lower() and history != '']
+        data = [history for history in data if current.lower().strip() in history.lower() and history != '']
 
     # 限制最多回傳 25 個結果
-    return [app_commands.Choice(name=history, value=history) for history in files[:25] if history != '']
+    return [app_commands.Choice(name=history, value=history) for history in data[:25] if history != '']
 
 def create_result_embed(ctx: commands.Context, result, model):
     embed = create_basic_embed(title='AI文字生成', color=ctx.author.color)

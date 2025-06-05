@@ -218,6 +218,7 @@ other_calls_prompts = '''
     <preference Prefer eating chocolate when working.> (沒有使用正確格式)
     <preference>User is a high school student.</preference> (這是使用者的data，不是preference)
     User also like to eat chocolate</preference> (開頭沒有加上<preference>，為錯誤格式)
+    <preference><think>User love to talking at midnight. Use normal style to response user.</think></preference> (你不該在think內使用preference標籤)
 
 方法2:
   # 正確格式
