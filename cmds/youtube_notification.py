@@ -5,7 +5,7 @@ from discord import app_commands
 import scrapetube
 import requests
 from bs4 import BeautifulSoup
-from cmds.voice3 import is_youtube_url
+from cmds.music_bot.play4.utils import is_url
 from core.functions import read_json, write_json
 
 path = './cmds/data.json/youtube_update_channels.json'
@@ -127,7 +127,7 @@ class YoutubeNotification(commands.Cog):
 
         # 使用者要新增
         if youtuber is not None:
-            if not is_youtube_url(youtuber): await ctx.send('請使用正常的YouTube連結', ephemeral=True); return
+            if not is_url(youtuber): await ctx.send('請使用正常的YouTube連結', ephemeral=True); return
             if youtuber in j[channel_id]['artist']: await ctx.send('此頻道已經被設定過'); return
             channel_name = 取得頻道名稱(youtuber)
 
