@@ -1,8 +1,9 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from datetime import datetime
+from datetime import datetime, timedelta
 import typing
+from typing import Optional, Union
 import traceback
 
 from core.classes import Cog_Extension
@@ -157,6 +158,69 @@ class OnJoinLeave(Cog_Extension):
             self.write_data(data)
             embed = create_basic_embed(f'已為 {ctx.guild.name} 新增此功能', f'(加入頻道: {joinCh.name} 離開頻道: {leaveCh.name})')
             await ctx.send(embed=embed)
+
+    @commands.hybrid_command(name='刪除小時訊息', description='Delete messages serveral hours ago')
+    @commands.has_permissions(administrator=True)
+    @app_commands.describe(user='可以指定用戶 或是打userID來刪除訊息')
+    async def delete_spam_messages(self, ctx: commands.Context, hours: int, user: discord.User):
+        async with ctx.typing(ephemeral=True):
+            try:
+                if not ctx.guild.me.guild_permissions.manage_messages: return await ctx.send('我沒有權限刪除訊息', ephemeral=True)
+
+                count = 0
+                cant_delete_m: list[discord.Message] = []
+                cant_delete_c = []
+                now = datetime.now()
+                time = now - timedelta(hours=hours)
+
+                if isinstance(user, str):
+                    userID = int(user)
+                else:
+                    userID = user.id
+
+                for c in ctx.guild.text_channels:
+                    if not hasattr(c, 'history') or not c.permissions_for(ctx.guild.me).view_channel: continue
+                    if not c.permissions_for(ctx.guild.me).read_message_history:
+                        cant_delete_c.append(c)
+                        continue
+                    async for m in c.history(after=time):
+                        if m.author.id == userID: 
+                            if not c.permissions_for(ctx.guild.me).manage_messages:
+                                cant_delete_m.append(m)
+                                continue
+
+                            await m.delete()
+                            count += 1
+
+                embed = create_basic_embed(功能='刪除訊息', color=discord.Color.red())
+                embed.add_field(name='刪除訊息數', value=f'`{count}`', inline=False)
+                embed.set_footer(text=f'{userID=}')
+                if cant_delete_m:
+                    embed.add_field(
+                        name='無法刪除訊息數', 
+                        value='''\
+                            > `{}`
+                            > reason: 沒有 `管理訊息` 權限
+                            > 無法刪除的訊息: 
+                                {}
+                            '''
+                            .format(len(cant_delete_m), '\n'.join( [f"- Content: {m.content}; Time: {m.created_at.strftime('%Y-%m-%d %H:%M:%S')}" for m in cant_delete_m] )),
+                        inline=False
+                    )
+                if cant_delete_c:
+                    embed.add_field(
+                        name='無法刪除訊息的頻道數', 
+                        value='''\
+                            > `{}`
+                            > reason: 沒有該頻道的 `閱讀訊息歷史` 權限
+                            > 無法刪除訊息的頻道: {} 
+                            '''
+                            .format(len(cant_delete_c), '\n'.join([c.name for c in cant_delete_c])),
+                        inline=False
+                    )
+
+                await ctx.send(embed=embed)
+            except: traceback.print_exc()
 
 async def setup(bot):
     await bot.add_cog(OnJoinLeave(bot))

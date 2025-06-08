@@ -52,9 +52,16 @@ def read_json(path: str) -> Optional[Any]:
 
 def write_json(obj, path: str):
     """將物件寫入path當中， indent=4, ensure_ascii=False"""
-    with open(path, mode='w', encoding='utf8') as f:
-        json.dump(obj, f, indent=4, ensure_ascii=False)
-        f.flush()
+    try:
+        with open(path, mode='w', encoding='utf8') as f:
+            json.dump(obj, f, indent=4, ensure_ascii=False)
+            f.flush()
+    except FileNotFoundError as e:
+        print(f"文件未找到: {e}")
+        return
+    except Exception as e:
+        print(f"其他錯誤: {traceback.format_exc()}")
+        return
 
 
 def create_basic_embed(title = None, description = None, color = discord.Color.blue(), 功能:str = None, time=True):

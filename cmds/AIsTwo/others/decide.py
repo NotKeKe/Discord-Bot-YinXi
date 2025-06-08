@@ -90,7 +90,7 @@ class ActivitySelector:
         elif status == 2:
             random_num = random.randint(0, 1) 
             song_type = 'emo' if random_num == 0 else '世界計畫'
-            result = base_zhipu_chat(f'基於搜尋，找`一首`有關`{song_type}`的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', 'glm-4-flash', temperature=0.8,
+            result = base_openai_chat(f'基於搜尋，找`一首`有關`{song_type}`的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', 'glm-4-flash', temperature=0.8,
                                     system_prompt=system_prompt, is_enable_tools=True, max_tokens=60, top_p=0.9)[1]
             result = translate(result)
             result = halfToFull(result).replace('。', '\n')
@@ -98,7 +98,7 @@ class ActivitySelector:
             activity = discord.Activity(type=discord.ActivityType.listening, name=result)
         # Setting `Watching ` status
         elif status == 3:
-            result = base_zhipu_chat(f'基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字', 'glm-4-flash', temperature=0.8,
+            result = base_openai_chat(f'基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字', 'glm-4-flash', temperature=0.8,
                                     system_prompt=system_prompt, is_enable_tools=True, max_tokens=60, top_p=0.9)[1]
             result = translate(result)
             result = halfToFull(result).replace('。', '\n')
