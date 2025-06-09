@@ -13,31 +13,65 @@ ffmpeg_options = {
 
 # YTDL_OPTIONS = {
 #     'format': 'bestaudio/best',
-#     'extractaudio': True,
-#     'audioformat': 'mp3',
-#     'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-#     'restrictfilenames': True,
-#     'noplaylist': True,
-#     'nocheckcertificate': True,
-#     'ignoreerrors': False,
-#     'logtostderr': False,
+#     'forceurl': True,
+#     'skip_download': True,
 #     'quiet': True,
 #     'no_warnings': True,
 #     'default_search': 'auto',
+#     'noplaylist': True,
+#     'restrictfilenames': True,
+#     'no_check_certificate': True,
 #     'source_address': '0.0.0.0',
 # }
 
 YTDL_OPTIONS = {
-    'format': 'bestaudio/best',
-    'forceurl': True,
-    'skip_download': True,
-    'quiet': True,
-    'no_warnings': True,
-    'default_search': 'auto',
-    'noplaylist': True,
-    'restrictfilenames': True,
-    'no_check_certificate': True,
-    'source_address': '0.0.0.0',
+    # === 基本設定 ===
+    "quiet": True,
+    "no_warnings": True,
+    "no_color": True,
+   
+    # === 格式選擇 ===
+    "format": "bestaudio/best",
+    "prefer_free_formats": True,
+   
+    # === 下載控制 ===
+    "skip_download": True,
+    "simulate": True,              # 修正：啟用模擬模式
+    "dump_single_json": False,
+   
+    # === 播放清單處理 ===
+    "noplaylist": True,
+    "extract_flat": False,
+   
+    # === 資訊提取設定 ===
+    "writeinfojson": False,
+    "writedescription": False,
+    "writesubtitles": False,
+    "writeautomaticsub": False,
+    "writethumbnail": False,
+    "write_all_thumbnails": False,
+    "writeannotations": False,
+   
+    # === 縮圖處理 ===
+    "list_thumbnails": True,       # 修正：啟用多縮圖列表
+   
+    # === 網路優化 ===
+    "socket_timeout": 30,
+    "retries": 2,
+    "fragment_retries": 2,
+   
+    # === 快取設定 ===
+    "cachedir": "/tmp/yt-dlp-cache",
+    "rm_cachedir": False,
+   
+    # === 性能優化 ===
+    "no_check_certificate": False,
+    "prefer_insecure": False,
+    "call_home": False,
+    "lazy_playlist": True,
+   
+    # === 限制處理範圍 ===
+    "playlistend": 1
 }
 
 class ID:
