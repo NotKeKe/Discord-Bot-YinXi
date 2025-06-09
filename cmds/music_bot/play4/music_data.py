@@ -53,7 +53,7 @@ class MusicData:
 class Recommend:
     def __init__(self, music_data: MusicData):
         self.music_data = music_data
-        self.userIDs = music_data['recommend'].keys()
+        self.userIDs = music_data.data['recommend'].keys()
 
     def record_data(self, data: tuple, userID: str):
         '''data: len(self.list), title, video_url, audio_url, thumbnail_url, duration\naka player.add's return data'''
