@@ -26,3 +26,4 @@ discord-pretty-help
 jinja2
 python-multipart
 chromadb
+aiosqlite
