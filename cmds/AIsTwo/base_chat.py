@@ -310,9 +310,8 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
         if history is None: history = []
         if max_tokens is None: max_tokens = 1999
         # system
+        system = default_system_prompt if not system_prompt else system_prompt
         if not system_prompt:
-            system_prompt = default_system_prompt
-
             personality = default_system_personality
             preference = 'None'
             info = 'None'
@@ -328,7 +327,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                 if not personality: personality = default_system_personality # 避免 personality 為空字串
                 preference = Preference.get_preferences(userID)
                 info = UserInfo(userID).get_info()
-            system = system_prompt.format(preference=preference, personality=personality, info=info)
+            system = system.format(preference=preference, personality=personality, info=info)
         system = to_system_message(system + (other_calls_prompts if not no_extra_system_prompt else ''))
         
         # 選擇base url
@@ -510,14 +509,8 @@ def base_zhipu_chat(prompt:str, model:str = None, temperature:float = None, hist
         if max_tokens is None: max_tokens = 1999
         # system
         if not system_prompt:
-            system_prompt = default_system_prompt
-
-            if ctx or userID:
-                from cmds.AIsTwo.others.decide import Preference
-                from cmds.AIsTwo.info import HistoryData
-                personality = HistoryData.personality.get(userID or str(ctx.author.id), '')
-                preference = Preference.get_preferences(userID or ctx.author.id)
-                system = system_prompt.format(preference=preference, personality=personality)
+            system_prompt = default_system_prompt.format(personality=default_system_personality)
+            
         system = to_system_message(system_prompt)
 
         from cmds.AIsTwo.others.if_tools_needed import ifTools_zhipu
