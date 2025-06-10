@@ -353,7 +353,9 @@ class SkyblockItemTracker(commands.Cog):
     async def bz_item_tracker(self):
         try:
             # 每隔5分鐘更新一次bazaar資訊
-            self.__class__.bazaar = await thread_pool(sb.get_bazaar_data)
+            try:
+                self.__class__.bazaar = await thread_pool(sb.get_bazaar_data)
+            except: ...
             bazaar = self.__class__.bazaar
             self.initbzuser()
             if not bazaar['success']: return

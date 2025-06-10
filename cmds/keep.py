@@ -190,6 +190,7 @@ class Keep(Cog_Extension):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
         await RunKeep.create_KeepTask()
+        await self.write_keep_data.start()
 
     # Create a Keep
     @commands.hybrid_command()

@@ -31,6 +31,7 @@ from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 alive = time.time()
+youtube_download_base_url = 'https://opfqetniurlt.ap-northeast-1.clawcloudrun.com'
 
 # Create SQLite database and table
 def init_snoymous_messages_db():
@@ -538,7 +539,7 @@ class ApiCog(commands.Cog):
                 }
 
                 async with aiohttp.ClientSession() as sess:
-                    async with sess.post('http://192.168.31.99:6002/api/download', json=data) as resp:
+                    async with sess.post(f'{youtube_download_base_url}/api/download', json=data) as resp:
                         if resp.status == 404: return await ctx.send('目前無法下載影片或音訊 (原因: 我也不知道 可能我壞掉了(?) )')
                         resp_json = await resp.json()
                         task_id = resp_json.get('task_id')
@@ -549,7 +550,7 @@ class ApiCog(commands.Cog):
                     await asyncio.sleep(3)
 
                     async with aiohttp.ClientSession() as sess:
-                        async with sess.get(f'http://192.168.31.99:6002/api/status/{task_id}') as resp:
+                        async with sess.get(f'{youtube_download_base_url}/api/status/{task_id}') as resp:
                             resp_json = await resp.json()
                             status = resp_json.get('status')
                             if status == 'error': 

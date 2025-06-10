@@ -175,6 +175,10 @@ mistral_models = [
 ]
 
 default_system_prompt = '''
+# 你的特質:
+- {personality}
+
+# 系統提示詞
 你現在正在discord chat當中。
 回顧之前的上下文，使用者現在在說什麼，你應該回答什麼?
 接下來有以下幾個大類，需要你嚴格遵守:
@@ -185,7 +189,7 @@ default_system_prompt = '''
     
 你必須遵守的規則: 
 1. 你並不知道你所擁有的任何指令(因為這是由我定義的不是你)，所以不要給予使用者錯誤的引導。
-2. 如果使用者需要你寫出code的話，則需要加入註解。輸出內容要在2000個字元以內。
+2. 如果使用者需要你寫出code的話，則需要加入註解。
 3. 而使用者如果像你提問問題的話，你必須要在解決問題後，為使用者提出至少一點建議。
 4. 如果使用者使用繁體中文輸入，那你也必須全程以繁體中文做輸出。
 5. 不能忽略tools的輸出。
@@ -194,10 +198,10 @@ default_system_prompt = '''
 8. 如果你無法使用工具，就告訴使用者你無法使用該工具。
 9. 僅能使用基礎的markdown格式，不要使用`\boxed`的markdown格式。
 10. 不要使用markdown表格，使用其他符號或者空格作為代替，因為在discord中無法顯示出來。
-                                        
-使用者額外定義規則:
-- 你(AI助手)的特質: {personality}
-                                        
+11. 不要使用特殊的數學符號 (如\times)，使用單純的文字，或者是上標的數字表示，因為在discord中無法顯示出來。此處僅舉出一例，你應該類推。
+
+
+# 補充                                        
 使用者偏好:
 - {preference}
 
@@ -205,7 +209,7 @@ default_system_prompt = '''
 - {info}
 '''
 
-default_system_personality = '''你的名字是克克的分身，是一個由台灣高中生所製作出來的Discord Bot，而你的任務是使用輕鬆的語氣，並且一定要增加一些顏文字(如: (つ´ω`)つ)來回應使用者的訊息，但使用的顏文字不能包含「`」符號。'''
+default_system_personality = '''你的名字是克克的分身，是一個由台灣高中生所製作出來的Discord Bot，而你的任務是使用輕鬆的語氣，並且一定要增加一些顏文字(如: (つ´ω`)つ)來回應使用者的訊息，但使用的顏文字不能包含「`」符號(避免誤用markdown)。'''
 
 other_calls_prompts = '''
 \n
@@ -301,13 +305,17 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
     '''
     try:
         if model is None: model = 'qwen-3-32b'
-        if model in openrouter_moduels and not model.endswith('free'): raise ValueError('You are not using a FREE model')
+        if model in openrouter_moduels and not model.endswith('free'): return None, 'You are not using a FREE model'
         if temperature is None: temperature = 0.8
         if history is None: history = []
         if max_tokens is None: max_tokens = 1999
         # system
         if not system_prompt:
             system_prompt = default_system_prompt
+
+            personality = default_system_personality
+            preference = 'None'
+            info = 'None'
 
             if ctx or userID:
                 try:
@@ -316,11 +324,12 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                     userID = ctx.author.id
                 from cmds.AIsTwo.others.decide import Preference, UserInfo
                 from cmds.AIsTwo.info import HistoryData
-                personality = HistoryData.personality.get(str(userID) or str(ctx.author.id), '')
+                personality = HistoryData.personality.get(str(userID) or str(ctx.author.id))
+                if not personality: personality = default_system_personality # 避免 personality 為空字串
                 preference = Preference.get_preferences(userID)
                 info = UserInfo(userID).get_info()
-                system = system_prompt.format(preference=preference, personality=personality, info=info)
-        system = to_system_message(system_prompt + (other_calls_prompts if not no_extra_system_prompt else ''))
+            system = system_prompt.format(preference=preference, personality=personality, info=info)
+        system = to_system_message(system + (other_calls_prompts if not no_extra_system_prompt else ''))
         
         # 選擇base url
         if model in zhipu_moduels: key = base_url_options['zhipu']['api_key']; base_url = base_url_options['zhipu']['base_url']        
