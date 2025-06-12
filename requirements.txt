@@ -20,10 +20,10 @@ scrapetube==2.5.1
 tenacity==9.0.0
 tweepy==4.15.0
 uvicorn==0.34.2
-yt_dlp==2025.4.30
+yt_dlp
 zhipuai==2.1.5.20250421
 discord-pretty-help
 jinja2
 python-multipart
-chromadb
+chromadb>=1.0.8
 aiosqlite

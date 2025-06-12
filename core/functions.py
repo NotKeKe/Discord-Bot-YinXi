@@ -3,7 +3,7 @@ import discord
 from datetime import datetime, timedelta, timezone
 import asyncio
 import functools
-from typing import Optional, Any
+from typing import Optional, Any, List
 from deep_translator import GoogleTranslator
 import aiohttp
 import os
@@ -33,6 +33,7 @@ NewsApiKEY = os.getenv("news_api_KEY")
 nasaApiKEY = os.getenv("nasa_api_KEY")
 unsplashKEY = os.getenv('unsplash_api_access_KEY')
 GIPHYKEY = os.getenv('GIPHY_KEY')
+GENIUS_ACCESS_TOKEN = os.getenv('GENIUS_ACCESS_TOKEN')
 
 def read_json(path: str) -> Optional[Any]:
     """將path讀取成物件並回傳"""
@@ -164,4 +165,4 @@ def is_KeJC(userID: int):
     return str(userID) == KeJCID
 
 settings = read_json('setting.json')
-admins: list[int] = read_json('./cmds/data.json/admins.json')['admins']
+admins: List[int] = read_json('./cmds/data.json/admins.json')['admins']
