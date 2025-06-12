@@ -53,7 +53,7 @@ YTDL_OPTIONS = {
     "writeannotations": False,
    
     # === 縮圖處理 ===
-    "list_thumbnails": True,       # 修正：啟用多縮圖列表
+    # "list_thumbnails": True,       # 修正：啟用多縮圖列表
    
     # === 網路優化 ===
     "socket_timeout": 30,
@@ -142,12 +142,13 @@ async def send_info_embed(player, ctx: commands.Context | discord.Interaction, i
     loop_status = player.loop_status
     is_current = index == player.current_index
 
-    eb = create_basic_embed(f'{'▶️ 正在播放 ' if is_current else '以新增 '}`{title}`', color=user.color, 功能='音樂播放')
+    eb = create_basic_embed(f'{'▶️ 正在播放 ' if is_current else '已新增 '}`{title}`', color=user.color, 功能='音樂播放')
     eb.set_image(url=thumbnail_url)
     eb.add_field(name='🌐 Video url', value=f'[url]({video_url})')
     eb.add_field(name='⏱️ Duration', value=f'{duration}')
     eb.add_field(name='🔁 Loop status', value=loop_status)
-    eb.add_field(name='Progress bar', value=player.progress_bar)
+    eb.add_field(name='🔊 Volume', value=f'{player.volume * 100}%')
+    eb.add_field(name='Progress bar', value=player.progress_bar, inline=False)
     eb.set_footer(text=f'Requested by {user.global_name}', icon_url=user.avatar.url if user.avatar else None)
 
     view = MusicControlButtons(player)
@@ -156,11 +157,12 @@ async def send_info_embed(player, ctx: commands.Context | discord.Interaction, i
     return eb, view
 
 async def check_and_get_player(ctx: commands.Context, *, check_user_in_channel=True):
+    '''Return current Player object, and a status of this command.'''
     from cmds.play4 import players
     from cmds.music_bot.play4.player import Player
     
     if check_user_in_channel:
-        if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面?'), False
+        if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧~'), False
     if not ctx.voice_client: return await ctx.send('音汐不在語音頻道內欸:thinking:'), False
 
     player: Player = players.get(ctx.guild.id)

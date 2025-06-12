@@ -165,20 +165,6 @@ class TestTemp(Cog_Extension):
         await ctx.send("請選擇一個按鈕", view=view)
 
     @commands.command()
-    async def pageview(self, ctx):
-        from cmds.music_bot.play2.button import PaginatorView
-        from cmds.music_bot.play2.default import save
-        pages = [
-            {"title": "第 1 頁", "content": "這是第 1 頁的內容"},
-            {"title": "第 2 頁", "content": "這是第 2 頁的內容"},
-            {"title": "第 3 頁", "content": "這是第 3 頁的內容"}
-        ]
-        pages = save.personal_list[str(ctx.author.id)]
-
-        view = PaginatorView(pages=pages)
-        await ctx.send(view=view)
-
-    @commands.command()
     async def cmd(self, ctx):
         if str(ctx.author.id) != KeJCID: return
         print('hello\n')
@@ -199,10 +185,11 @@ class TestTemp(Cog_Extension):
 
     @commands.hybrid_command()
     @app_commands.check(promision_check)
-    async def test(self, ctx: commands.Context):
-        import requests
-        response = requests.get('https://api.zxki.cn/api/tgrj')
-        await ctx.send(response.text)
+    async def test(self, ctx: commands.Context, query: str, artist: str):
+        async with ctx.typing():
+            from cmds.music_bot.play4.lyrics import search_lyrics
+            a = await search_lyrics(query, artist)
+            await ctx.send(a)
 
 
     # async def on_select(interaction: discord.Interaction):

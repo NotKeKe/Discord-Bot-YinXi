@@ -10,6 +10,8 @@ from cmds.music_bot.play4.player import Player, loop_option
 from cmds.music_bot.play4.utils import send_info_embed, check_and_get_player
 from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.music_data import MusicData, Recommend
+from cmds.music_bot.play4.lyrics import search_lyrics
+from cmds.music_bot.play4.buttons import VolumeControlButtons
 
 from core.classes import Cog_Extension
 from core.functions import KeJCID, create_basic_embed
@@ -35,7 +37,7 @@ class Music(Cog_Extension):
     @commands.hybrid_command(name='play', description='播放音樂', aliases=['p', '播放'])
     async def _play(self, ctx: commands.Context, *, query: str = None):
         try:
-            async with ctx.typing(ephemeral=True):
+            async with ctx.typing():
                 if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
                 if not ctx.voice_client:
                     await ctx.author.voice.channel.connect()
@@ -50,7 +52,10 @@ class Music(Cog_Extension):
                 self.recommend.record_data(data, str(ctx.author.id))
                 await player.play()
                 await send_info_embed(player, ctx)
-        except: traceback.print_exc()
+        except: 
+            traceback.print_exc()
+            await ctx.send('疑? 好像出錯了 要不換個 `query` 試試看?')
+            del players[ctx.guild.id]
 
     @commands.hybrid_command(name='add', description='添加歌曲到播放清單')
     async def _add(self, ctx: commands.Context, *, query: str):
@@ -162,6 +167,7 @@ class Music(Cog_Extension):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
             if not status: return
+            if not player.list: return await ctx.send('播放清單本來就是空的窩~')
 
             view = discord.ui.View(timeout=60)
             button_check = discord.ui.Button(emoji='✅', label='確認', style=discord.ButtonStyle.green)
@@ -242,6 +248,23 @@ class Music(Cog_Extension):
             view.add_item(button2)
 
             await ctx.send(view=view, embed=create_eb(), ephemeral=True)
+
+    @commands.hybrid_command(name='歌詞搜尋', description='Search lyrics with Genius API')
+    async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None):
+        result = await search_lyrics(query, artist)
+        await ctx.send(result if result else '找不到這首歌的歌詞欸... 要不考慮換個關鍵字試試?')
+
+    @commands.hybrid_command(name='音量調整', description='Adjust the volume of the bot')
+    @app_commands.describe(volume='0~100 (單位為 `%` )，如果不輸入的話 可以用按鈕點')
+    async def volume_adjust(self, ctx: commands.Context, volume: int = None):
+        async with ctx.typing():
+            player, status = await check_and_get_player(ctx)
+            if not status: return
+
+            if volume:
+                await player.volume_adjust(volume=volume / 100)
+
+            await ctx.send('音量大小按鈕', view=VolumeControlButtons(player))
 
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):

@@ -1,11 +1,13 @@
 import discord
 from discord.ext import commands
+from discord import PCMVolumeTransformer
 import asyncio
 import traceback
 import time
 
 from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.downloader import Downloader
+from cmds.music_bot.play4.lyrics import search_lyrics
 
 from core.functions import create_basic_embed, current_time, secondToReadable
 # from core.classes import bot
@@ -27,6 +29,11 @@ class Player:
         self.channel = ctx.voice_client.channel
         self.voice_client = ctx.voice_client
         self.bot = ctx.bot
+
+        # volume
+        self.source = None
+        self.volume: float = 1
+        self.transformer: PCMVolumeTransformer = None
 
         self.manual = False
 
@@ -100,8 +107,12 @@ class Player:
             # 播放新音訊
             self.gener_progress_bar()
             self.update_progress_bar_task = self.bot.loop.create_task(self.update_passed_time())
+            self.source = discord.FFmpegPCMAudio(audio_url, **utils.ffmpeg_options)
+            self.transformer = PCMVolumeTransformer(self.source, self.volume)
+            if self.voice_client.is_playing():
+                self.voice_client.stop()
             self.voice_client.play(
-                discord.FFmpegPCMAudio(audio_url, **utils.ffmpeg_options), 
+                self.transformer, 
                 after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(e), self.bot.loop)
             )
         except Exception as e:
@@ -189,8 +200,10 @@ class Player:
             else: # 已到列表末尾且未啟用循環
                 await asyncio.sleep(1)
                 if not self.ctx.voice_client: return
+                from cmds.play4 import players
                 await self.ctx.send('我已經播完所有歌曲啦! 我就離開囉')
                 await self.voice_client.disconnect()
+                del players[self.ctx.guild.id]
                 del self
                 return
         elif self.loop_status == 'list':
@@ -231,6 +244,7 @@ class Player:
 
     def clear_list(self):
         self.list = []
+        self.voice_client.stop()
 
     def gener_progress_bar(self, bar_length: int = 20) -> str:
         """
@@ -293,3 +307,21 @@ class Player:
         self.ctx = None
         self.voice_client = None
         self.bot = None
+
+    async def search_lyrics(self) -> str:
+        query = self.list[self.current_index].get('title')
+        result = await search_lyrics(query=query)
+        if not result: return '沒有搜尋結果，建議使用 `/歌詞搜尋 {query} {artist}` 來搜尋歌詞'
+        return result
+    
+    async def volume_adjust(self, volume: float = None, add: float = None, reduce: float = None) -> discord.Message | bool:
+        '''調整音量，add 和 reduce 皆為`正`浮點數，且音量最大值為 2.0。此 func 也會傳送訊息通知使用者將音量調整為多少'''
+        if not volume and not add and not reduce: return False
+        self.volume = ( self.volume + (add or 0) - (reduce or 0) ) if add or reduce else volume
+        if self.volume > 200: self.volume = 200
+
+        self.transformer.volume = self.volume
+        self.voice_client.source = self.transformer
+
+        msg = await self.ctx.send(f'已將音量調整為 `{self.volume * 100}%`', silent=True) # ephemeral 有問題 我也不知道為什麼，所以先用 silent 代替 (雖然概念不太一樣就是了)
+        return msg
