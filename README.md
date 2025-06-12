@@ -1,7 +1,9 @@
 # 音汐 (Yin-Xi) Discord 機器人
 <p align="center">
-  <img src="https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/botself.png?raw=true" width = "100" height = "100"/>
+  <img src="https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/botself.png?raw=true" width = "300" height = "300"/>
 </p>
+
+( cogview-3-flash 幫他畫了 6 根手指ww )
 
 **🔗 Bot 邀請連結:**
 - [URL](https://discord.com/oauth2/authorize?client_id=990798785489825813)
