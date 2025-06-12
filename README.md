@@ -1,6 +1,6 @@
 # 音汐 (Yin-Xi) Discord 機器人
 <p align="center">
-  <img src="https://github.com/NotKeKe/Discord-Bot-YinXi/tree/main/assets/botself.png?raw=true" width = "100" height = "100"/>
+  <img src="https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/botself.png?raw=true" width = "100" height = "100"/>
 </p>
 
 **🔗 Bot 邀請連結:**
