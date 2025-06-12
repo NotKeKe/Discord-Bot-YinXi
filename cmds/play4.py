@@ -251,8 +251,9 @@ class Music(Cog_Extension):
 
     @commands.hybrid_command(name='歌詞搜尋', description='Search lyrics with Genius API')
     async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None):
-        result = await search_lyrics(query, artist)
-        await ctx.send(result if result else '找不到這首歌的歌詞欸... 要不考慮換個關鍵字試試?')
+        async with ctx.typing():
+            result = await search_lyrics(query, artist)
+            await ctx.send(result if result else '找不到這首歌的歌詞欸... 要不考慮換個關鍵字試試?')
 
     @commands.hybrid_command(name='音量調整', description='Adjust the volume of the bot')
     @app_commands.describe(volume='0~100 (單位為 `%` )，如果不輸入的話 可以用按鈕點')
