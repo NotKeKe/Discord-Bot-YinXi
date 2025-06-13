@@ -24,54 +24,37 @@ ffmpeg_options = {
 #     'source_address': '0.0.0.0',
 # }
 
-YTDL_OPTIONS = {
+YTDL_OPTIONS = YTDL_OPTIONS = {
     # === 基本設定 ===
-    "quiet": True,
-    "no_warnings": True,
-    "no_color": True,
-   
+    "quiet": True,                # 安靜模式（減少輸出）
+    "no_warnings": True,          # 隱藏警告
+    "no_color": True,             # 禁用顏色輸出
+
     # === 格式選擇 ===
-    "format": "bestaudio/best",
-    "prefer_free_formats": True,
-   
+    "format": "bestaudio/best",   # 獲取最佳音訊品質
+    "prefer_free_formats": True,  # 優先選擇開放格式（如 webm）
+
     # === 下載控制 ===
-    "skip_download": True,
-    "simulate": True,              # 修正：啟用模擬模式
-    "dump_single_json": False,
-   
-    # === 播放清單處理 ===
-    "noplaylist": True,
-    "extract_flat": False,
-   
-    # === 資訊提取設定 ===
-    "writeinfojson": False,
-    "writedescription": False,
-    "writesubtitles": False,
-    "writeautomaticsub": False,
-    "writethumbnail": False,
-    "write_all_thumbnails": False,
-    "writeannotations": False,
-   
-    # === 縮圖處理 ===
-    # "list_thumbnails": True,       # 修正：啟用多縮圖列表
-   
+    "skip_download": True,        # 跳過實際下載
+    "simulate": False,            # 禁用模擬模式（需完整解析）
+    "dump_single_json": True,     # 直接輸出 JSON 資料
+
+    # === 資訊提取 ===
+    "writeinfojson": True,        # 寫入完整資訊（含標題、連結）
+    "writethumbnail": True,      # 獲取封面連結
+
     # === 網路優化 ===
-    "socket_timeout": 30,
-    "retries": 2,
-    "fragment_retries": 2,
-   
-    # === 快取設定 ===
-    "cachedir": "/tmp/yt-dlp-cache",
+    "socket_timeout": 30,         # 縮短超時時間
+    "retries": 1,                 # 減少重試次數
+    "fragment_retries": 1,
+
+    # === 快取設定（Linux）===
+    "cachedir": "/tmp/yt-dlp-cache",  # 使用 RAM Disk 加速
     "rm_cachedir": False,
-   
-    # === 性能優化 ===
-    "no_check_certificate": False,
-    "prefer_insecure": False,
-    "call_home": False,
-    "lazy_playlist": True,
-   
-    # === 限制處理範圍 ===
-    "playlistend": 1
+
+    # === 其他優化 ===
+    "no_check_certificate": True,         # 避免 SSL 握手延遲（僅限可信環境）
+    "call_home": False,                   # 禁用外部請求
 }
 
 class ID:

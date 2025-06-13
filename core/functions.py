@@ -138,7 +138,7 @@ def get_attachment(msg: discord.Message, to_base64:bool=False) -> list:
         a = [image_url_to_base64(u) for u in a]
     return a
 
-def math_round(x: float, ndigits: int = 0) -> int:
+def math_round(x: float, ndigits: int = 0) -> float:
     factor = 10 ** ndigits
     if x >= 0: return int(x * factor + 0.5) / factor
     else: return int(x * factor - 0.5) / factor

@@ -9,7 +9,7 @@ from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.downloader import Downloader
 from cmds.music_bot.play4.lyrics import search_lyrics
 
-from core.functions import create_basic_embed, current_time, secondToReadable
+from core.functions import create_basic_embed, current_time, secondToReadable, math_round
 # from core.classes import bot
 
 loop_option = ('None', 'single', 'list')
@@ -318,10 +318,10 @@ class Player:
         '''調整音量，add 和 reduce 皆為`正`浮點數，且音量最大值為 2.0。此 func 也會傳送訊息通知使用者將音量調整為多少'''
         if not volume and not add and not reduce: return False
         self.volume = ( self.volume + (add or 0) - (reduce or 0) ) if add or reduce else volume
-        if self.volume > 200: self.volume = 200
+        if self.volume > 2: self.volume = 2
 
         self.transformer.volume = self.volume
         self.voice_client.source = self.transformer
-
-        msg = await self.ctx.send(f'已將音量調整為 `{self.volume * 100}%`', silent=True) # ephemeral 有問題 我也不知道為什麼，所以先用 silent 代替 (雖然概念不太一樣就是了)
+    
+        msg = await self.ctx.send(f'已將音量調整為 `{int(math_round(self.volume * 100))}%`', silent=True, ephemeral=True)
         return msg

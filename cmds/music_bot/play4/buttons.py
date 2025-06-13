@@ -73,6 +73,10 @@ class MusicControlButtons(View):
         result = await self.player.search_lyrics()
         await interation.followup.send(result, ephemeral=True)
 
+    @button(label='音量調整', emoji='🔊')
+    async def volume_callback(self, interaction: Interaction, button: Button):
+        await interaction.response.send_message(view=VolumeControlButtons(self.player), ephemeral=True)
+
     @button(label='歌曲推薦')
     async def recommend_callback(self, interaction: Interaction, button: Button):
         from cmds.play4 import music_data
