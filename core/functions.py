@@ -46,6 +46,10 @@ def read_json(path: str) -> Optional[Any]:
         return None
     except FileNotFoundError as e:
         print(f"文件未找到: {e}")
+        if path.endswith('.json'):
+            print('嘗試初始化 .json 中')
+            with open(path, 'wb') as f:
+                f.write(orjson.dumps({}))
         return None
     except Exception as e:
         print(f"其他錯誤: {e}")

@@ -12,10 +12,11 @@ from core.classes import Cog_Extension
 PATH = './data/temp'
 
 class ChannelHistories:
-    def __init__(self, ctx: commands.Context, count: int, file_type: str):
+    def __init__(self, ctx: commands.Context, count: int, file_type: str, reverse: bool):
         self.file_type = file_type
         self.ctx = ctx
         self.count = count
+        self.reverse = reverse
         self.ls = None
         self.channelID = ctx.channel.id
         self.file_path = None
@@ -52,6 +53,9 @@ class ChannelHistories:
         return ls
     
     async def type_process(self):
+        if self.reverse:
+            self.ls.reverse()
+
         if self.file_type == 'json':
             self.file_path = f'{PATH}/channel_history_{self.channelID}.json'
             async with aiofiles.open(f'{PATH}/channel_history_{self.channelID}.json', mode='w') as f:
@@ -104,27 +108,33 @@ class ChannelHistory(Cog_Extension):
 
     @commands.hybrid_command(name='輸出聊天紀錄', description='Return a file that contains the chat history of the channel')
     @app_commands.choices(file_type=[app_commands.Choice(name=t, value=t) for t in ('json', 'txt')])
-    async def output_chat_history(self, ctx: commands.Context, count: int = 10, file_type: str = 'json', ephemeral: bool = False):
+    @app_commands.describe(count='你要輸出的聊天紀錄數量 (預設為10)', file_type='你要輸出的檔案格式 (txt or json, 預設為json)', reverse='是否要翻轉最終的輸出 (預設會從最新到最舊)')
+    async def output_chat_history(self, ctx: commands.Context, count: int = 10, file_type: str = 'json', reverse: bool = False):
         async with ctx.typing():
-            if not ctx.channel.permissions_for(ctx.author).read_messages:
+            if not ctx.channel.permissions_for(ctx.author).read_messages or not ctx.channel.permissions_for(ctx.author).read_message_history:
                 return await ctx.send('你沒有權限讀取聊天紀錄')
             if not ctx.channel.permissions_for(ctx.me).read_message_history:
                 return await ctx.send('我沒有權限讀取聊天紀錄')
 
-            ch = ChannelHistories(ctx, count, file_type)
+            ch = ChannelHistories(ctx, count, file_type, reverse)
             file_path = await ch.run()
             
             file = discord.File(file_path, f'channel_history_{ctx.channel.id}.{file_type}')
 
-            await ctx.send(file=file, ephemeral=ephemeral)
+            await ctx.send(file=file)
 
     @tasks.loop(minutes=1)
     async def rm_file(self):
-        for path in os.listdir(PATH):
-            if not path.startswith('channel_history_'): continue
-            if time.time() - os.path.getctime(path) < 180: # 3分鐘後自動刪除
-                os.remove(f'{PATH}/{path}')
-
+        for filename in os.listdir(PATH):
+            file_path = os.path.join(PATH, filename)
+            if not filename.startswith('channel_history_'): continue
+            
+            if os.path.isfile(file_path):
+                try:
+                    if time.time() - os.path.getctime(file_path) > 180: # 超過3分鐘則刪除
+                        os.remove(file_path)
+                except Exception as e:
+                    print(f'刪除檔案 {file_path} 時發生錯誤: {e}')
 
 async def setup(bot):
     await bot.add_cog(ChannelHistory(bot))
