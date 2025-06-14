@@ -27,3 +27,4 @@ jinja2
 python-multipart
 chromadb>=1.0.8
 aiosqlite
+aiofiles
