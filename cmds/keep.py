@@ -2,13 +2,14 @@ from discord.ext import commands, tasks
 from discord import app_commands
 import asyncio
 import orjson
+import uuid
 from datetime import datetime
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
 import traceback
 
 from core.classes import Cog_Extension, bot
-from core.functions import read_json, write_json, create_basic_embed, current_time
+from core.functions import read_json, write_json, create_basic_embed, current_time, KeJCID
 from cmds.AIsTwo.base_chat import base_url_options
 
 ex_keepData = {
@@ -17,14 +18,15 @@ ex_keepData = {
             "When_to_send_str": "2025-05-13 22:00:00",
             "When_to_send_timestamp": 1747144800.0,
             "ChannelID": 1300024314518704210,
-            "event": "HI"
+            "event": "HI",
+            'uuid': "str(uuid.uuid4())"
         }, 
     ]
 }
 
 keepPATH = './cmds/data.json/keep.json'
 
-class RunKeep:
+class SaveKeep:
     keepData = None
     update = False
 
@@ -36,22 +38,26 @@ class RunKeep:
     @classmethod
     def save(cls, data=None):
         if data:
-            cls.data = data
+            cls.keepData = data
         cls.update = True
 
     @classmethod
     def write(cls):
-        if not cls.update: return
-        write_json(cls.data, keepPATH)
+        write_json(cls.keepData, keepPATH)
+        cls.update = False
 
     @classmethod
-    def deletekeepEvent(cls, userID: str):
+    def deletekeepEvent(cls, userID: str, uuid: str):
         if cls.keepData is not None:
-            cls.keepData[userID].pop()
+            for item in cls.keepData[userID]:
+                if item['uuid'] == uuid:
+                    cls.keepData[userID].remove(item)
+                    break
+
             if not cls.keepData[userID]: del cls.keepData[userID]
             cls.save(cls.keepData)
 
-
+class RunKeep:
     def __init__(self, time: str, event: str, ctx: commands.Context):
         self.system_prompt = '''你是一個專門記錄使用者設定提醒事項的AI，你必須使用你的function calling能力，呼叫keep函數，來協助使用者完成這件事，使用者會說他希望你提醒他完成某件事，在 `event` 變數中 一字不漏、不能修改的 傳入這件事，確保你的格式沒有任何錯誤。time部分，如果使用者沒有特別指定準確的小時與分鐘，就使用當前時間。**現在的時間為: {}**'''.format(current_time())
         self.tool_descrip = [
@@ -101,18 +107,21 @@ class RunKeep:
         return tool_call
 
     async def run(self):
-        tool_call = await self.chat()
-        tool_name = tool_call.function.name
-        arguments = tool_call.function.arguments
-        args = orjson.loads(arguments) if type(arguments) != dict else arguments
-        print(f'{tool_name}: {args}')
-        try: await self.func(**args)
-        except: traceback.print_exc()
+        try:
+            tool_call = await self.chat()
+            tool_name = tool_call.function.name
+            arguments = tool_call.function.arguments
+            args = orjson.loads(arguments) if type(arguments) != dict else arguments
+            print(f'{tool_name}: {args}')
+            await self.func(**args)
+        except: 
+            traceback.print_exc()
+            raise
 
     async def func(self, time: str, event: str):
         '''格式為'%Y-%m-%d %H:%M' '''
-        self.initData()
-        data = self.__class__.keepData
+        SaveKeep.initData()
+        data = SaveKeep.keepData
         ctx = self.ctx
         channelID = ctx.channel.id
         userID = str(ctx.author.id)
@@ -134,13 +143,15 @@ class RunKeep:
             await ctx.send('你設置了1000年後的時間??\n 我都活不到那時候你憑什麼:sob:')
             return
 
+        u = str(uuid.uuid4())
         if userID not in data:
             data[userID] = [
                 {
                     'When_to_send_str': str(keep_time),
                     'When_to_send_timestamp': keep_time.timestamp(),
                     'ChannelID': channelID,
-                    "event": event
+                    "event": event,
+                    'uuid': u
                 }
             ]
         else:
@@ -149,7 +160,8 @@ class RunKeep:
                     'When_to_send_str': str(keep_time),
                     'When_to_send_timestamp': keep_time.timestamp(),
                     'ChannelID': channelID,
-                    "event": event
+                    "event": event,
+                    'uuid': u
                 }
             )
 
@@ -160,55 +172,74 @@ class RunKeep:
 
         await ctx.send(embed=embed)
 
-        self.save(data)
-        bot.loop.create_task(self.keepMessage(ctx.channel, ctx.author, event, delay))
+        SaveKeep.save(data)
+        bot.loop.create_task(self.keepMessage(ctx.channel, ctx.author, event, delay, u))
 
-    async def keepMessage(self, channel, user, event, delay):
+    @staticmethod
+    async def keepMessage(channel, user, event, delay, uuid: str):
         await asyncio.sleep(delay)
         await channel.send(f'{user.mention}, 你需要做 {event}')
-        self.deletekeepEvent(str(user.id))
+        SaveKeep.deletekeepEvent(str(user.id), uuid)
 
-    async def create_KeepTask(self):
+    @classmethod
+    async def create_KeepTask(cls):
         '''This is a function for creating a keep task at bot ready. It will send a message to the user at the specified time.'''
-        await bot.wait_until_ready()
-        data = self.__class__.keepData
-        for userID in data:
-            delaySecond = data[userID]['When_to_send_timestamp']
-            delaySecond = (datetime.fromtimestamp(delaySecond) - datetime.now()).total_seconds()
-            if delaySecond <= 0: delaySecond = 1
-            channelID = data[userID]['ChannelID']
-            event = data[userID]['event']
+        try:
+            SaveKeep.initData()
+            data = SaveKeep.keepData
+            if not data: return
+            count = 0
+            for userID in data:
+                for item in data[userID]:
+                    delaySecond = item['When_to_send_timestamp']
+                    delaySecond = (datetime.fromtimestamp(delaySecond) - datetime.now()).total_seconds()
+                    if delaySecond <= 0: delaySecond = 1
+                    channelID = item['ChannelID']
+                    event = item['event']
+                    u = item['uuid']
 
-            user = await bot.fetch_user(int(userID))
-            channel = await bot.fetch_channel(int(channelID))
+                    user = await bot.fetch_user(int(userID))
+                    channel = await bot.fetch_channel(int(channelID))
 
-            bot.loop.create_task(self.keepMessage(channel, user, event, delaySecond))
+                    bot.loop.create_task(cls.keepMessage(channel, user, event, delaySecond, u)) 
+                    count += 1
+            print(f'已新增 {count} 個 keep 任務')
+        except: traceback.print_exc()
 
 
 class Keep(Cog_Extension):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
+        self.write_keep_data.start()
+        await self.bot.wait_until_ready()
         await RunKeep.create_KeepTask()
-        await self.write_keep_data.start()
 
     # Create a Keep
     @commands.hybrid_command()
     @app_commands.describe(time='輸入你要音汐什麼時候提醒，會用AI判斷時間')
     async def keep(self, ctx:commands.Context, time: str, * , event: str):
         '''[keep time(會使用AI作分析) event: str'''
-        try:
-            await RunKeep(time, event, ctx).run()
-        except: traceback.print_exc()
+        async with ctx.typing():
+            try:
+                await RunKeep(time, event, ctx).run()
+            except: traceback.print_exc()
+
+    @commands.command(name='check_keepdata')
+    async def check_keepdata(self, ctx: commands.Context):
+        if str(ctx.author.id) != KeJCID: return
+        await ctx.send(f'{SaveKeep.keepData=}\n{SaveKeep.update=}')
 
     @tasks.loop(minutes=1)
     async def write_keep_data(self):
-        if not RunKeep.update: return
-        RunKeep.write()
+        try:
+            if not SaveKeep.update: return
+            SaveKeep.write()
+        except: traceback.print_exc()
 
     @write_keep_data.before_loop
     async def write_keep_data_before_loop(self):
-        await bot.wait_until_ready()
+        await self.bot.wait_until_ready()
 
 async def setup(bot):
     await bot.add_cog(Keep(bot))

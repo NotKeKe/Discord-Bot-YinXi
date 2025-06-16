@@ -10,8 +10,8 @@ func_map = {
     'video_generate': video_generate,
     'UnixToReadable': UnixToReadable,
     'image_read': image_read,
-    'knowledge_search': knowledge_base_search,
-    'knowledge_save': knowledge_base_save,
+    # 'knowledge_search': knowledge_base_search,
+    # 'knowledge_save': knowledge_base_save,
     'wiki_search': wiki_searh
 }
 
