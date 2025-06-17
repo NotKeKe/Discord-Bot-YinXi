@@ -79,7 +79,7 @@ def summarize(history: list, system_prompt: str = None):
     messages = message + history
 
     response = openrouter.chat.completions.create(
-        model='deepseek/deepseek-r1:free',
+        model='deepseek/deepseek-r1-0528:free',
         messages=messages,
         max_completion_tokens=4096,
         temperature=0.6

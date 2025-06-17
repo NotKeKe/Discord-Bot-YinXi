@@ -221,9 +221,7 @@ class Keep(Cog_Extension):
     async def keep(self, ctx:commands.Context, time: str, * , event: str):
         '''[keep time(會使用AI作分析) event: str'''
         async with ctx.typing():
-            try:
-                await RunKeep(time, event, ctx).run()
-            except: traceback.print_exc()
+            await RunKeep(time, event, ctx).run()
 
     @commands.command(name='check_keepdata')
     async def check_keepdata(self, ctx: commands.Context):
