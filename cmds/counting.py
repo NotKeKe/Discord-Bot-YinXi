@@ -60,13 +60,13 @@ class Counting(commands.Cog):
         userID = message.author.id
 
         if preUserID == userID:
-            if content == 6: return
+            if str(content) == '6': return
             await message.add_reaction('❌')
             eb = create_basic_embed(f'❌ 你剛剛輸入過數字了，你不能一直輸入 \n下一個數字為 **1**', color=message.author.color, time=False)
             userID = 0
             count = 0
         elif count == 0 and content != 1:
-            if content == 6: return
+            if str(content) == '6': return
             await message.add_reaction('⚠️')
             eb = create_basic_embed(f'⚠️ 請從 **1** 開始輸入，而不是 {content}', color=message.author.color, time=False)
             userID = 0
@@ -78,7 +78,7 @@ class Counting(commands.Cog):
             await message.add_reaction('⚠️')
             eb = create_basic_embed(f'⚠️ 你輸入了過小的數字 **{content}**', color=message.author.color, time=False)
         elif content != count + 1: # 使用者數錯
-            if content == 6: return
+            if str(content) == '6': return
             await message.add_reaction('❌')
             eb = create_basic_embed(f'❌ 你輸入了錯誤的數字 **{content}**\n你應該輸入 **{count+1}**\n下一個數字為 **1**', color=message.author.color, time=False)
             userID = 0

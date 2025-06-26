@@ -140,7 +140,7 @@ GENIUS_ACCESS_TOKEN = ... # `/歌詞搜尋` 的 apiKEY
 ## 📞 聯絡與支援
 如果您有任何問題、建議或需要支援，可以透過以下方式聯絡我們：
 *   **Discord 伺服器**: [Discord Server](https://discord.gg/MhtxWJu)
-*   至 GitHub 的 Issues 註明您的問題或建議。
+*   至 GitHub 的 [Issues](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 註明您的問題或建議。
 *   在 Discord 伺服器中對 音汐 使用 `/錯誤回報` 來回報任何問題。
 
 ## 📄 授權

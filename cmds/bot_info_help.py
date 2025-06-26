@@ -239,6 +239,7 @@ class Bot_Info_and_Help(Cog_Extension):
                 > `/qrcode生成器` —— 轉換連結為 **QR Code**  
                 > `/keep` —— **提醒功能!** 在你設置完成後，會在時間到的時候 於相同頻道提醒你要做的事情  
                 > `/設定yt通知` —— 通知你追蹤的 **YouTuber** 更新了! (如果在youtuber欄位不輸入的話就會取消)  
+                > `/輸出聊天紀錄` —— 頻道聊天紀錄輸出 (可以輸出成 `json` or `txt` 檔)
                 ''',
                 inline=False
             )

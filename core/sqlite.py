@@ -40,3 +40,13 @@ class AioSqlite:
     
     async def init(self, query: str):
         await self.create_table(query)
+
+    async def exists(self, query: str, params: tuple = ()) -> bool:
+        '''
+        Example:
+        ```
+        await db.exists("SELECT 1 FROM users WHERE name = ?", ("Alice",))
+        ```
+        '''
+        result = await self.fetch_one(f"SELECT EXISTS({query})", params)
+        return bool(result[0])

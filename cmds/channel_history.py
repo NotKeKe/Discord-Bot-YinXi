@@ -24,7 +24,10 @@ class ChannelHistories:
     async def get_histories(self) -> list:
         ctx = self.ctx
         count = self.count
-        ls = []
+        ls = [{
+            'channel': {'id': ctx.channel.id, 'name': ctx.channel.name}, 
+            **({'guild': {'id': ctx.guild.id, 'name': ctx.guild.name}} if ctx.guild else {})
+        }]
         async for m in ctx.channel.history(limit=count):
             if m.content == m.attachments == m.embeds == None: continue
 
