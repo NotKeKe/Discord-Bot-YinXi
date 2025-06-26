@@ -14,8 +14,9 @@ from typing import Optional
 import asyncio
 import traceback
 from dotenv import load_dotenv
+import aiohttp
 
-from core.functions import read_json, thread_pool, embed_link, KeJCID
+from core.functions import read_json, thread_pool, embed_link, KeJCID, create_basic_embed
 
 # get env
 load_dotenv()
@@ -182,15 +183,6 @@ class TestTemp(Cog_Extension):
         guild = ctx.guild
         channels = [channel.name for channel in guild.channels if str(channel.type) == 'text']
         await ctx.send(', '.join(channels))
-
-    @commands.hybrid_command()
-    @app_commands.check(promision_check)
-    async def test(self, ctx: commands.Context, query: str, artist: str):
-        async with ctx.typing():
-            from cmds.music_bot.play4.lyrics import search_lyrics
-            a = await search_lyrics(query, artist)
-            await ctx.send(a)
-
 
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()

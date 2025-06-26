@@ -249,11 +249,14 @@ class Music(Cog_Extension):
 
             await ctx.send(view=view, embed=create_eb(), ephemeral=True)
 
-    @commands.hybrid_command(name='歌詞搜尋', description='Search lyrics with Genius API')
-    async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None):
+    @commands.hybrid_command(name='歌詞搜尋', description='Search lyrics with LrcApi (https://github.com/HisAtri/LrcApi)')
+    @app_commands.describe(lrc='是否顯示 LRC 格式 (帶有時間) 的歌詞，預設為 False')
+    async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None, lrc: bool = False):
         async with ctx.typing():
-            result = await search_lyrics(query, artist)
+            result = await search_lyrics(query, artist, lrc)
             await ctx.send(result if result else '找不到這首歌的歌詞欸... 要不考慮換個關鍵字試試?')
+
+            if len(result.splitlines()) < 10: await ctx.send('如果歌詞看起來太短的話 可以試試把 `lrc` 設為 `True` 窩w', ephemeral=True)
 
     @commands.hybrid_command(name='音量調整', description='Adjust the volume of the bot')
     @app_commands.describe(volume='0~100 (單位為 `%` )，如果不輸入的話 可以用按鈕點')
