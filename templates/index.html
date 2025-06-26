@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>音汐 - Discord Bot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* 淺藍色漸變背景 */
+            background: linear-gradient(135deg, #A8DADC, #457B9D); 
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #333; /* 深色文字，在淺色背景上更清晰 */
+            text-align: center;
+            overflow: hidden; 
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95); /* 白色半透明背景，與淺藍色系協調 */
+            padding: 40px 60px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* 較淺的陰影 */
+            animation: fadeIn 1s ease-out forwards;
+            max-width: 90%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px; 
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 4px solid #1D3557; /* 深藍色邊框 */
+            box-shadow: 0 0 15px rgba(29, 53, 87, 0.4); /* 與邊框顏色匹配的光暈 */
+        }
+
+        h1 {
+            color: #1D3557; /* 深藍色 */
+            font-size: 3.2em;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* 較淺的文字陰影 */
+        }
+
+        h2 {
+            color: #457B9D; /* 中等藍色 */
+            font-size: 1.5em;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        .info-section {
+            width: 100%;
+            background-color: rgba(241, 250, 252, 0.8); /* 更淺的背景，與淺藍色協調 */
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            margin-bottom: 25px;
+            color: #333; /* 確保資訊區文字清晰 */
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-item strong {
+            color: #1D3557; /* 深藍色標籤 */
+            width: 100px; 
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .info-item a {
+            color: #457B9D; /* 中等藍色連結 */
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .info-item a:hover {
+            color: #1D3557; /* 滑鼠懸停時變深 */
+            text-decoration: underline;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap; 
+            justify-content: center;
+            gap: 15px; 
+            margin-top: 20px;
+        }
+
+        .button-link {
+            text-decoration: none;
+        }
+
+        .animated-button {
+            background-color: #1D3557; /* 深藍色按鈕 */
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.5px;
+            font-weight: bold;
+        }
+
+        .animated-button i {
+            margin-right: 8px; 
+        }
+
+        .animated-button:hover {
+            background-color: #457B9D; /* 滑鼠懸停時變淺藍 */
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .animated-button:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px;
+            }
+            h1 {
+                font-size: 2.5em;
+            }
+            h2 {
+                font-size: 1.2em;
+            }
+            .animated-button {
+                padding: 12px 25px;
+                font-size: 1em;
+            }
+            .info-item strong {
+                width: 80px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <img src="https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/botself.png?raw=true" alt="音汐 Bot 頭貼" class="bot-avatar">
+
+        <h1>音汐</h1>
+        <h2>您的 Discord Bot 夥伴</h2>
+
+        <div class="info-section">
+            <div class="info-item">
+                <strong>作者:</strong> 克克 KeJC
+            </div>
+            <div class="info-item">
+                <strong>GitHub:</strong> <a href="https://github.com/NotKeKe/Discord-Bot-YinXi" target="_blank">NotKeKe/Discord-Bot-YinXi</a>
+            </div>
+            <div class="info-item">
+                <strong>Discord 群組:</strong> <a href="https://discord.gg/MhtxWJu" target="_blank">加入我們的社群</a>
+            </div>
+            <div class="info-item">
+                <strong>Discord Bot 邀請:</strong> <a href="https://discord.com/oauth2/authorize?client_id=990798785489825813" target="_blank">邀請音汐加入您的伺服器！</a>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <a href="https://discord.com/oauth2/authorize?client_id=990798785489825813" target="_blank" class="button-link">
+                <button class="animated-button">
+                    <i class="fab fa-discord"></i> 邀請 Bot
+                </button>
+            </a>
+            <a href="https://discord.gg/MhtxWJu" target="_blank" class="button-link">
+                <button class="animated-button">
+                    <i class="fas fa-users"></i> 加入群組
+                </button>
+            </a>
+            <a href="https://github.com/NotKeKe/Discord-Bot-YinXi" target="_blank" class="button-link">
+                <button class="animated-button">
+                    <i class="fab fa-github"></i> 查看 GitHub
+                </button>
+            </a>
+            <a href="/anonymous" class="button-link">
+                <button class="animated-button">
+                    <i class="fas fa-comment-dots"></i> 匿名留言板
+                </button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
