@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 import discord
@@ -23,6 +24,7 @@ import base64
 from PIL import Image
 import io
 import re
+import aiofiles
 
 from core.classes import Cog_Extension
 from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime, BASE_DIR, current_time, async_translate
@@ -32,6 +34,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 alive = time.time()
 youtube_download_base_url = 'https://opfqetniurlt.ap-northeast-1.clawcloudrun.com'
+app.mount("/assests", StaticFiles(directory="assests"), name="assests")
 
 # Create SQLite database and table
 def init_snoymous_messages_db():
@@ -49,64 +52,13 @@ def init_snoymous_messages_db():
     conn.close()
 
 @app.get("/", response_class=HTMLResponse)
-async def home():
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Discord Bot</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                margin: 20px;
-            }
-            h1 {
-                color: #333;
-            }
-            button {
-                background-color: #4CAF50;
-                border: none;
-                color: white;
-                padding: 15px 32px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;
-                margin: 4px 2px;
-                cursor: pointer;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Discord Bot</h1>
-        <p>Welcome to the Discord Bot!</p>
-        <a href="/anonymous"><button>匿名留言板</button></a>
-    </body>
-    </html>
-    """
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {'request': request})
 
 @app.get('/api/llm/tools')
 async def get_tools():
     data = read_json('./cmds/AIsTwo/data/tools_descrip.json')
     return data
-
-# @app.get('/log', response_class=HTMLResponse)
-# async def get_log():
-#     with open("./nas_log/error.log", "rb") as f:
-#         f.seek(-3000, 2)
-#         data_bytes = f.read()
-#         data = data_bytes.decode("utf-8")
-#     return '''
-#     <html>
-#        <head>
-#             <title>Discord Bot logs</title>
-#         </head>
-#         <body style="background-color: #003E3E;">
-#             <h1 style="color: white; font-family: Arial, Helvetica, sans-serif;">Bot error logs:</h1>
-#             <p style="color: white; font-family: 'Lucida Console', 'Courier New', monospace; font-size: 17px;">{data}</p>
-#         </body>
-#     </html>
-#     '''.format(data=data.replace('\n', '<br>'))
 
 @app.get('/api/image/')
 async def get_image_from_path(path: str = Query(..., min_length=5)):
@@ -122,6 +74,10 @@ async def direct_to_discord_server():
 @app.get('/github', response_class=RedirectResponse)
 async def direct_to_yinxi_github():
     return RedirectResponse('https://github.com/NotKeKe/Discord-Bot-YinXi')
+
+@app.get('/s_url', response_class=RedirectResponse)
+async def short_url():
+    return RedirectResponse('https://ke.rf.gd')
 
 @app.get('/test', response_class=FileResponse)
 async def test_file_return():
@@ -449,10 +405,6 @@ class ApiCog(commands.Cog):
                     max_player = None
                     file = None
 
-                    if plugins != 'None':
-                        plugins = [f"Name: {item['name']}, Version: {item['version']}" for item in plugins]
-                    if mods != 'None':
-                        mods = [f"Name: {item['name']}, Version: {item['version']}" for item in mods]
                     if players != 'None':
                         online = players.get('online')
                         max_player = players.get('max')
@@ -474,21 +426,42 @@ class ApiCog(commands.Cog):
                             file = discord.File(image_buffer, filename="icon.png")
 
                 eb = create_basic_embed(功能='Get Minecraft Server Status', color=ctx.author.color)
+                view = discord.ui.View()
 
                 eb.add_field(name='Online', value=str(data.get('online')))
                 eb.add_field(name='IP', value=f"{ip}:{port}")
                 eb.add_field(name='Hostname', value=hostname)
-                # eb.add_field(name='Icon', value=icon)
                 eb.add_field(name='Gamemode', value=gamemode)
                 eb.add_field(name='Current Players', value=online)
                 eb.add_field(name='Max Players', value=max_player)
                 eb.add_field(name='Version', value=version)
-                eb.add_field(name='Plugins', value=(', '.join(plugins) if isinstance(plugins, list) else plugins)[:1020])
-                eb.add_field(name='Mods', value=(', '.join(mods) if isinstance(mods, list) else mods)[:1020])
+                def format_list_field(items, limit=1020):
+                    if isinstance(items, list):
+                        joined = ', '.join(item['name'] for item in items)
+                        return (joined[:limit - 3] + '...') if len(joined) > limit else joined
+                    return items
+                eb.add_field(name='Plugins', value=format_list_field(plugins))
+                eb.add_field(name='Mods', value=format_list_field(mods))
                 eb.set_image(url="attachment://icon.png" if file else file)
                 eb.set_footer(text=url)
 
-                await ctx.send(embed=eb, file=file)
+                if 'None' in (mods, plugins):
+                    button = discord.ui.Button(label=f'查看{'模組' if mods != 'None' else '插件'}版本', style=discord.ButtonStyle.blurple)
+                    async def button_callback(interaction: discord.Interaction, *args):
+                        text = '\n'.join([f"{item['name']} - {item['version']}" for item in (mods if mods != 'None' else plugins)])
+                        path = './data/temp'
+                        new_path = f'{path}/minecraft_server_status_{ctx.author.id}.txt'
+                        async with aiofiles.open(new_path, mode='w', encoding='utf-8') as f:
+                            await f.write(text)
+                        file = discord.File(new_path, f'minecraft_server_status_{ctx.author.id}.txt')
+                        await interaction.response.send_message(file=file)
+                        await asyncio.sleep(300)
+                        try: os.remove(new_path)
+                        except: ...
+                    button.callback = button_callback
+                    view.add_item(button)
+
+                await ctx.send(embed=eb, file=file, view=view)
         except Exception as e:
             traceback.print_exc()
             return await ctx.send('Error, please try again later (reason: {})'.format(e))
