@@ -5,7 +5,7 @@ import orjson
 import requests
 from cmds.AIsTwo.base_chat import base_zhipu_chat, base_openrouter_chat, true_zhipu, ollama, base_ollama_chat, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
-from core.functions import translate, current_time
+from core.functions import translate, current_time, read_json, write_json
 # tools
 from cmds.AIsTwo.others.if_tools_needed import get_tool_results
 from cmds.AIsTwo.tool_map import tools_descrip
@@ -71,6 +71,18 @@ class ActivitySelector:
             if resp.status_code == 200:
                 result = translate(resp.text, 'zh-CN', 'zh-TW')
                 activity = discord.Game(name=result)
+
+                try:
+                    path = './cmds/data.json/lovelive_data.json'
+                    d = read_json(path)
+                    if 'data' in d:
+                        if resp.text not in d['data']:
+                            d['data'].append(resp.text)
+                            write_json(d, path)
+                    else:
+                        d['data'] = [resp.text]
+                        write_json(d, path)
+                except: traceback.print_exc()
             else:
                 system_prompt += '''
                 現在時間為 {time}，你需要根據這個時間去決定你現在的狀態。

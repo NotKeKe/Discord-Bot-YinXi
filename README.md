@@ -144,4 +144,8 @@ GENIUS_ACCESS_TOKEN = ... # `/歌詞搜尋` 的 apiKEY
 *   在 Discord 伺服器中對 音汐 使用 `/錯誤回報` 來回報任何問題。
 
 ## 📄 授權
-- 暫無授權資訊。
+- [LICENSE-MIT](LICENSE)
+
+## TODO & DONE
+[TODO](https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/TODO.md)
+[DONE](https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/DONE.md)

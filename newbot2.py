@@ -91,26 +91,28 @@ class UpdateStatus(commands.Cog):
     @commands.command()
     async def 改變狀態(self, ctx: commands.Context, activity_code: int = 1):
         async with ctx.typing():
-            if ctx.author.id != KeJC_ID: return
-            if ctx.guild.me.guild_permissions.manage_messages:
-                await ctx.message.delete()
-            # activity changing
-            from cmds.AIsTwo.others.decide import ActivitySelector
-            from core.functions import thread_pool
-            activity = await thread_pool(ActivitySelector.activity_select, activity_code)
-            await self.bot.change_presence(activity=activity)
+            try:
+                if ctx.author.id != KeJC_ID: return
+                # activity changing
+                from cmds.AIsTwo.others.decide import ActivitySelector
+                from core.functions import thread_pool
+                activity = await thread_pool(ActivitySelector.activity_select, activity_code)
+                await self.bot.change_presence(activity=activity)
 
-            # user
-            user = await ctx.guild.fetch_member(self.bot.user.id) or ctx.guild.get_member(self.bot.user.id)
-            if not user: return await ctx.send('Cannot get user', ephemeral=True)
+                # user
+                user = await ctx.guild.fetch_member(self.bot.user.id) or ctx.guild.get_member(self.bot.user.id)
+                if not user: return await ctx.send('Cannot get user', ephemeral=True)
 
-            # get activity name
-            if not user.activity: 
-                await ctx.send("Cannot fetch user's activity, trying to `get` bot", ephemeral=True)
-                user = ctx.guild.get_member(self.bot.user.id)
-                if not user.activity: return await ctx.send("Cannot get user's activity", ephemeral=True)
+                # get activity name
+                if not user.activity: 
+                    await ctx.send("Cannot fetch user's activity, trying to `get` bot", ephemeral=True)
+                    user = ctx.guild.get_member(self.bot.user.id)
+                    if not user.activity: return await ctx.send("Cannot get user's activity", ephemeral=True)
 
-            await ctx.send(f'Successfully changed user activity to `{user.activity.name}`', ephemeral=True)
+                await ctx.send(f'Successfully changed user activity to `{user.activity.name}`', ephemeral=True)
+            finally:
+                if ctx.guild.me.guild_permissions.manage_messages:
+                    await ctx.message.delete()
             
     @tasks.loop(minutes=1)
     async def update_status(self):

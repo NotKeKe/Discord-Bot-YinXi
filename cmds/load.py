@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import asyncio
 
 from core.classes import Cog_Extension
+from core.functions import testing_guildID
 
 # get env
 load_dotenv()
@@ -38,6 +39,7 @@ class Load(Cog_Extension):
     @commands.has_permissions(administrator=True)
     @app_commands.describe(extension = "選擇一個category")
     @app_commands.autocomplete(extension = load_autocomplete)
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def load(self, ctx, extension: str):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
@@ -56,6 +58,7 @@ class Load(Cog_Extension):
     @commands.has_permissions(administrator=True)
     @app_commands.describe(extension = "選擇一個category")
     @app_commands.autocomplete(extension = load_autocomplete)
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def unload(self, ctx, extension: str):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
@@ -74,6 +77,7 @@ class Load(Cog_Extension):
     @commands.has_permissions(administrator=True)
     @app_commands.describe(extension = "選擇一個category")
     @app_commands.autocomplete(extension = load_autocomplete)
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def reload(self, ctx: commands.Context, extension: str):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
@@ -96,6 +100,7 @@ class Load(Cog_Extension):
     #reload all commands
     @commands.hybrid_command(name = "全部重載", description = "reload all commands, 重載全部commands, 不會回報載入成功, 可於後台看到錯誤。")
     @commands.has_permissions(administrator=True)
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def reloadall(self, ctx):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
@@ -115,6 +120,7 @@ class Load(Cog_Extension):
     #reload sync
     @commands.hybrid_command(name = "重載sync")
     @commands.has_permissions(administrator=True)
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def reloadsync(self, ctx):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令", ephemeral=True); return
@@ -128,6 +134,7 @@ class Load(Cog_Extension):
 
     # reload all commands ands sync them
     @commands.hybrid_command(name="reload_all", description = "重載全部指令並sync一遍")
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def reload_all_sync(self, ctx):
         '''只有克克能用的話  還需要幫助嗎:thinking:'''
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令", ephemeral=True); return
@@ -160,6 +167,7 @@ class Load(Cog_Extension):
         await message.edit(embed=embed)
 
     @commands.command(name='restart')
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def restart(self, ctx):
         if str(ctx.author.id) != KeJCID: return
 
@@ -170,6 +178,7 @@ class Load(Cog_Extension):
         except:...
 
     @commands.command(name='清除日誌')
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def clear(self, ctx):
         if str(ctx.author.id) != KeJCID: return
 
@@ -177,6 +186,7 @@ class Load(Cog_Extension):
         os.system('pm2 flush')
 
     @commands.command(name='系統指令')
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     async def system_command(self, ctx, * , command):
         if str(ctx.author.id) != KeJCID: return
         

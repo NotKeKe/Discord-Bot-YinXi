@@ -445,7 +445,7 @@ class ApiCog(commands.Cog):
                 eb.set_image(url="attachment://icon.png" if file else file)
                 eb.set_footer(text=url)
 
-                if 'None' in (mods, plugins):
+                if 'None' in (mods, plugins) and ( isinstance(mods, list) or isinstance(plugins, list) ):
                     button = discord.ui.Button(label=f'查看{'模組' if mods != 'None' else '插件'}版本', style=discord.ButtonStyle.blurple)
                     async def button_callback(interaction: discord.Interaction, *args):
                         text = '\n'.join([f"{item['name']} - {item['version']}" for item in (mods if mods != 'None' else plugins)])

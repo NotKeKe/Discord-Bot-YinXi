@@ -61,6 +61,10 @@ class TestTemp(Cog_Extension):
     async def testtemp(self, ctx):
         await ctx.send("hello, this is testtemp", ephemeral=True)
 
+    @commands.hybrid_command(name='取得所有指令名稱')
+    async def get_all_commands(self, ctx: commands.Context):
+        await ctx.send((', '.join(sorted(list(self.bot.all_commands)))) + f'\n共有 `{len(self.bot.all_commands)}` 個指令')
+
     @commands.command()
     async def embedtest(self, ctx):
         try:

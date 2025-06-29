@@ -38,19 +38,18 @@ GENIUS_ACCESS_TOKEN = os.getenv('GENIUS_ACCESS_TOKEN')
 def read_json(path: str) -> Optional[Any]:
     """將path讀取成物件並回傳"""
     try:
+        if not os.path.exists(path) or os.path.getsize(path) == 0:
+            print(path + ' 不存在或為空，初始化為 {}')
+            with open(path, 'wb') as f:
+                f.write(orjson.dumps({}))
+            return {}
+
         with open(path, mode='rb') as f:
             data = orjson.loads(f.read())
         return data
     except orjson.JSONDecodeError as e:
         print(f"JSON 解碼錯誤: {e}")
-        return None
-    except FileNotFoundError as e:
-        print(f"文件未找到: {e}")
-        if path.endswith('.json'):
-            print('嘗試初始化 .json 中')
-            with open(path, 'wb') as f:
-                f.write(orjson.dumps({}))
-        return None
+        return {}
     except Exception as e:
         print(f"其他錯誤: {e}")
         return None
@@ -170,3 +169,4 @@ def is_KeJC(userID: int):
 
 settings = read_json('setting.json')
 admins: List[int] = read_json('./cmds/data.json/admins.json')['admins']
+testing_guildID: int = settings['testing_guildID']
