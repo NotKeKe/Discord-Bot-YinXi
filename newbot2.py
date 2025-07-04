@@ -8,7 +8,7 @@ import asyncio
 import time
 import traceback
 
-from core.functions import math_round, current_time
+from core.functions import math_round, current_time, testing_guildID
 
 # get env
 load_dotenv()
@@ -53,8 +53,9 @@ async def on_ready():
     # await bot.change_presence(status=discord.Status.online, activity=game)
 
     try:
+        synced_bot_guild = await bot.tree.sync(guild=discord.Object(id=testing_guildID))
         synced_bot = await bot.tree.sync()
-        print(f'Synced {len(synced_bot)} commands.')
+        print(f'Synced {len(synced_bot + synced_bot_guild)} commands.')
     except Exception as e:
         print("出錯 when synced: ", e)
 

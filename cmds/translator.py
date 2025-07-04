@@ -12,7 +12,7 @@ class Translator(Cog_Extension):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
 
-    @commands.hybrid_command(name='翻譯', description='Translate some text')
+    @commands.hybrid_command(name='translate', description='Translate some text', aliases=['翻譯'])
     @app_commands.describe(content='輸入你要翻譯的文字 Enter the text you wanna translate', 
                             target='選擇目標語言（你希望翻譯成哪種語言，預設為zh-TW） Select the language you want to translate into'  
                             )
