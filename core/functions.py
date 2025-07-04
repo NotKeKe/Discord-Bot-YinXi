@@ -26,6 +26,8 @@ def get_embed_link() -> str:
     return base_url
 
 BASE_DIR = os.path.abspath(os.path.dirname(__name__))
+BASE_OLLAMA_URL: str = 'http://192.168.31.199:11434'
+
 embed_link = get_embed_link()
 KeJCID = os.getenv('KeJC_ID')
 TempHypixelApiKey = os.getenv('tmp_hypixel_api_key')
@@ -80,7 +82,7 @@ def create_basic_embed(title = None, description = None, color = discord.Color.b
     return embed
 
 def UnixNow() -> int:
-    '''傳送現在的Unix時間'''
+    '''傳送現在的Unix時間 (秒級)'''
     timestamp = int(datetime.now().timestamp())
     return timestamp
 

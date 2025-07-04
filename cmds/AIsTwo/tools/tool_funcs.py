@@ -110,7 +110,13 @@ def search(keywords: str, time_range: str = 'year', language: str = 'zh-TW') -> 
     }
 
     response = requests.get(url, params=params)
-    data = orjson.loads(response.content)
+    if response.status_code != 200: return 'No answer'
+    try:
+        data = orjson.loads(response.content)
+    except Exception as e:
+        print(f"Error parsing JSON response: {e}")
+        print(response.content)
+        return 'No answer'
     urls = [item['url'] for item in data['results']][:10]
 
     def scrape_page(url):

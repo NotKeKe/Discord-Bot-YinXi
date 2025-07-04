@@ -18,11 +18,16 @@ import parsedatetime
 # from cmds.AIs.openrouter import chat_openrouter, summarize
 
 from cmds.AIsTwo.info import HistoryData
-from cmds.AIsTwo.base_chat import zhipu_moduels, openrouter_moduels, ollama_modules, gemini_moduels, base_zhipu_chat, base_openai_chat, to_assistant_message, to_user_message, stop_flag
+from cmds.AIsTwo.base_chat import base_zhipu_chat, base_openai_chat, to_assistant_message, to_user_message, stop_flag
 from cmds.AIsTwo.human.base import chat_human, processing, style_train
 from cmds.AIsTwo.others.func import summarize
-from cmds.AIsTwo.others.decide import is_talking_with_me, save_to_knowledge_base, ActivitySelector, Preference
-from cmds.AIsTwo.utils import choice_model, halfToFull, select_moduels_auto_complete
+from cmds.AIsTwo.others.decide import is_talking_with_me, ActivitySelector, Preference
+from cmds.AIsTwo.utils import halfToFull, select_moduels_auto_complete
+
+from cmds.AIsTwo.human.vector.dm import (
+    to_vector_data, 
+    search as dm_vector_search
+)
 
 from core.functions import thread_pool, create_basic_embed, current_time, KeJCID, current_time, get_attachment, admins
 from core.classes import bot
@@ -58,7 +63,7 @@ async def to_history(channel: discord.TextChannel, limit: int = 10):
                 histories.extend(to_user_message(content + '\n', time=current_time(), attachments=attachment))
             pre = 'user'
 
-    return histories
+    return histories[-6:]
 
 class AIChannel(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -101,14 +106,15 @@ class AIChannel(commands.Cog):
 
             if channelID not in data: data[channelID] = [] # 對私訊
 
-            try:
-                summaried = HistoryData.chat_human_summary[channelID].get('summary', ' ')
-            except: 
-                summaried = ''
+            # try:
+            #     summaried = HistoryData.chat_human_summary[channelID].get('summary', ' ')
+            # except: 
+            #     summaried = ''
 
             channel_history = await to_history(message.channel, 20)
-            if not channel_history: await message.channel.send('系統偵測到你第是第一次在這個頻道跟音汐說話(〃∀〃)\n我先說喔 這功能還在實驗當中 我的提示詞還沒很完善 所以他說話有時候都會怪怪的(目前猜測是這個原因)\n但你要跟他聊天還是可以的啦d(d＇∀＇)')
-            history = to_user_message(summaried) + channel_history
+            if not channel_history: await message.channel.send('系統偵測到你第是第一次在這個頻道跟音汐說話(〃∀〃)\n我先說喔 這功能還在實驗當中 我的提示詞還沒很完善 所以他說話有時候都會怪怪的(目前猜測是這個原因)\n但你要跟他聊天還是可以的啦d(d＇∀＇)\n喔順便說一下 我最近新增了向量存儲 所以你的聊天紀錄會被我用向量的方式儲存窩\n雖然資料都會存在我自己這裡 我也不覺得我會被駭，但你還是要注意一下窩w')
+            # history = to_user_message(summaried) + channel_history
+            history = channel_history
             
             if message.guild:
                 isTalkToMe = await thread_pool(is_talking_with_me, message.content, history)
@@ -126,9 +132,15 @@ class AIChannel(commands.Cog):
                     if channelID in stop_flag: stop_flag[channelID].append(userID)
                     else: stop_flag[channelID] = [userID]
                     await asyncio.sleep(1)
-            
+
             ctx = await self.bot.get_context(message)
             async with ctx.typing():
+                vector_search = await dm_vector_search(message.content, str(channelID))
+                print(vector_search)
+                history.insert(0, to_user_message(vector_search)[0])
+                
+                tasks = []
+            
                 think, result = await thread_pool(chat_human, ctx, history)
                 if not result and not is_stop: return # 如果是因為使用者打斷對話 就不用傳送這個訊息
                 result = halfToFull(result)
@@ -136,7 +148,8 @@ class AIChannel(commands.Cog):
                 for i in item:
                     msg = await ctx.send(i)
                     item.remove(i)
-                    if i: await asyncio.sleep(random.uniform(0.3, 2))
+                    if item: await asyncio.sleep(random.uniform(0.3, 2))
+
             if think:
                 view = discord.ui.View()
                 async def button_callback(interaction: discord.Interaction):
@@ -148,8 +161,19 @@ class AIChannel(commands.Cog):
                 view.add_item(button)
 
                 msg = await msg.edit(view=view)
-                timeout = await view.wait()
-                if timeout: await msg.edit(view=None)
+            
+                async def delete_task(view: discord.ui.View, msg: discord.Message):
+                    timeout = await view.wait()
+                    if timeout: await msg.edit(view=None)
+                
+                del_task = asyncio.create_task(delete_task(view, msg))
+                tasks.append(del_task)
+
+            # 對話結束後 檢查是否要將聊天歷史向量化
+            vt_task = asyncio.create_task(to_vector_data(str(channelID), msg))
+            tasks.append(vt_task)
+
+            await asyncio.gather(*tasks)
         except:
             traceback.print_exc()
 
