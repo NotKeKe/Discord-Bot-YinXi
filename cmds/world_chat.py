@@ -26,48 +26,49 @@ class WorldChat(Cog_Extension):
         self.__class__.channels = read_json(path)
 
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, msg: discord.Message):
         '''
         如果使用者發送圖片，就不會再發送Embed
         '''
     
-        if message.author.bot: return
+        if msg.author.bot: return
         self.initchannel()
         channels = self.__class__.channels
-        if message.channel.id not in channels['channels']: return
+        if msg.channel.id not in channels['channels']: return
 
         # 使用者圖片
         attachments = [
             attachment.url
-            for attachment in message.attachments
+            for attachment in msg.attachments
             if attachment.content_type and attachment.content_type.startswith('image/')
         ]
 
-        result = attachments if attachments else [message.content]
-        user_said = ' '.join(result) if attachments else ''.join(result)
-
-        # 訊息發送管理
-        if attachments:
-            await message.channel.send('由於Discord限制，圖片不會顯示在Embed當中')
-        else:
-            embed = create_basic_embed(title = f":speech_balloon: {message.author.global_name}: ", description=' ', color=message.author.color)
-            embed = embed.add_field(name=user_said, value=' ', inline=True)
-
+        eb = create_basic_embed(color=msg.author.color)
+        
         for cnl in channels['channels']:
             try:
-                if message.channel.id != cnl:
-                    channel = await self.bot.fetch_channel(cnl)
+                if msg.channel.id == cnl: continue
+                channel = self.bot.get_channel(cnl)
 
-                    if attachments:
-                        await channel.send(content=f":speech_balloon: {message.author.global_name}:\n{user_said}\n~~如果該使用者傳送了不良圖片，請使用/建議 或 /錯誤回報 進行檢舉 (會封禁使用者傳送圖片的權利)~~")
-                    else:
-                        await channel.send(embed=embed)
+                if attachments:
+                    eb.add_field(name=f"**:speech_balloon: {msg.author.global_name}: **", value=f"User sended {len(attachments)} image{'s' if len(attachments) > 1 else ''}", inline=True)
+                    await channel.send(embed=eb)
+                    for a in attachments:
+                        await channel.send(a)
+                else:
+                    eb.add_field(name=f"**:speech_balloon: {msg.author.global_name}: **", value=msg.content, inline=True)
+                    await channel.send(embed=eb)
+            except TypeError:
+                ...
+            except Exception as e:
+                print(f'An error accured at world_chat: {e}')
 
-            except TypeError: channel.remove(cnl)
+        user_said = msg.content if not attachments else f"{f'{msg.content} | 'if msg.content else ''}{' '.join(attachments)}"
+            
         time = datetime.now()
         now = time.strftime("%Y-%m-%d %H:%M:%S")
 
-        channels['History'].append(f"{now} | {message.author.global_name}: {user_said}")
+        channels['History'].append(f"{now} | {msg.author.global_name}: {user_said}")
 
         self.__class__.channels = channels
         write_json(channels, path)
