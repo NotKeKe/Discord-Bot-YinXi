@@ -136,7 +136,7 @@ class AIChannel(commands.Cog):
             ctx = await self.bot.get_context(message)
             async with ctx.typing():
                 vector_search = await dm_vector_search(message.content, str(channelID))
-                print(vector_search)
+                # print(vector_search)
                 history.insert(0, to_user_message(vector_search)[0])
                 
                 tasks = []

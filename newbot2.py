@@ -9,6 +9,7 @@ import time
 import traceback
 
 from core.functions import math_round, current_time, testing_guildID
+from core.translator import i18n
 
 # get env
 load_dotenv()
@@ -38,21 +39,11 @@ ending_note = "這是 {ctx.bot.user.name} 的commands help\n輸入 {help.clean_p
 # bot.help_command = PrettyHelp(color=discord.Color.blue(), ending_note=ending_note)
 bot.help_command = None
 
-# 錯誤追蹤
 @bot.event
-async def on_command_error(ctx, error):
-    if ctx.command is None: return
-    await ctx.invoke(bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=error, user_send=False, ephemeral=True)
-
-#上線通知
-@bot.event
-async def on_ready():
-    # now = time.strftime("%Y/%m/%d %H:%M:%S")
-    # game = discord.Game(f"所以說機器人怎麼做... 上線時間: {now}")
-    # # discord.Status. (online, idle(閒置), dnd(勿擾), invisible)
-    # await bot.change_presence(status=discord.Status.online, activity=game)
-
+async def setup_hook():
     try:
+        translator = i18n()
+        await bot.tree.set_translator(translator)
         synced_bot_guild = await bot.tree.sync(guild=discord.Object(id=testing_guildID))
         synced_bot = await bot.tree.sync()
         print(f'Synced {len(synced_bot + synced_bot_guild)} commands.')
@@ -63,6 +54,16 @@ async def on_ready():
     # await user.send("我上線了")
     global online_time
     online_time = current_time()
+
+# 錯誤追蹤
+@bot.event
+async def on_command_error(ctx, error):
+    if ctx.command is None: return
+    await ctx.invoke(bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=error, user_send=False, ephemeral=True)
+
+#上線通知
+@bot.event
+async def on_ready():
     print('我上線了窩\n')
 
 #讓私訊也能被處理
