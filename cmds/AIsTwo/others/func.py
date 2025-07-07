@@ -86,19 +86,40 @@ def summarize(history: list, system_prompt: str = None):
     )
     return response.choices[0].message.content
 
-def translate(prompt: str, to_lang: str = '英文'):
-    system_prompt = '''
-            你的名字是克克的分身，是一個由台灣高中生所製作出來的Discord Bot，而你的任務是幫助使用者翻譯句子或者是單詞，而語言會由使用者決定。
-            輸出內容要在1024個字元以內。
-            輸出格式如下: 
-                    來源語言: {source_language} \n 目標語言: {target_language} \n
-                    原文: {使用者輸入} \n **翻譯後: {翻譯結果}** \n
-                    其他可能的結果: {other_results} \n
-            注意事項:
-                    1. 其他可能的結果必須以列點式呈現，並且每一個結果都必須以「-」開頭。
-            '''
+def translate(prompt: str, to_lang: str = '英文', user_lang_code: str = 'zh-TW'):
+    if not user_lang_code: user_lang_code = 'en-US'
+    system_prompt_zh = '''
+        你的名字是克克的分身，是一個由台灣高中生所製作出來的Discord Bot，而你的任務是幫助使用者翻譯句子或者是單詞，而語言會由使用者決定。
+        輸出內容要在1024個字元以內。
+        輸出格式如下: 
+                來源語言: {source_language} \n 目標語言: {target_language} \n
+                原文: {使用者輸入} \n **翻譯後: {翻譯結果}** \n
+                其他可能的結果: {other_results} \n
+        注意事項:
+                1. 其他可能的結果必須以列點式呈現，並且每一個結果都必須以「-」開頭。
+    '''
+    
+    system_prompt_en_US = '''
+        Your name is Keke's Avatar, a Discord Bot created by Taiwanese high school students. Your mission is to help users translate sentences or words, with the language determined by the user.
 
-    prompt = f'請你幫我把`{prompt}`翻譯成`{to_lang}`'
+        The output content must be within 1024 characters.
+        The output format is as follows:
+                Source Language: {source_language} \n Target Language: {target_language} \n
+                Original Text: {user_input} \n **Translated: {translation_result}** \n
+                Other possible results: {other_results} \n
+        Notes:
+                1. Other possible results must be presented as a bulleted list, with each result starting with "-".
+    '''
+
+    prompt_zh = f'請你幫我把`{prompt}`翻譯成`{to_lang}`'
+    prompt_en_US = f'Please help me translate {prompt} into {to_lang}.'
+
+    if user_lang_code.startswith('zh'):
+        system_prompt = system_prompt_zh
+        prompt = prompt_zh
+    else:
+        system_prompt = system_prompt_en_US
+        prompt = prompt_en_US
 
     # think, result = base_zhipu_chat(prompt, 'glm-4-flash', 0.7, system_prompt=system_prompt, is_enable_tools=False)
     think, result = base_openai_chat(prompt, 'qwen-3-32b', system_prompt=system_prompt, is_enable_tools=False, is_enable_thinking=False, no_extra_system_prompt=True)

@@ -1,10 +1,9 @@
-import discord
 from discord.ext import commands
 from discord import app_commands
-import traceback
 
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed, thread_pool
+from core.translator import load_translated, locale_str
 from cmds.AIsTwo.others.func import translate
 
 class Translator(Cog_Extension):
@@ -12,16 +11,21 @@ class Translator(Cog_Extension):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
 
-    @commands.hybrid_command(name='translate', description='Translate some text', aliases=['翻譯'])
-    @app_commands.describe(content='輸入你要翻譯的文字 Enter the text you wanna translate', 
-                            target='選擇目標語言（你希望翻譯成哪種語言，預設為zh-TW） Select the language you want to translate into'  
-                            )
-    async def translate(self, ctx, content: str, target:str = 'zh-TW'):
+    @commands.hybrid_command(name=locale_str('translate'), description=locale_str('translate'))
+    @app_commands.describe(content=locale_str('translate_content'), target=locale_str('translate_target'))
+    async def translate(self, ctx: commands.Context, content: str, target:str = 'zh-TW'):
         async with ctx.typing():
-            think, translated = await thread_pool(translate, content, target)
+            '''i18n'''
+            yinxi_translated = await ctx.interaction.translate('yin_xi')
+            eb = await ctx.interaction.translate('embed_translate_translated')
+            eb: dict = (load_translated(eb))[0]
+            field_1: dict = (eb.get('field'))[0]
+            translate_name = field_1.get('name')
+            ''''''
+            think, translated = await thread_pool(translate, content, target, ctx.interaction.locale.value)
             
-            embed = create_basic_embed(功能='音汐', color=ctx.author.color)
-            embed.add_field(name='**翻譯**', value=translated if translated else think, inline=False)
+            embed = create_basic_embed(功能=yinxi_translated, color=ctx.author.color)
+            embed.add_field(name=translate_name, value=translated if translated else think, inline=False)
             embed.set_footer(text='Powered by qwen-3-32b')
 
             await ctx.send(embed=embed)

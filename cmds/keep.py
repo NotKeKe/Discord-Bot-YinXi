@@ -10,6 +10,7 @@ import traceback
 
 from core.classes import Cog_Extension, bot
 from core.functions import read_json, write_json, create_basic_embed, current_time, KeJCID
+from core.translator import load_translated, locale_str
 from cmds.AIsTwo.base_chat import base_url_options
 
 ex_keepData = {
@@ -88,6 +89,7 @@ class RunKeep:
         self.provider = 'cerebras'
         self.client = AsyncOpenAI(api_key=base_url_options[self.provider]['api_key'], base_url=base_url_options[self.provider]['base_url'])
         self.ctx = ctx
+        self.interaction = ctx.interaction
 
     async def chat(self) -> ChatCompletionMessageToolCall:
         messages = [
@@ -126,21 +128,27 @@ class RunKeep:
         channelID = ctx.channel.id
         userID = str(ctx.author.id)
 
+        '''i18n'''
+        invalid_format = await self.interaction.translate('send_keep_invalid_format')
+        time_passed = await self.interaction.translate('send_keep_time_passed')
+        too_far = await self.interaction.translate('send_keep_too_far')
+        ''''''
+
         try:        #如果使用者輸入錯誤的格式，則返回訊息並結束keep command
             keep_time = datetime.strptime(f'{time}', '%Y-%m-%d %H:%M')
         except Exception:
-            await ctx.send('你輸入了錯誤的格式', ephemeral=True)
+            await ctx.send(invalid_format, ephemeral=True)
             return
         
         now = datetime.now()
         delay = (keep_time - now).total_seconds()
 
         if delay <= 0:      #如果使用者輸入現在或過去的時間，則返回訊息並結束keep command
-            await ctx.send(f'{ctx.author.mention}, 你指定的時間已經過去了，請選擇一個未來的時間。')
+            await ctx.send(time_passed.format(ctx.author.mention))
             return
         
         if delay > 31557600000:
-            await ctx.send('你設置了1000年後的時間??\n 我都活不到那時候你憑什麼:sob:')
+            await ctx.send(too_far)
             return
 
         u = str(uuid.uuid4())
@@ -164,11 +172,18 @@ class RunKeep:
                     'uuid': u
                 }
             )
+        '''i18n'''
+        embed_translated = await self.interaction.translate('embed_keep_提醒事件')
+        embed_translated: dict = (load_translated(embed_translated))[0]
 
-        embed = create_basic_embed(title='提醒事件:', description=f'**{event}**', color=ctx.author.color, time=False)
+        title = embed_translated.get('title')
+        field_1 = (embed_translated.get('field'))[0]
+        ''''''
+        embed = create_basic_embed(title=title, description=f'**{event}**', color=ctx.author.color, time=False)
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-        embed.add_field(name='注意事項: ', value='記得開啟此頻道的mentions通知 以免錯過提醒!', inline=True)
+        embed.add_field(name=field_1.get('name'), value=field_1.get('value'), inline=True)
         embed.set_footer(text=f'時間: {keep_time}')
+        embed.set_footer(text=embed_translated.get('footer').format(keep_time=keep_time))
 
         await ctx.send(embed=embed)
 
@@ -217,7 +232,7 @@ class Keep(Cog_Extension):
 
     # Create a Keep
     @commands.hybrid_command()
-    @app_commands.describe(time='輸入你要音汐什麼時候提醒，會用AI判斷時間')
+    @app_commands.describe(time=locale_str('keep_time'))
     async def keep(self, ctx:commands.Context, time: str, * , event: str):
         '''[keep time(會使用AI作分析) event: str'''
         async with ctx.typing():

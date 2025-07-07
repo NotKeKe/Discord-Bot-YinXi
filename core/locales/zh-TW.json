@@ -1,0 +1,45 @@
+{
+    "name": {
+        "keep": "記事",
+        "translate": "翻譯",
+        "qrcode_generator": "qrcode生成器"
+    },
+    "description": {
+        "translate": "翻譯一些文字",
+        "qrcode_generator": "生成一個QRcode"
+    },
+    "params_desc": {
+        "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
+        "translate_content": "輸入你要翻譯的文字",
+        "translate_target": "選擇目標語言（你希望翻譯成哪種語言，預設為zh-TW）",
+        "qrcode_generator_url": "在此輸入連結"
+    },
+    "components": {
+        "yin_xi": "音汐",
+        "send_keep_invalid_format": "你輸入了錯誤的格式",
+        "send_keep_time_passed": "{}, 你指定的時間已經過去了，請選擇一個未來的時間。",
+        "send_keep_too_far": "你設置了1000年後的時間??\n 我都活不到那時候你憑什麼:sob:",
+        "send_qrcode_generator_invalid_url": "該功能目前無法使用 或你的連結有問題，請稍後再試",
+        "embed_keep_提醒事件": [{
+            "title": "提醒事件:",
+            "description": "",
+            "field": [{
+                "name": "注意事項: ",
+                "value": "記得開啟此頻道的mentions通知 以免錯過提醒!"
+            }],
+            "footer": "時間: {keep_time}"
+        }],
+        "embed_translate_translated": [{
+            "field": [{
+                "name": "**翻譯**"
+            }]
+        }],
+        "embed_qrcode_generator_1": [{
+            "author": "QRcode生成器"
+        }],
+        "embed_command2_DESCRIPTIONHERE": [""],
+
+        "button_command1_DESCRIPTIONHERE": "",
+        "button_command2_DESCRIPTIONHERE": ""
+    }
+}
