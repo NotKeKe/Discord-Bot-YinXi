@@ -10,6 +10,7 @@ from cmds.music_bot.play4.downloader import Downloader
 from cmds.music_bot.play4.lyrics import search_lyrics
 
 from core.functions import create_basic_embed, current_time, secondToReadable, math_round
+from core.translator import load_translated
 # from core.classes import bot
 
 loop_option = ('None', 'single', 'list')
@@ -29,6 +30,8 @@ class Player:
         self.channel = ctx.voice_client.channel
         self.voice_client = ctx.voice_client
         self.bot = ctx.bot
+        self.translator = self.bot.tree.translator
+        self.locale = ctx.interaction.locale.value if ctx.interaction else 'zh-TW'
 
         # volume
         self.source = None
@@ -118,7 +121,7 @@ class Player:
         except Exception as e:
             print(f'播放錯誤: {e}')
             traceback.print_exc()
-            await self.ctx.send(f'播放失敗，可能因為你播放太久了，導致音訊連結過期  或者其他原因，建議使用 `[rm` 刪除後再重新加入音樂。\n(reason: {str(e)})\n(如果你不確定原因的話可以使用 `/錯誤回報` 進行回報。)')
+            await self.ctx.send((await self.translator.get_translate('send_player_play_error', self.locale)).format(e=str(e)))
 
 
     def loop(self, loop_type: str):
@@ -157,24 +160,24 @@ class Player:
     async def pause(self):
         '''Pause to play music and `SEND` message to notice user'''
         if self.voice_client.is_paused():
-            return await self.ctx.send('音樂已經暫停了欸:thinking:')
+            return await self.ctx.send(await self.translator.get_translate('send_player_already_paused', self.locale))
         if not self.voice_client.is_playing():
-            return await self.ctx.send('沒有正在播放的音樂呢')
+            return await self.ctx.send(await self.translator.get_translate('send_player_not_playing', self.locale))
 
         self.voice_client.pause()
         self.paused = True
-        return await self.ctx.send('已經幫你暫停音樂囉', ephemeral=True)
+        return await self.ctx.send(await self.translator.get_translate('send_player_paused_success', self.locale), ephemeral=True)
     
     async def resume(self):
         '''Resume to play music and `SEND` message to notice user'''
         if self.voice_client.is_playing():
-            return await self.ctx.send('音汐正在播放中，不需要恢復喔:thinking:')
+            return await self.ctx.send(await self.translator.get_translate('send_player_is_playing', self.locale))
         if not self.voice_client.is_paused():
-            return await self.ctx.send('這裡沒有暫停中的音樂')
+            return await self.ctx.send(await self.translator.get_translate('send_player_not_paused', self.locale))
 
         self.voice_client.resume()
         self.paused = False
-        await self.ctx.send('已經幫你繼續播放音樂囉~', ephemeral=True)
+        await self.ctx.send(await self.translator.get_translate('send_player_resumed_success', self.locale), ephemeral=True)
 
     def delete_song(self, index: int):
         '''Ensure index is index not id of song'''
@@ -190,7 +193,7 @@ class Player:
             
         # 檢查播放列表是否為空
         if not self.list:
-            print('播放列表為空，無法播放下一首')
+            print('Player playlist is empty')
             return
             
         # 更新索引
@@ -201,7 +204,7 @@ class Player:
                 await asyncio.sleep(1)
                 if not self.ctx.voice_client: return
                 from cmds.play4 import players
-                await self.ctx.send('我已經播完所有歌曲啦! 我就離開囉')
+                await self.ctx.send(await self.translator.get_translate('send_player_finished_playlist', self.locale))
                 await self.voice_client.disconnect()
                 del players[self.ctx.guild.id]
                 del self
@@ -216,23 +219,41 @@ class Player:
         await asyncio.sleep(0.2)
         await self.play()
 
-    def show_list(self, index: int = None) -> discord.Embed:
+    async def show_list(self, index: int = None) -> discord.Embed:
         '''Ensure index is index not id of song'''
         index = index or self.current_index
         if not (0 <= index < len(self.list)):  # 確保索引在範圍內
-            return create_basic_embed('找不到該歌曲')
+            return create_basic_embed((await self.translator.get_translate('send_player_not_found_song', self.locale)).format(index=index+1))
         
-        eb = create_basic_embed(color=self.user.color, 功能='播放清單')
+        '''i18n'''
+        i18n_queue_str = await self.translator.get_translate('embed_player_queue', self.locale)
+        i18n_queue_data = load_translated(i18n_queue_str)[0]
+        i18n_np_str = await self.translator.get_translate('embed_music_now_playing', self.locale)
+        i18n_np_data = load_translated(i18n_np_str)[0]
+        ''''''
+        eb = create_basic_embed(color=self.user.color, 功能=i18n_queue_data['title'])
         eb.set_thumbnail(url=self.list[index]['thumbnail_url'])
-        start = max(0, index - 2)  # 避免索引超出範圍
-        end = min(len(self.list), index + 8)  # 讓結束索引最多到最後一項
+        start = max(0, index - 2)
+        end = min(len(self.list), index + 8)
 
         for i in range(start, end):
-            title = self.list[i]['title']
-            video_url = self.list[i]['video_url']
-            duration = self.list[i]['duration']
-            user = (self.list[i]).get('user')
-            eb.add_field(name=f'{i + 1}. {title}', value=f'歌曲連結: [url]({video_url})\n時長: {duration}\n點播人: {user.global_name if user else "未知"}')
+            item = self.list[i]
+            title = item['title']
+            video_url = item['video_url']
+            duration = item['duration']
+            user = item.get('user')
+            
+            prefix = ''
+            if i == index:
+                prefix = f'{i18n_queue_data["field"][0]["name"]} '
+            elif i == index + 1:
+                prefix = f'{i18n_queue_data["field"][1]["name"]} '
+
+            eb.add_field(
+                name=f'{prefix}{i + 1}. {title}',
+                value=f'[URL]({video_url})\n{i18n_np_data["duration"]}: {duration}\n{i18n_np_data["requester"]}: {user.global_name if user else "N/A"}',
+                inline=False
+            )
 
         return eb
 
@@ -311,7 +332,7 @@ class Player:
     async def search_lyrics(self) -> str:
         query = self.list[self.current_index].get('title')
         result = await search_lyrics(query=query)
-        if not result: return '沒有搜尋結果，建議使用 `/歌詞搜尋 {query} {artist}` 來搜尋歌詞'
+        if not result: return await self.translator.get_translate('send_player_lyrics_not_found', self.locale)
         return result
     
     async def volume_adjust(self, volume: float = None, add: float = None, reduce: float = None) -> discord.Message | bool:
@@ -323,5 +344,5 @@ class Player:
         self.transformer.volume = self.volume
         self.voice_client.source = self.transformer
     
-        msg = await self.ctx.send(f'已將音量調整為 `{int(math_round(self.volume * 100))}%`', silent=True, ephemeral=True)
+        msg = await self.ctx.send((await self.translator.get_translate('send_player_volume_adjusted', self.locale)).format(volume=int(math_round(self.volume * 100))), silent=True, ephemeral=True)
         return msg

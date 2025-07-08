@@ -3,6 +3,8 @@
 import discord
 from discord.ext import commands
 
+from core.translator import locale_str
+
 class TicTacToeGame:
     def __init__(self):
         self.board = [[":new_moon:" for _ in range(3)] for _ in range(3)]
@@ -35,25 +37,41 @@ class TicTacToe(commands.Cog):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
 
-    @commands.hybrid_command(aliases=['tictactoe'], name="圈圈叉叉", description="A tic-tac-toe game")
-    async def start_game(self, ctx):
+    @commands.hybrid_command(name=locale_str('tictactoe'), description=locale_str('tictactoe_description'))
+    async def start_game(self, ctx: commands.Context):
         '''
         [圈圈叉叉 或是 [tictactoe
         跟別人玩圈圈叉叉
         基本上全部人都能按
-        '''        
+        '''
         self.games[ctx.channel.id] = TicTacToeGame()
         game = self.games[ctx.channel.id]
-        embed = discord.Embed(title="Tic Tac Toe", description=game.format_board(), color=discord.Color.blue())
-        embed.add_field(name="Current Player", value=game.current_player, inline=False)
-        await ctx.send(embed=embed, view=self.create_view(ctx.channel.id))
+        '''i18n'''
+        i18n_data = await ctx.interaction.translate('embed_tictactoe_game')
+        i18n_data = i18n_data[0]
+        ''''''
+        embed = discord.Embed(title=i18n_data['title'], description=game.format_board(), color=discord.Color.blue())
+        embed.add_field(name=i18n_data['field'][0]['name'], value=game.current_player, inline=i18n_data['field'][0].get('inline', True))
+        await ctx.send(embed=embed, view=await self.create_view(ctx, ctx.channel.id))
 
-    def create_view(self, channel_id):
+    async def create_view(self, ctx: commands.Context, channel_id: int):
         view = discord.ui.View()
+        
+        '''i18n'''
+        button_labels = await ctx.interaction.translate('button_tictactoe_labels')
+        button_labels = button_labels[0]
+        ''''''
+
         positions = [
-            ("左上", 0, 0), ("中上", 0, 1), ("右上", 0, 2),
-            ("左邊", 1, 0), ("中間", 1, 1), ("右邊", 1, 2),
-            ("左下", 2, 0), ("中下", 2, 1), ("右下", 2, 2)
+            (button_labels['top_left'], 0, 0),
+            (button_labels['top_center'], 0, 1),
+            (button_labels['top_right'], 0, 2),
+            (button_labels['middle_left'], 1, 0),
+            (button_labels['middle_center'], 1, 1),
+            (button_labels['middle_right'], 1, 2),
+            (button_labels['bottom_left'], 2, 0),
+            (button_labels['bottom_center'], 2, 1),
+            (button_labels['bottom_right'], 2, 2)
         ]
         for label, row, col in positions:
             view.add_item(discord.ui.Button(label=label, style=discord.ButtonStyle.primary, custom_id=f"{channel_id}-{row}-{col}"))
@@ -69,7 +87,7 @@ class TicTacToe(commands.Cog):
             channel_id, row, col = map(int, custom_id.split("-"))
 
             if channel_id not in self.games:
-                await interaction.response.send_message("請先開始一個遊戲，使用 圈圈叉叉 指令。", ephemeral=True)
+                await interaction.response.send_message(await interaction.translate('send_tictactoe_no_game'), ephemeral=True)
                 return
 
             game = self.games[channel_id]
@@ -100,16 +118,25 @@ class TicTacToe(commands.Cog):
                 # 檢查是否有玩家獲勝
                 winner = game.check_winner()
                 if winner:
-                    embed = discord.Embed(title="Tic Tac Toe", description=f"{winner} wins!\n\n{game.format_board()}", color=discord.Color.green())
+                    '''i18n'''
+                    i18n_data = await interaction.translate('embed_tictactoe_game')
+                    i18n_data = i18n_data[0]
+                    ''''''
+                    embed = discord.Embed(title=i18n_data['title'], description=i18n_data['winner_description'].format(winner=winner) + f"\n\n{game.format_board()}", color=discord.Color.green())
                     await interaction.response.edit_message(embed=embed, view=None)
                     self.games.pop(channel_id)
                 else:
                     game.current_player = ":blue_circle:" if game.current_player == ":x:" else ":x:"
-                    embed = discord.Embed(title="Tic Tac Toe", description=game.format_board(), color=discord.Color.blue())
-                    embed.add_field(name="Current Player", value=game.current_player, inline=False)
-                    await interaction.response.edit_message(embed=embed, view=self.create_view(channel_id))
+                    '''i18n'''
+                    i18n_data = await interaction.translate('embed_tictactoe_game')
+                    i18n_data = i18n_data[0]
+                    ''''''
+                    embed = discord.Embed(title=i18n_data['title'], description=game.format_board(), color=discord.Color.blue())
+                    embed.add_field(name=i18n_data['field'][0]['name'], value=game.current_player, inline=i18n_data['field'][0].get('inline', True))
+                    ctx = await self.bot.get_context(interaction)
+                    await interaction.response.edit_message(embed=embed, view=await self.create_view(ctx, channel_id))
             else:
-                await interaction.response.send_message("這個位置已經被佔用了，請選擇其他位置。", ephemeral=True)
+                await interaction.response.send_message(await interaction.translate('send_tictactoe_position_taken'), ephemeral=True)
         except: pass
 
 async def setup(bot):

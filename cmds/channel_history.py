@@ -8,6 +8,7 @@ import time
 import traceback
 
 from core.classes import Cog_Extension
+from core.translator import locale_str, load_translated
 
 PATH = './data/temp'
 
@@ -67,27 +68,42 @@ class ChannelHistories:
             self.file_path = f'{PATH}/channel_history_{self.channelID}.txt'
             result = []
             for m in self.ls:
-                message_str = f"作者: {m['author']['name']} ({m['author']['id']})\n" \
-                              f"頭像連結: {m['author']['avatar_url'] or '無'}\n" \
-                              f"時間: {m['timestamp']}\n" \
-                              f"內容: {m['content'] or '無'}\n"
+                i18n_data = await self.ctx.interaction.translate('send_channel_history_file_template')
+                i18n_data = load_translated(i18n_data)[0]
+                
+                author_str = i18n_data.get('author', '作者')
+                avatar_url_str = i18n_data.get('avatar_url', '頭像連結')
+                time_str = i18n_data.get('time', '時間')
+                content_str = i18n_data.get('content', '內容')
+                none_str = i18n_data.get('none', '無')
+                attachments_str = i18n_data.get('attachments', '附件')
+                embed_str = i18n_data.get('embed', '嵌入訊息 (embed)')
+                embed_title_str = i18n_data.get('embed_title', '嵌入標題')
+                embed_description_str = i18n_data.get('embed_description', '嵌入描述')
+                embed_fields_str = i18n_data.get('embed_fields', '嵌入欄位')
+                embed_image_str = i18n_data.get('embed_image', '嵌入圖片')
+
+                message_str = f"{author_str}: {m['author']['name']} ({m['author']['id']})\n" \
+                              f"{avatar_url_str}: {m['author']['avatar_url'] or none_str}\n" \
+                              f"{time_str}: {m['timestamp']}\n" \
+                              f"{content_str}: {m['content'] or none_str}\n"
 
                 if m['attachments'] is not None:
-                    message_str += f"附件: {', '.join(m['attachments'])}\n"
+                    message_str += f"{attachments_str}: {', '.join(m['attachments'])}\n"
                 
                 if m['embeds'] is not None:
                     for embed in m['embeds']:
-                        message_str += "嵌入訊息 (embed):\n"
-                        if embed['title'] is not None and embed['title'] != '無':
-                            message_str += f"  嵌入標題: {embed['title']}\n"
-                        if embed['description'] is not None and embed['description'] != '無':
-                            message_str += f"  嵌入描述: {embed['description']}\n"
+                        message_str += f"{embed_str}:\n"
+                        if embed['title'] is not None and embed['title'] != none_str:
+                            message_str += f"  {embed_title_str}: {embed['title']}\n"
+                        if embed['description'] is not None and embed['description'] != none_str:
+                            message_str += f"  {embed_description_str}: {embed['description']}\n"
                         if embed['fields']:
-                            message_str += "  嵌入欄位:\n"
+                            message_str += f"  {embed_fields_str}:\n"
                             for field in embed['fields']:
                                 message_str += f"    - {field['name']}: {field['value']}\n"
                         if embed['image'] is not None:
-                            message_str += f"  嵌入圖片: {embed['image']}\n"
+                            message_str += f"  {embed_image_str}: {embed['image']}\n"
                 
                 message_str += "-" * 30 + "\n"
                 result.append(message_str)
@@ -109,15 +125,15 @@ class ChannelHistory(Cog_Extension):
         os.makedirs(PATH, exist_ok=True)
         self.rm_file.start()
 
-    @commands.hybrid_command(name='輸出聊天紀錄', description='Return a file that contains the chat history of the channel')
+    @commands.hybrid_command(name=locale_str('output_chat_history'), description=locale_str('output_chat_history'))
     @app_commands.choices(file_type=[app_commands.Choice(name=t, value=t) for t in ('json', 'txt')])
-    @app_commands.describe(count='你要輸出的聊天紀錄數量 (預設為10)', file_type='你要輸出的檔案格式 (txt or json, 預設為json)', reverse='是否要翻轉最終的輸出 (預設會從最新到最舊)')
+    @app_commands.describe(count=locale_str('output_chat_history_count'), file_type=locale_str('output_chat_history_file_type'), reverse=locale_str('output_chat_history_reverse'))
     async def output_chat_history(self, ctx: commands.Context, count: int = 10, file_type: str = 'json', reverse: bool = False):
         async with ctx.typing():
             if not ctx.channel.permissions_for(ctx.author).read_messages or not ctx.channel.permissions_for(ctx.author).read_message_history:
-                return await ctx.send('你沒有權限讀取聊天紀錄')
+                return await ctx.send(await ctx.interaction.translate('send_output_chat_history_no_read_permission'))
             if not ctx.channel.permissions_for(ctx.me).read_message_history:
-                return await ctx.send('我沒有權限讀取聊天紀錄')
+                return await ctx.send(await ctx.interaction.translate('send_output_chat_history_bot_no_read_permission'))
 
             ch = ChannelHistories(ctx, count, file_type, reverse)
             file_path = await ch.run()

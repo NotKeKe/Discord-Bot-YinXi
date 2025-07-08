@@ -1,0 +1,495 @@
+{
+    "name": {
+        "keep": "keep",
+        "translate": "translate",
+        "qrcode_generator": "qrcode_generator",
+        "botinfo": "botinfo",
+        "help": "help",
+        "checkin": "checkin",
+        "counting": "counting",
+        "output_chat_history": "output_chat_history",
+        "giveaway": "giveaway",
+        "chat_hugging": "chat_hugging",
+        "join_leave_message": "join_leave_message",
+        "delete_spam_messages": "delete_spam_messages",
+        "rank": "rank",
+        "levels": "levels",
+        "owner_id": "owner_id",
+        "ping": "ping",
+        "repeat": "repeat",
+        "where_am_i": "where_am_i",
+        "avatar": "avatar",
+        "get_system_channel": "get_system_channel",
+        "server_info": "server_info",
+        "convert_timestamp": "convert_timestamp",
+        "tw_high_school_score_calculator": "tw_high_school_score_calculator",
+        "random_number": "random_number",
+        "suggest": "suggest",
+        "report": "report",
+        "tictactoe": "tictactoe",
+        "world_chat": "world_chat",
+        "report_bad_image": "report_bad_image",
+        "youtube_notification": "youtube_notification",
+        "play": "play",
+        "add": "add",
+        "skip": "skip",
+        "back": "back",
+        "pause": "pause",
+        "resume": "resume",
+        "stop": "stop",
+        "loop": "loop",
+        "nowplaying": "nowplaying",
+        "queue": "queue",
+        "remove": "remove",
+        "clear": "clear",
+        "leave": "leave",
+        "lyrics": "lyrics",
+        "volume": "volume"
+    },
+    "description": {
+        "translate": "Translate some text",
+        "qrcode_generator": "Generate a QR code",
+        "botinfo": "View information about this bot",
+        "help": "Show the help menu for all commands",
+        "checkin": "Daily check-in",
+        "counting": "Set or cancel the counting channel",
+        "output_chat_history": "Output the chat history of a channel to a file",
+        "giveaway": "Host a giveaway",
+        "chat_hugging": "Chat with a model from Hugging Face",
+        "join_leave_message": "Set the channel to send a message when a user joins or leaves the server.",
+        "delete_spam_messages": "Delete messages sent by a specific user within a specific time frame",
+        "keep": "Have the bot remind you at a specified time",
+        "rank": "Check your chat rank in this server",
+        "levels": "View the chat rank leaderboard for this server",
+        "owner_id": "Get the server owner's ID",
+        "ping": "Get the bot's latency",
+        "repeat": "Make the bot repeat what you say",
+        "where_am_i": "Tells you which server and channel you are in",
+        "avatar": "Get a user's avatar",
+        "get_system_channel": "Get the system channel for this server",
+        "server_info": "Show detailed information about this server",
+        "convert_timestamp": "Convert a Unix timestamp to a readable time format",
+        "tw_high_school_score_calculator": "Calculate the total score for the Taiwanese high school entrance exam",
+        "random_number": "Generate a random number within a specified range",
+        "suggest": "Send a suggestion to the developer",
+        "report": "Report a bug to the developer",
+        "tictactoe": "Start a game of Tic-Tac-Toe",
+        "world_chat": "Set the current channel as a world chat channel",
+        "report_bad_image": "Report a user who sent an inappropriate image in the world chat",
+        "youtube_notification": "Set or cancel update notifications for a specific YouTube channel",
+        "play": "Play music",
+        "add": "Add a song to the playlist",
+        "skip": "Skip the current song",
+        "back": "Go back to the previous song",
+        "pause": "Pause the music",
+        "resume": "Resume the music",
+        "stop": "Stop playing and leave the channel",
+        "loop": "Set the loop mode",
+        "nowplaying": "Show the currently playing song",
+        "queue": "Show the playlist",
+        "remove": "Remove a song from the playlist",
+        "clear": "Clear the entire playlist",
+        "leave": "Leave the voice channel",
+        "lyrics": "Search for lyrics",
+        "volume": "Adjust the volume"
+    },
+    "params_desc": {
+        "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
+        "translate_content": "Enter the text you want to translate",
+        "translate_target": "Select the target language (default is zh-TW)",
+        "qrcode_generator_url": "Enter the link here",
+        "help_cog_name": "The name of the command category to query",
+        "help_cmd_name": "The name of the command to query",
+        "output_chat_history_count": "Number of messages to output (default 10)",
+        "output_chat_history_file_type": "Output file type (txt/json, default json)",
+        "output_chat_history_reverse": "Whether to reverse the message order (default no)",
+        "giveaway_winners_total": "Number of winners",
+        "giveaway_prize": "Prize",
+        "giveaway_date": "End date (format: YYYY-MM-DD)",
+        "giveaway_time": "End time (format: HH:MM)",
+        "chat_hugging_prompt": "What would you like to say to the AI?",
+        "chat_hugging_model": "Select a conversation model",
+        "chat_hugging_history": "Select a history to continue the conversation",
+        "chat_hugging_temperature": "Set the model's temperature (randomness)",
+        "chat_hugging_show_thoughts": "Whether to show the AI's thought process (only visible to you)",
+        "join_leave_message_join_channel": "Channel to send a message when a user joins",
+        "join_leave_message_leave_channel": "Channel to send a message when a user leaves",
+        "delete_spam_messages_hours": "How many hours ago to delete messages",
+        "delete_spam_messages_user": "The user whose messages to delete",
+        "keep_event": "The event to be reminded of",
+        "repeat_text": "The text for the bot to repeat",
+        "avatar_member": "The user to get the avatar of (can be left blank)",
+        "convert_timestamp_timestamp": "Unix timestamp (seconds)",
+        "tw_high_school_score_calculator_image": "Upload your report card image for AI recognition",
+        "tw_high_school_score_calculator_prompt": "What do you want the AI to help you with (only used if you upload an image)",
+        "random_number_start": "The starting number of the random range",
+        "random_number_end": "The ending number of the random range",
+        "random_number_times": "How many random numbers to generate (default 1)",
+        "play_query": "Enter a song name, YouTube link, or playlist",
+        "add_query": "Enter the name of the song or YouTube link to add",
+        "loop_loop_type": "Select loop mode (None, single, list)",
+        "remove_number": "The number of the song to remove (viewable from /queue)",
+        "lyrics_query": "Song name",
+        "lyrics_artist": "Artist name (optional)",
+        "lyrics_lrc": "Whether to show lyrics with a timeline (default no)",
+        "volume_volume": "Set the volume (0-200), or use the buttons to fine-tune",
+        "suggest_suggestion": "Your suggestion",
+        "report_error": "The error you encountered",
+        "world_chat_cancel": "Whether to cancel the world chat setting",
+        "report_bad_image_author": "The username of the user who sent the inappropriate image",
+        "report_bad_image_reason": "The reason for your report",
+        "youtube_notification_youtuber": "The YouTube channel link to set notifications for (leave blank to cancel)"
+    },
+    "components": {
+        "yin_xi": "YinXi",
+        "send_keep_invalid_format": "You entered an incorrect format",
+        "send_keep_time_passed": "{}, the time you specified has already passed, please choose a future time.",
+        "send_keep_too_far": "You set a time 1000 years in the future?? I won't even be alive then, how dare you :sob:",
+        "send_qrcode_generator_invalid_url": "This feature is currently unavailable or your link is problematic, please try again later",
+        "embed_keep_created": [{
+            "title": "Reminder Event:",
+            "field": [{
+                "name": "Note: ",
+                "value": "Remember to enable mentions notifications for this channel to avoid missing the reminder!"
+            }],
+            "footer": "Time: {keep_time}"
+        }],
+        "embed_translate_translated": [{
+            "field": [{
+                "name": "**Translation**"
+            }]
+        }],
+        "embed_qrcode_generator_1": [{
+            "author": "QR Code Generator"
+        }],
+        "select_bot_info_help_command_placeholder": "Select a command",
+        "send_bot_info_help_command_no_description": "This command has no description",
+        "send_bot_info_help_view_error": "An error occurred during this operation: \"{e}\", please report it to the developer.",
+        "select_bot_info_help_cog_placeholder": "Select a category",
+        "send_bot_info_help_cog_no_commands": "This category has no commands",
+        "send_bot_info_help_more_commands_cannot_display": "There are other commands from {value} that cannot be displayed",
+        "button_botinfo_command_intro_label": "Command Introduction",
+        "embed_help_cog": [{
+            "title": "Command List",
+            "description": "Number of commands: `{total_cmds}`",
+            "fields": [
+                { "name": "**{command_name}**", "value": "{command_description}" }
+            ]
+        }],
+        "embed_botinfo_info": [{
+            "author": "Bot Info",
+            "fields": [
+                { "name": "🤖 **Name**", "value": "YinXi" },
+                { "name": "👨 **Author**", "value": "KeKe KeJC" },
+                { "name": "⚙️ **Known Command Categories**", "value": "{cogs_list}" },
+                { "name": "🐙 **My Github Link**", "value": "[NotKeKe](https://github.com/NotKeKe)" },
+                { "name": "🔗 **This Project Link**", "value": "[YinXi](https://github.com/NotKeKe/Discord-Bot-YinXi)" }
+            ]
+        }],
+        "embed_help_main": [{
+            "author": "Command Help",
+            "fields": [{
+                    "name": "**Features**",
+                    "value": "> ✅ Discord Bot combined with AI\n> ✅ Provides many useful small features"
+                },
+                {
+                    "name": "**🌟 AI Features**",
+                    "value": "> `/chat` - Chat with AI\n> `/ai_channel` - Set up an AI channel, chat without entering commands\n> `/image_generation` - Generate images with AI (cogview-3-flash)\n> You can also chat by DMing YinXi!"
+                },
+                {
+                    "name": "**👥 Server Features**",
+                    "value": "> `/server_info` - Quickly get important information about this server\n> `/world_chat` - Communicate with other users who have this feature enabled across servers\n> `/counting_channel` - Play a number relay game with server members\n> `/get_system_channel` - As the name suggests\n> `/avatar` - Take someone's avatar when they're not looking w"
+                },
+                {
+                    "name": "**🎶 Music Features**",
+                    "value": "> `/play` or `[p` `{query}` - Play a song ▶️\n> `/add` `{query}` - Add a song to the playlist ➕\n> `/skip` or `[s` - Skip the current song ⏭️\n> `/back` - Go back to the previous song ⏮️\n> `/pause` or `[ps` or `[暫停` - Pause the music ⏸️\n> `/resume` or `[rs` - Resume the music ▶️\n> `/stop` - Clear the playlist and leave the channel ⏹️\n> `/loop {loop_type}` - Set the loop mode 🔁\n> `/current_playing` or `[np` or `[now` - Show the currently playing song ℹ️\n> `/list` or `[q` - Show the playlist 📋\n> `/delete_song` or `[rm` `{number}` - Delete a song from the playlist ❌\n> `/clear_queue` or `[clear` - Clear the entire playlist 🧹\n> `/leave` - Leave the voice channel 🚪\n> **Some commands have other ways to be called, be sure to try them out~**"
+                },
+                {
+                    "name": "**🔧 Useful Gadgets**",
+                    "value": "> `/minecraft_server_status` - Check the status of a Minecraft server\n> `[nasa` - Get the daily image provided by NASA\n> `[cat` - Get daily cat knowledge 🐱\n> `[image {query} {number}` - Enter the keyword you want to search for and the number of images to search for, and you'll get the images you want (you can also leave it blank!)\n> `[gif` - Use `/gif` to see how to use it~\n> `[simp` - Say something a simp would say 🐶🐶🐶 **~~(but the official says it's a jerk quote)~~**\n> `/qrcode_generator` - Convert a link to a QR Code\n> `/keep` - Reminder function! After you set it up, it will remind you of what you need to do in the same channel when the time comes\n> `/set_yt_notification` - Notifies you when a YouTuber you follow has updated! (If you don't enter anything in the youtuber field, it will be cancelled)\n> `/output_chat_history` - Output channel chat history (can be output as a `json` or `txt` file)"
+                },
+                {
+                    "name": "**🤫 Features most people won't use**",
+                    "value": "> `/convert_timestamp` - Convert a timestamp to a readable time"
+                },
+                {
+                    "name": "Other:",
+                    "value": "> There are more features waiting for you to discover!"
+                }
+            ]
+        }],
+        "send_checkin_already_checked_in": "You have already checked in today.",
+        "send_checkin_success": "You have checked in at \"{time}\", total check-ins: {times}",
+        "send_counting_already_counting": "This channel is already counting, the current number is {count}.",
+        "send_counting_set_success": "This channel has been successfully set as a counting channel.",
+        "embed_counting_error": [{
+            "double_input": "❌ You just entered a number, you can't enter twice in a row!\nThe next number is **1**",
+            "wrong_start": "⚠️ Please start from **1**, not {content}.",
+            "too_large": "⚠️ The number you entered, **{content}**, is too large!",
+            "too_small": "⚠️ The number you entered, **{content}**, is too small!",
+            "wrong_number": "❌ You entered the wrong number **{content}**!\nYou should have entered **{next_count}**.\nGame reset, the next number is **1**"
+        }],
+        "send_output_chat_history_no_read_permission": "You do not have permission to read the chat history of this channel.",
+        "send_output_chat_history_bot_no_read_permission": "I do not have permission to read the chat history of this channel.",
+        "send_channel_history_file_template": [{
+            "author": "Author",
+            "avatar_url": "Avatar URL",
+            "time": "Time",
+            "content": "Content",
+            "none": "None",
+            "attachments": "Attachments",
+            "embed": "Embed Message",
+            "embed_title": "Embed Title",
+            "embed_description": "Embed Description",
+            "embed_fields": "Embed Fields",
+            "embed_image": "Embed Image"
+        }],
+        "send_error_occurred": "An error occurred with this command.",
+        "embed_events_recording_message_edit_before": "Before edit",
+        "embed_events_recording_message_edit_after": "After edit",
+        "embed_events_recording_message_delete": "Deleted message",
+        "embed_events_recording_role_create": "New role created",
+        "send_giveaway_invalid_format": "You entered an incorrect date or time format.",
+        "send_giveaway_time_passed": "{mention}, the time you specified has already passed, please choose a future time.",
+        "send_giveaway_too_far": "You set a time 1000 years in the future?? I won't even be alive then, how dare you :sob:",
+        "send_giveaway_left": "You have left the giveaway.",
+        "send_giveaway_joined": "You have successfully joined the giveaway!",
+        "send_giveaway_no_winner": "No one participated in the giveaway...",
+        "send_giveaway_ended_message": "🎉 **Giveaway has ended** 🎉\nStarted by: {mention}\nLucky winner: {winner}",
+        "embed_giveaway_start": [{
+            "author": "Giveaway",
+            "fields": [
+                { "name": "Number of winners:" },
+                { "name": "Current participants:", "value": "0" },
+                { "name": "Note", "value": "If the bot doesn't send you any message after clicking the button, it means you haven't joined this event yet" }
+            ],
+            "footer": "End time"
+        }],
+        "embed_giveaway_end": [{
+            "fields": [
+                { "name": "Winner(s)" }
+            ],
+            "footer": "Expected winners: {winners_total} | Final participants: {count}"
+        }],
+        "send_chat_hugging_fail": "Could not generate a response at this time, please try again later.",
+        "embed_on_guild_join": [{
+            "title": "My self-introduction!",
+            "author": "Hello",
+            "fields": [
+                { "name": "Author:", "value": "KeKe KeJC", "inline": true },
+                { "name": "Github Link:", "value": "[NotKeKe](https://github.com/NotKeKe)", "inline": true },
+                { "name": "Note:", "value": "This bot is still in the testing phase, do not give it any administrative permissions!\nDo not give it any administrative permissions!\nDo not give it any administrative permissions!", "inline": false }
+            ]
+        }],
+        "send_on_member_join": "\"{member_name}\" slid into the server!",
+        "send_on_member_remove": "\"{member_name}\" went out the way they came in （ ´☣///_ゝ///☣｀）",
+        "send_join_leave_message_cancel_success": "Operation cancelled",
+        "send_join_leave_message_delete_success": "This feature has been deleted for {guild_name}",
+        "embed_join_leave_message_confirm_delete": [{
+            "title": "Are you sure you don't want the bot to send messages when users join and leave the server?",
+            "description": "✅ means continue sending messages ❌ means **do not** continue sending messages"
+        }],
+        "send_join_leave_message_no_channel_input": "Please enter a channel",
+        "send_join_leave_message_no_join_channel": "Please enter a join channel",
+        "send_join_leave_message_no_leave_channel": "Please enter a leave channel",
+        "send_join_leave_message_no_permission": "Please select a channel where I can send messages",
+        "embed_join_leave_message_set_success": [{
+            "title": "This feature has been added for {guild_name}",
+            "description": "(Join channel: {join_channel_name} Leave channel: {leave_channel_name})"
+        }],
+        "send_delete_spam_messages_no_permission": "I do not have permission to delete messages",
+        "embed_delete_spam_messages": [{
+            "title": "Delete Messages",
+            "fields": [
+                { "name": "Number of messages deleted", "value": "`{count}`", "inline": false },
+                { "name": "Number of messages that could not be deleted", "value": "> `{count}`\n> reason: No `Manage Messages` permission\n> Messages that could not be deleted: \n{messages}", "inline": false },
+                { "name": "Number of channels where messages could not be deleted", "value": "> `{count}`\n> reason: No `Read Message History` permission for that channel\n> Channels where messages could not be deleted: {channels}", "inline": false }
+            ]
+        }],
+        "send_keep_remind": "{mention}, you need to do {event}",
+        "send_levels_level_up": "Your length has become {level} cm",
+        "send_levels_no_data_yet": "No chat rank data has been saved yet",
+        "send_levels_no_guild_data": "No chat rank information has been saved for this server yet",
+        "send_levels_not_enough_messages": "You have not sent enough messages in this server yet",
+        "embed_rank": [{
+            "description": "You are now {rank_name} (level {level})"
+        }],
+        "embed_levels": [{
+            "title": "Server Rank Leaderboard",
+            "footer": "{user_name} got first place 🎉🎉🎉",
+            "field": { "name": "{rank}. {user_name} (level {level}, {count} messages)", "value": " " }
+        }],
+        "embed_owner_id": [{
+            "author": "Who is the admin?",
+            "title": "{owner_mention}",
+            "field": { "name": "Owner ID" }
+        }],
+        "embed_ping": [{
+            "title": "Latency",
+            "description": "**{latency}** (ms)"
+        }],
+        "embed_where_am_i": [{
+            "title": "Where are you?",
+            "description": "You are in the {channel_mention} channel of \"{guild_name}\""
+        }],
+        "send_avatar_no_avatar": "User \"{member_name}\" has no avatar",
+        "send_get_system_channel_no_system_channel": "This server has no default channel",
+        "send_server_info_not_in_guild": "You are not in a server",
+        "embed_server_info": [{
+            "title": "**{guild_name}** Server Info",
+            "fields": [
+                { "name": "📌 Server Name" },
+                { "name": "🆔 Server ID" },
+                { "name": "👥 Total Members" },
+                { "name": "👤 Member Count" },
+                { "name": "🤖 Bot Count" },
+                { "name": "📢 Channel Count" },
+                { "name": "👑 Owner" },
+                { "name": "🆔 Owner ID" },
+                { "name": "🟢 Online Members" },
+                { "name": "📣 System Channel" }
+            ]
+        }],
+        "send_convert_timestamp_invalid_number": "Please enter a valid number",
+        "embed_tw_high_school_score_calculator": [{
+            "title": "Total Score Calculator",
+            "fields": [
+                { "name": "Weighted Total Score" },
+                { "name": "Unweighted Total Score" },
+                { "name": "**AI Response**" }
+            ]
+        }],
+        "send_tw_high_school_score_calculator_no_prompt": "Please enter what you want the AI to do (`prompt`)",
+        "send_random_number_too_many": "You cannot pick {times} numbers from {range1}~{range2} (too many!)",
+        "send_play_not_in_voice": "You don't seem to be in a voice channel? Join one first",
+        "send_play_no_query": "I didn't receive your keyword... Remember to enter `query`",
+        "send_play_error": "Huh? Something seems to have gone wrong, why not try a different `query`?",
+        "send_add_not_in_voice": "You don't seem to be in a voice channel? Join one first",
+        "send_add_use_play_first": "Use `/play` to request music~",
+        "send_add_not_in_same_channel": "You and I are not in the same channel... Join {channel_mention} first",
+        "send_add_player_crashed": "YinXi seems to have exited abnormally just now... Why not let me rejoin and see?",
+        "send_add_success": "Successfully added the song to the playlist! You now have {size} songs in your playlist!",
+        "send_skip_no_more_songs": "Add a song first~ There are no more songs in the playlist",
+        "send_back_no_more_songs": "Add a song first~ There are no more songs in the playlist",
+        "send_stop_not_in_voice": "Huh? Are you or am I not in a voice channel",
+        "send_stop_not_in_same_channel": "Huh? We seem to be in different channels",
+        "send_stop_success": "Music has been stopped and I have left {channel_mention}~",
+        "send_loop_invalid_type": "You gave me the wrong loop type, available loop types are `{loop_option_str}`\nTry again~",
+        "send_loop_success": "Loop mode has been set to `{loop_type}`",
+        "send_remove_success": "Deleted `{title}`, requested by: `{user_name}`",
+        "send_clear_already_empty": "The playlist was already empty~",
+        "send_clear_confirm_button": "Confirm",
+        "send_clear_reject_button": "Cancel",
+        "send_clear_success": "✅ Playlist has been deleted",
+        "send_clear_cancelled": "❌ Cancelled",
+        "embed_clear_confirm": [{
+            "title": "Are you sure you want to delete the playlist?"
+        }],
+        "send_lyrics_not_found": "Couldn't find the lyrics for this song... Maybe try a different keyword?",
+        "send_lyrics_too_short_tip": "If the lyrics look too short, you can try setting `lrc` to `True`~",
+        "send_volume_buttons_title": "Volume Buttons",
+        "embed_music_now_playing": [{
+            "requester": "Requester",
+            "author": "Author",
+            "duration": "Duration",
+            "list_size": "Playlist Size",
+            "now_playing": "Now Playing"
+        }],
+        "embed_music_info": [{
+            "title": "♪ Now Playing",
+            "field": [
+                { "name": "🌐 Video URL" },
+                { "name": "🎶 Song Duration" },
+                { "name": "🔁 Loop Status" },
+                { "name": "🔊 Volume" },
+                { "name": "📊 Progress Bar", "inline": false }
+            ],
+            "footer": "Requester: {user_name}"
+        }],
+        "send_check_not_in_voice": "You need to join a voice channel first!",
+        "send_button_not_in_voice": "You don't seem to be in a voice channel?",
+        "send_button_bot_not_in_voice": "YinXi is not in a voice channel :thinking:",
+        "send_button_player_crashed": "YinXi seems to have crashed unexpectedly :thinking:",
+        "send_button_stopped_music": "( {user} ) has stopped the music and left {channel_mention} ~",
+        "send_button_loop_changed": "Loop status has been changed to `{loop_status}`",
+        "send_button_recommend_not_enabled": "You haven't enabled music recommendations, please use `/music_recommendation` to enable this feature!",
+        "send_button_no_recommendations": "There are no recommended songs for you at the moment.",
+        "embed_button_recommend_title": "Song Recommendation",
+        "send_check_bot_not_in_voice": "I'm not in any voice channel right now",
+        "embed_player_queue": [{
+            "title": "Playlist",
+            "description": "There are currently `{count}` songs in total",
+            "field": [
+                { "name": "**Now Playing**" },
+                { "name": "**Up Next**" }
+            ]
+        }],
+        "send_player_not_found_song": "Could not find song #{index}",
+        "send_player_play_error": "Playback failed, possibly because you've been playing for too long, causing the audio link to expire, or for other reasons. It is recommended to use `/remove` to delete the song and then add it again.\n(Reason: {e})\n(If you are unsure of the reason, you can use `/report_bug` to report it.)",
+        "send_player_already_paused": "The music is already paused :thinking:",
+        "send_player_not_playing": "There is no music playing right now",
+        "send_player_paused_success": "I've paused the music for you",
+        "send_player_is_playing": "YinXi is currently playing, no need to resume :thinking:",
+        "send_player_not_paused": "There is no paused music here",
+        "send_player_resumed_success": "I've resumed the music for you~",
+        "send_player_playlist_empty": "The playlist is empty, cannot play the next song",
+        "send_player_finished_playlist": "I've finished playing all the songs! I'm leaving now",
+        "send_player_lyrics_not_found": "No search results found, it is recommended to use `/lyrics {query} {artist}` to search for lyrics",
+        "send_player_volume_adjusted": "Volume has been adjusted to `{volume}%`",
+        "send_suggest_channel_not_found": "Suggestion channel not found.",
+        "send_suggest_success": "Successfully sent suggestion \"{suggestion}\"",
+        "send_suggest_fail": "Could not send suggestion at this time",
+        "send_suggest_no_permission": "I do not have permission to create a thread in this channel.",
+        "send_report_channel_not_found": "Report channel not found.",
+        "send_report_success": "Issue \"{error}\" has been successfully reported",
+        "send_report_fail": "Could not report error at this time",
+        "send_report_no_permission": "I do not have permission to create a thread in this channel.",
+        "send_issue_solve_not_thread": "This isn't a thread, what are you doing",
+        "send_issue_solve_success": "Issue Solved",
+        "send_issue_solve_not_found": "Event not found",
+        "embed_tictactoe_game": [{
+            "title": "Tic-Tac-Toe",
+            "field": [
+                { "name": "Current Player", "inline": false }
+            ],
+            "winner_description": "{winner} wins!"
+        }],
+        "button_tictactoe_labels": [{
+            "top_left": "Top Left",
+            "top_center": "Top Center",
+            "top_right": "Top Right",
+            "middle_left": "Middle Left",
+            "middle_center": "Middle",
+            "middle_right": "Middle Right",
+            "bottom_left": "Bottom Left",
+            "bottom_center": "Bottom Center",
+            "bottom_right": "Bottom Right"
+        }],
+        "send_tictactoe_no_game": "Please start a new game using the /tictactoe command first.",
+        "send_tictactoe_position_taken": "This position is already taken, please choose another position.",
+        "embed_world_chat": [{
+            "field": [
+                { "name": "**:speech_balloon: {author_name}: **" }
+            ],
+            "image_sent_value": "User sent {count} image(s)"
+        }],
+        "choice_world_chat_cancel_no": "No",
+        "choice_world_chat_cancel_yes": "Yes",
+        "send_world_chat_not_world_channel": "This channel is not a world chat channel.",
+        "send_world_chat_cancelled": "World chat setting has been cancelled.",
+        "send_world_chat_already_set": "This channel is already a world chat channel.",
+        "send_world_chat_set_success": "This channel has been set as a world chat channel.",
+        "send_report_bad_image_log": "{guild_name} | {reporter_name} reported at {now}\nauthor={author}\nreason={reason}\nreporter ID: {reporter_id}",
+        "send_report_bad_image_success": "Successfully reported {author} to the developer.",
+        "send_youtube_notification_new_video": "**{yt_name}** has published a new video!\n\n{url}",
+        "send_youtube_notification_invalid_url": "Please use a valid YouTube channel link.",
+        "send_youtube_notification_already_set": "Notifications for this YouTube channel have already been set up for this channel.",
+        "send_youtube_notification_set_success": "Notifications for \"{channel_name}\" have been enabled.",
+        "send_youtube_notification_no_youtuber_set": "You have not set up any YouTube notifications yet.",
+        "send_youtube_notification_cancel_success": "Notifications for \"{channel_name}\" have been cancelled.",
+        "send_youtube_notification_no_meta_tag": "Could not find the meta tag for the channel name",
+        "send_youtube_notification_unknown_channel_name": "Unknown channel name",
+        "select_youtube_notification_placeholder": "Select a YouTuber whose notifications you want to delete",
+        "select_youtube_notification_prompt": "Select a YouTuber whose notifications you want to cancel"
+    }
+}

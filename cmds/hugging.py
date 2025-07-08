@@ -5,6 +5,7 @@ import typing
 import traceback
 
 from core.functions import thread_pool
+from core.translator import locale_str
 
 from cmds.AIsTwo.base_chat import huggingFace_modules, base_huggingFace_chat
 from cmds.AIsTwo.info import HistoryData, chat_autocomplete, get_history, create_result_embed
@@ -27,7 +28,8 @@ class HuggingFaceAI(commands.Cog):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
 
-    @commands.hybrid_command(name='chat_hugging', description=' ')
+    @commands.hybrid_command(name=locale_str('chat_hugging'), description=locale_str('chat_hugging'))
+    @app_commands.describe(輸入文字=locale_str('chat_hugging_prompt'), model=locale_str('chat_hugging_model'), 歷史紀錄=locale_str('chat_hugging_history'), temperature=locale_str('chat_hugging_temperature'), 想法顯示=locale_str('chat_hugging_show_thoughts'))
     @app_commands.autocomplete(歷史紀錄=chat_autocomplete, model=moduels_autocomplete)
     async def chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'deepseek-ai/DeepSeek-R1', 歷史紀錄:str = None, temperature:float = None, 想法顯示:bool = False):
         async with ctx.typing():
@@ -47,7 +49,7 @@ class HuggingFaceAI(commands.Cog):
                     HistoryData.appendHistory(ctx.author.id, 輸入文字, result, 歷史紀錄)
             except:
                 traceback.print_exc()
-                await ctx.send('目前無法生成，請稍後再試')
+                await ctx.send(await ctx.interaction.translate('send_chat_hugging_fail'))
 
 async def setup(bot):
     await bot.add_cog(HuggingFaceAI(bot))

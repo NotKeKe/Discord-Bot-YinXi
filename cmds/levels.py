@@ -4,6 +4,7 @@ import traceback
 
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed, read_json, write_json, thread_pool, KeJCID
+from core.translator import locale_str, load_translated
 
 path = './cmds/data.json/levels.json'
 
@@ -94,7 +95,10 @@ class Levels(Cog_Extension):
             # await ctx.channel.send(f'{data[guildID][userID][0]=}')
 
             if data[guildID][userID][0] != level:
-                await ctx.channel.send(f'你的長度變成{level}公分了')
+                locale = ctx.guild.preferred_locale.value if ctx.guild else 'zh-TW'
+                translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
+                send_str = translations.get('components', {}).get('send_levels_level_up', '你的長度變成{level}公分了')
+                await ctx.channel.send(send_str.format(level=level))
                 data[guildID][userID][0] = level
 
             self.savedata(data)
@@ -105,47 +109,64 @@ class Levels(Cog_Extension):
     async def on_message(self, ctx):
         await self.on_message_level(ctx)
 
-    @commands.hybrid_command(aliases=['rank', 'ranks', '等級'], name='聊天等級')
-    async def rank(self, ctx):
-        self.initdata()
-        guildID = str(ctx.guild.id)
-        userID = str(ctx.author.id)
-        data = self.__class__.data
+    @commands.hybrid_command(name=locale_str('rank'), description=locale_str('rank'), aliases=['ranks', '等級'])
+    async def rank(self, ctx: commands.Context):
+        async with ctx.typing():
+            self.initdata()
+            guildID = str(ctx.guild.id)
+            userID = str(ctx.author.id)
+            data = self.__class__.data
 
-        if data is None: await ctx.send('尚未儲存任何聊天等級'); return
-        if guildID not in data: await ctx.send('此伺服器尚未儲存任何聊天等級資訊'); return
+            if data is None: await ctx.send(await ctx.interaction.translate('send_levels_no_data_yet')); return
+            if guildID not in data: await ctx.send(await ctx.interaction.translate('send_levels_no_guild_data')); return
 
+            MsgCount = data[guildID][userID][1]
+            level = await thread_pool(for_loop, 標準, MsgCount)
 
-        MsgCount = data[guildID][userID][1]
-        level = await thread_pool(for_loop, 標準, MsgCount)
+            if userID not in data[guildID] or level == 0: await ctx.send(await ctx.interaction.translate('send_levels_not_enough_messages')); return
+                        
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_rank')
+            eb_data = load_translated(eb_template)[0]
+            description = eb_data.get('description').format(rank_name=名稱[level-1] if level-1 <= len(名稱)-1 else '萌新', level=level)
+            ''''''
+            embed = create_basic_embed(title=ctx.author.display_name,
+                                       description=description,
+                                       color=ctx.author.color)
 
-        if userID not in data[guildID] or level == 0: await ctx.send('你尚未在此伺服器傳送足夠的訊息'); return
-                    
-        embed = create_basic_embed(title=ctx.author.display_name, description=f"你現在是 {名稱[level-1] if level-1 <= len(名稱)-1 else '萌新'} ({level}等)",
-                                   color=ctx.author.color)
+            await ctx.send(embed=embed)
 
-        await ctx.send(embed=embed)
+    @commands.hybrid_command(name=locale_str('levels'), description=locale_str('levels'), aliases=['level', '排行'])
+    async def levels(self, ctx: commands.Context):
+        async with ctx.typing():
+            self.initdata()
+            data = self.__class__.data
+            guildID = str(ctx.guild.id)
 
-    @commands.hybrid_command(aliases=['levels', 'level', '排行'], name='伺服器聊天等級排行')
-    async def levels(self, ctx):
-        self.initdata()
-        data = self.__class__.data
-        guildID = str(ctx.guild.id)
+            if data is None: await ctx.send(await ctx.interaction.translate('send_levels_no_data_yet')); return
+            if guildID not in data: await ctx.send(await ctx.interaction.translate('send_levels_no_guild_data')); return
 
-        if data is None: await ctx.send('尚未儲存任何聊天等級'); return
-        if guildID not in data: await ctx.send('此伺服器尚未儲存任何聊天等級資訊'); return
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_levels')
+            eb_data = load_translated(eb_template)[0]
+            title = eb_data.get('title')
+            footer_template = eb_data.get('footer')
+            field_template = eb_data.get('field')
+            ''''''
+            embed:discord.Embed = create_basic_embed(title=' ', color=ctx.author.color, 功能=title, time=False)
 
-        embed:discord.Embed = create_basic_embed(title=' ', color=ctx.author.color, 功能='伺服器等級排行', time=False)
+            userID_values = sortMsgCount(data[guildID])
 
-        userID_values = sortMsgCount(data[guildID])
-
-        for i, (user_id, level, count) in enumerate(userID_values):
-            user = await self.bot.fetch_user(int(user_id))
-            if i == 0:
-                embed.set_footer(text=f"{user.display_name}獲得了第一名🎉🎉🎉", icon_url=user.avatar.url)
-            embed.add_field(name=f"{i+1}. {user.display_name} ({level}等，{count}則訊息)", value=' ', inline=True)
-        
-        await ctx.send(embed=embed)
+            for i, (user_id, level, count) in enumerate(userID_values):
+                user = await self.bot.fetch_user(int(user_id))
+                if i == 0:
+                    embed.set_footer(text=footer_template.format(user_name=user.display_name), icon_url=user.avatar.url)
+                
+                field_name = field_template.get('name').format(rank=i+1, user_name=user.display_name, level=level, count=count)
+                field_value = field_template.get('value')
+                embed.add_field(name=field_name, value=field_value, inline=True)
+            
+            await ctx.send(embed=embed)
 
     @commands.command(name='強制leveldata')
     async def force_level_data(self, ctx):

@@ -11,6 +11,8 @@ class MusicControlButtons(View):
     def __init__(self, player: Player, timeout = 180):
         super().__init__(timeout=timeout)
         self.player = player
+        self.translator = player.translator
+        self.locale = player.locale
     
     @button(label='上一首歌', emoji='⏮️')
     async def previous_callback(self, interaction: Interaction, button: Button):
@@ -35,19 +37,19 @@ class MusicControlButtons(View):
     async def stop_callback(self, interaction: Interaction, button: Button):
         from cmds.play4 import players
         
-        if not interaction.user.voice.channel: return await interaction.response.send_message('你好像不在語音頻道裡面?')
-        if not interaction.guild.voice_client: return await interaction.response.send_message('音汐不在語音頻道內欸:thinking:')
+        if not interaction.user.voice.channel: return await interaction.response.send_message(await self.translator.get_translate('send_button_not_in_voice', self.locale))
+        if not interaction.guild.voice_client: return await interaction.response.send_message(await self.translator.get_translate('send_button_bot_not_in_voice', self.locale))
 
         player: Player = players.get(interaction.guild.id)
         user = interaction.user.global_name
 
-        if not player: return await interaction.response.send_message('音汐剛剛好像不正常退出了呢:thinking:')
+        if not player: return await interaction.response.send_message(await self.translator.get_translate('send_button_player_crashed', self.locale))
         del players[interaction.guild.id]
 
         channel = interaction.guild.voice_client.channel
 
         await interaction.guild.voice_client.disconnect()
-        await interaction.response.send_message(f'( {user} ) 已經停止音樂 並離開 {channel.mention} 囉 ~')
+        await interaction.response.send_message((await self.translator.get_translate('send_button_stopped_music', self.locale)).format(user=user, channel_mention=channel.mention))
 
     @button(label='循環', emoji='🔁')
     async def loop_callback(self, interaction: Interaction, button: Button):
@@ -55,12 +57,12 @@ class MusicControlButtons(View):
         self.player.turn_loop()
         eb, view = await send_info_embed(self.player, interaction, if_send=False)
         await msg.edit(embed=eb, view=view)
-        await interaction.response.send_message(f'已將循環狀態改為 `{self.player.loop_status}`', ephemeral=True)
+        await interaction.response.send_message((await self.translator.get_translate('send_button_loop_changed', self.locale)).format(loop_status=self.player.loop_status), ephemeral=True)
     
     @button(label='列表', emoji='📄')
     async def queue_callback(self, interaction: Interaction, button: Button):
-        eb = self.player.show_list()
-        await interaction.response.send_message(embed=eb)
+        eb = await self.player.show_list()
+        await interaction.response.send_message(embed=eb, ephemeral=True)
 
     @button(label='刷新', emoji='🔄')
     async def refresh_callback(self, interaction: Interaction, button: Button):
@@ -81,12 +83,12 @@ class MusicControlButtons(View):
     async def recommend_callback(self, interaction: Interaction, button: Button):
         from cmds.play4 import music_data
         item = music_data.data['recommend'].get(str(interaction.user.id))
-        if not item: return await interaction.response.send_message('你沒有開啟音樂推薦功能，使用 `/音樂推薦` 來開啟此功能!')
+        if not item: return await interaction.response.send_message(await self.translator.get_translate('send_button_recommend_not_enabled', self.locale))
 
         recommend: list = item.get('recommend')
-        if not recommend: return await interaction.response.send_message('目前沒有推薦歌曲')
+        if not recommend: return await interaction.response.send_message(await self.translator.get_translate('send_button_no_recommendations', self.locale))
 
-        eb = create_basic_embed('歌曲推薦', color=interaction.user.color, 功能='音樂播放')
+        eb = create_basic_embed(await self.translator.get_translate('embed_button_recommend_title', self.locale), color=interaction.user.color, 功能='音樂播放')
         eb.add_field(name='推薦歌曲', value='\n'.join( [ f'[{song[0]}]({song[3]}) - {song[1]}' for song in recommend ] ), inline=False)
         await interaction.response.send_message(embed=eb)
 

@@ -7,6 +7,7 @@ import traceback
 
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed, read_json, write_json
+from core.translator import locale_str, load_translated
 
 path = './cmds/data.json/world_channels.json'
 
@@ -51,13 +52,23 @@ class WorldChat(Cog_Extension):
                 channel = self.bot.get_channel(cnl)
 
                 if attachments:
-                    eb.add_field(name=f"**:speech_balloon: {msg.author.global_name}: **", value=f"User sended {len(attachments)} image{'s' if len(attachments) > 1 else ''}", inline=True)
-                    await channel.send(embed=eb)
-                    for a in attachments:
-                        await channel.send(a)
-                else:
-                    eb.add_field(name=f"**:speech_balloon: {msg.author.global_name}: **", value=msg.content, inline=True)
-                    await channel.send(embed=eb)
+                    '''i18n'''
+                    locale = channel.guild.preferred_locale.value if channel.guild else 'zh-TW'
+                    translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
+                    eb_template_str = translations.get('components', {}).get('embed_world_chat', '[{}]')
+                    eb_data = load_translated(eb_template_str)[0]
+                    field_name_template = eb_data['field'][0]['name']
+                    image_sent_value = eb_data.get('image_sent_value')
+                    ''''''
+                    field_name = field_name_template.format(author_name=msg.author.global_name)
+                    if attachments:
+                        eb.add_field(name=field_name, value=image_sent_value.format(count=len(attachments)), inline=True)
+                        await channel.send(embed=eb)
+                        for a in attachments:
+                            await channel.send(a)
+                    else:
+                        eb.add_field(name=field_name, value=msg.content, inline=True)
+                        await channel.send(embed=eb)
             except TypeError:
                 ...
             except Exception as e:
@@ -73,15 +84,16 @@ class WorldChat(Cog_Extension):
         self.__class__.channels = channels
         write_json(channels, path)
 
-    @commands.hybrid_command(name='世界頻道', description='Set a World Channel')
-    @commands.has_permissions(administrator=True)
+    @commands.hybrid_command(name=locale_str('world_chat'), description=locale_str('world_chat'))
+    @app_commands.describe(是否取消=locale_str('world_chat_cancel'))
     @app_commands.choices(
         是否取消 = [
-            discord.app_commands.Choice(name = "不取消 (可以不填這項)", value = 1),
-            discord.app_commands.Choice(name = "取消", value = 2)
+            discord.app_commands.Choice(name=locale_str('choice_world_chat_cancel_no'), value=1),
+            discord.app_commands.Choice(name=locale_str('choice_world_chat_cancel_yes'), value=2)
         ]
     )
-    async def setworldchannel(self, ctx, 是否取消: discord.app_commands.Choice[int] = None):
+    @commands.has_permissions(administrator=True)
+    async def setworldchannel(self, ctx: commands.Context, 是否取消: discord.app_commands.Choice[int] = None):
         self.initchannel()
         channels = self.__class__.channels
 
@@ -92,24 +104,35 @@ class WorldChat(Cog_Extension):
         channelID = ctx.channel.id
 
         if 取消:
-            if channelID not in channels['channels']: await ctx.send('此頻道不是世界頻道', ephemeral=True); return
+            if channelID not in channels['channels']: await ctx.send(await ctx.interaction.translate('send_world_chat_not_world_channel'), ephemeral=True); return
             channels['channels'].remove(channelID)
-            await ctx.send('已取消世界頻道')
+            await ctx.send(await ctx.interaction.translate('send_world_chat_cancelled'))
         else:
-            if channelID in channels['channels']: await ctx.send('你已經設定了世界頻道'); return
+            if channelID in channels['channels']: await ctx.send(await ctx.interaction.translate('send_world_chat_already_set')); return
             channels['channels'].append(channelID)
-            await ctx.send('已設置此頻道為世界頻道')
+            await ctx.send(await ctx.interaction.translate('send_world_chat_set_success'))
 
         self.__class__.channels = channels
         write_json(channels, path)
 
-    @commands.hybrid_command(name='不良圖片檢舉', description='Report whoever sended bad image to you')
-    @app_commands.describe(author='輸入該使用者的名稱(不是你的 除非你想舉報你自己)', 舉報原因='說說為什麼你要舉報他，是因為他傳送了不良圖片嗎:thinking:')
-    async def report(self, ctx, author, 舉報原因):
+    @commands.hybrid_command(name=locale_str('report_bad_image'), description=locale_str('report_bad_image'))
+    @app_commands.describe(author=locale_str('report_bad_image_author'), 舉報原因=locale_str('report_bad_image_reason'))
+    async def report(self, ctx: commands.Context, author: str, 舉報原因: str):
         channel = await self.bot.fetch_channel(bad_image_channel)
         now = time.strftime("%Y/%m/%d %H:%M:%S")
-        await channel.send(f"{ctx.guild.name} | {ctx.author.global_name} 於 {now} 舉報了\n{author=}\n{舉報原因=}\n舉報人ID{ctx.author.id}")
-        await ctx.send(f'已成功向我舉報{author}')
+        '''i18n'''
+        log_message_template = await self.bot.tree.translator.translate(locale_str('send_report_bad_image_log'), channel.guild.preferred_locale, None)
+        ''''''
+        log_message = log_message_template.format(
+            guild_name=ctx.guild.name,
+            reporter_name=ctx.author.global_name,
+            now=now,
+            author=author,
+            reason=舉報原因,
+            reporter_id=ctx.author.id
+        )
+        await channel.send(log_message)
+        await ctx.send((await ctx.interaction.translate('send_report_bad_image_success')).format(author=author))
 
 
 async def setup(bot):

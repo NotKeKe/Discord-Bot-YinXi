@@ -11,19 +11,19 @@ class i18n(Translator):
         example = {
             # 註: 此處的指令名稱應該都要是英文，並且與en-US.json中的指令名稱相同
             'lang': {
-                'name': { # 命名規則: 指令名稱
+                'name': { # 命名規則: "指令名稱"
                     'command_1': str(),
                     'command_2': str()
                 },
-                'description': { # 命名規則: 指令名稱
+                'description': { # 命名規則: "指令名稱"
                     'command_1': str(),
                     'command_2': str()
                 },
-                'params_desc': { # 命名規則: 指令名稱_參數名稱
+                'params_desc': { # 命名規則: "指令名稱_參數名稱"
                     'command1_param': str(),
                     'command2_param': str()
                 },
-                'components': { # 命名規則: {功能: send, embed, button, select}_指令名稱_對於該功能的`英文`描述
+                'components': { # 命名規則: "{功能: send, embed, button, select}_指令名稱_對於該功能的`英文`描述"
                     'send_command1_DESCRIPTIONHERE': str(),
                     'send_command2_DESCRIPTIONHERE': str(),
                     'embed_command1_DESCRIPTIONHERE': [
@@ -48,6 +48,27 @@ class i18n(Translator):
                 }
             }
         }
+
+    async def get_translate(self, string: str, lang_code: str = 'zh-TW'):
+        """這是一個能夠透過 lang code 與指定 key 來獲得翻譯的方法，因為 translate 會被 interaction.translate 呼叫，但不一定每個 ctx 都有 interaction (我不確定，但我的理解是這樣)。
+
+        Args:
+            string (str): 在此處傳入 key
+            lang_code (str): 在此處傳入使用者偏好語言，例如: zh-TW
+        """        
+        if not lang_code: lang_code = 'zh-TW'
+        
+        locale_item = self.translations.get(lang_code, {})  
+
+        item = locale_item.get('components', {})
+        return_item = item.get(string, string)
+
+        if isinstance(return_item, list):
+            return orjson.dumps(return_item).decode('utf-8')
+        elif isinstance(return_item, str):
+            return return_item
+        else:
+            return string
 
     async def translate(self, string: locale_str, locale: discord.Locale, context: TranslationContext):
         # locale_translations = self.translations.get(locale.value, {})  

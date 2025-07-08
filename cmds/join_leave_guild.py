@@ -8,6 +8,7 @@ import traceback
 
 from core.classes import Cog_Extension
 from core.functions import embed_link, read_json, write_json, create_basic_embed
+from core.translator import locale_str, load_translated
 
 PATH = './cmds/data.json/guild_join.json'
 
@@ -51,12 +52,17 @@ class OnJoinLeave(Cog_Extension):
         try:
             channel = guild.system_channel if guild.system_channel.permissions_for(guild.me).send_messages else (channel for channel in guild.text_channels if channel.permissions_for(guild.me).send_messages)
             if channel is None: return
-            embed=discord.Embed(title="我的自我介紹!",  color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name="Hello", icon_url=embed_link)
-            embed.set_author(name="Bot資訊", url=None, icon_url=embed_link)
-            embed.add_field(name="作者: ", value="克克 KeJC", inline=True)
-            embed.add_field(name="Github連結:",value="[NotKeKe](https://github.com/NotKeKe)", inline=True)
-            embed.add_field(name='注意事項:', value="目前這隻bot還在測試階段，不要給他任何的管理權限!\n不要給他任何的管理權限!\n不要給他任何的管理權限!", inline=False)
+            '''i18n'''
+            locale = guild.preferred_locale.value if guild.preferred_locale else 'zh-TW'
+            translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
+            eb_template_str = translations.get('components', {}).get('embed_on_guild_join', '[{}]')
+            eb_data = load_translated(eb_template_str)[0]
+            ''''''
+            
+            embed=discord.Embed(title=eb_data.get('title'),  color=discord.Color.blue(), timestamp=datetime.now())
+            embed.set_author(name=eb_data.get('author'), icon_url=embed_link)
+            for field in eb_data.get('fields', []):
+                embed.add_field(name=field.get('name'), value=field.get('value'), inline=field.get('inline', False))
             await channel.send(embed=embed)
         except Exception as exception:
             print(f"Error: {exception}")
@@ -74,7 +80,10 @@ class OnJoinLeave(Cog_Extension):
             chn = await self.bot.fetch_channel(channelID)
 
             if chn:
-                await chn.send(f'「{member.name}」滑進了這個了伺服器!')
+                locale = chn.guild.preferred_locale.value if chn.guild else 'zh-TW'
+                translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
+                send_str = translations.get('components', {}).get('send_on_member_join', '{member_name}')
+                await chn.send(send_str.format(member_name=member.name))
         except: traceback.print_exc()
 
     #成員離開
@@ -90,10 +99,14 @@ class OnJoinLeave(Cog_Extension):
             chn = await self.bot.fetch_channel(channelID)
 
             if chn:
-                await chn.send(f'「{member.name}」從進來的地方又出去了 （ ´☣///_ゝ///☣｀）')
+                locale = chn.guild.preferred_locale.value if chn.guild else 'zh-TW'
+                translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
+                send_str = translations.get('components', {}).get('send_on_member_remove', '{member_name}')
+                await chn.send(send_str.format(member_name=member.name))
         except: traceback.print_exc()
 
-    @commands.hybrid_command(name='join_leave_message', description='在使用者加入伺服器時 發送訊息')
+    @commands.hybrid_command(name=locale_str('join_leave_message'), description=locale_str('join_leave_message'))
+    @app_commands.describe(join_channel=locale_str('join_leave_message_join_channel'), leave_channel=locale_str('join_leave_message_leave_channel'))
     @commands.has_permissions(administrator=True)
     @app_commands.autocomplete(join_channel=channel_autocomplete, leave_channel=channel_autocomplete)
     async def set_join_leave_message(self, ctx: commands.Context, join_channel: str=None, leave_channel: str=None):
@@ -112,11 +125,11 @@ class OnJoinLeave(Cog_Extension):
                 return
 
             async def check_callback(interation: discord.Interaction):
-                await interation.response.send_message('已取消操作', ephemeral=True)
+                await interation.response.send_message(await interation.translate('send_join_leave_message_cancel_success'), ephemeral=True)
                 disabled_button()
             async def refuse_callback(interation: discord.Interaction):
                 del data[guildID]
-                await interation.response.send_message(f'已為 {interation.guild.name} 刪除此功能')
+                await interation.response.send_message((await interation.translate('send_join_leave_message_delete_success')).format(guild_name=interation.guild.name))
                 self.write_data(data)
                 disabled_button()
             
@@ -126,12 +139,15 @@ class OnJoinLeave(Cog_Extension):
             view.add_item(check_button)
             view.add_item(refuse_button)
 
-            embed = create_basic_embed('你確定不讓Bot在使用者加入及退出伺服器時 發送訊息嗎?', '✅表示繼續讓Bot發送 ❌表示**不**讓Bot繼續發送',
-                                       time=False)
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_join_leave_message_confirm_delete')
+            eb_data = load_translated(eb_template)[0]
+            ''''''
+            embed = create_basic_embed(eb_data.get('title'), eb_data.get('description'), time=False)
 
             await ctx.send(embed=embed, view=view)
         else:
-            if join_channel == leave_channel == ctx.guild.system_channel == None: return await ctx.send('請輸入頻道')
+            if join_channel == leave_channel == ctx.guild.system_channel == None: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_channel_input'))
             joinCh = None
             leaveCh = None
             if not join_channel: joinCh = ctx.guild.system_channel
@@ -147,25 +163,31 @@ class OnJoinLeave(Cog_Extension):
                     if type(join_channel) == type(leave_channel) == discord.channel.TextChannel:
                         break
             if not joinCh:
-                return await ctx.send("請輸入加入頻道")
+                return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_join_channel'))
             elif not leaveCh:
-                return await ctx.send("請輸入離開頻道") 
+                return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_leave_channel'))
             
-            if not joinCh.permissions_for(joinCh.guild.me).send_messages: return await ctx.send('請選取能讓我發送訊息的頻道')
-            if not leaveCh.permissions_for(leaveCh.guild.me).send_messages: return await ctx.send('請選取能讓我發送訊息的頻道')
+            if not joinCh.permissions_for(joinCh.guild.me).send_messages: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_permission'))
+            if not leaveCh.permissions_for(leaveCh.guild.me).send_messages: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_permission'))
 
             data[guildID] = {'joinChannel': joinCh.id, 'leaveChannel': leaveCh.id}
             self.write_data(data)
-            embed = create_basic_embed(f'已為 {ctx.guild.name} 新增此功能', f'(加入頻道: {joinCh.name} 離開頻道: {leaveCh.name})')
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_join_leave_message_set_success')
+            eb_data = load_translated(eb_template)[0]
+            title = eb_data.get('title').format(guild_name=ctx.guild.name)
+            description = eb_data.get('description').format(join_channel_name=joinCh.name, leave_channel_name=leaveCh.name)
+            ''''''
+            embed = create_basic_embed(title, description)
             await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name='刪除小時訊息', description='Delete messages serveral hours ago')
+    @commands.hybrid_command(name=locale_str('delete_spam_messages'), description=locale_str('delete_spam_messages'))
+    @app_commands.describe(hours=locale_str('delete_spam_messages_hours'), user=locale_str('delete_spam_messages_user'))
     @commands.has_permissions(administrator=True)
-    @app_commands.describe(user='可以指定用戶 或是打userID來刪除訊息')
     async def delete_spam_messages(self, ctx: commands.Context, hours: int, user: discord.User):
         async with ctx.typing(ephemeral=True):
             try:
-                if not ctx.guild.me.guild_permissions.manage_messages: return await ctx.send('我沒有權限刪除訊息', ephemeral=True)
+                if not ctx.guild.me.guild_permissions.manage_messages: return await ctx.send(await ctx.interaction.translate('send_delete_spam_messages_no_permission'), ephemeral=True)
 
                 count = 0
                 cant_delete_m: list[discord.Message] = []
@@ -192,30 +214,37 @@ class OnJoinLeave(Cog_Extension):
                             await m.delete()
                             count += 1
 
-                embed = create_basic_embed(功能='刪除訊息', color=discord.Color.red())
-                embed.add_field(name='刪除訊息數', value=f'`{count}`', inline=False)
+                '''i18n'''
+                eb_template = await ctx.interaction.translate('embed_delete_spam_messages')
+                eb_data = load_translated(eb_template)[0]
+                title = eb_data.get('title')
+                fields = eb_data.get('fields')
+                count_field_name = fields[0].get('name')
+                cant_delete_msg_field_name = fields[1].get('name')
+                cant_delete_msg_field_value = fields[1].get('value')
+                cant_delete_channel_field_name = fields[2].get('name')
+                cant_delete_channel_field_value = fields[2].get('value')
+                ''''''
+
+                embed = create_basic_embed(功能=title, color=discord.Color.red())
+                embed.add_field(name=count_field_name, value=f'`{count}`', inline=False)
                 embed.set_footer(text=f'{userID=}')
                 if cant_delete_m:
                     embed.add_field(
-                        name='無法刪除訊息數', 
-                        value='''\
-                            > `{}`
-                            > reason: 沒有 `管理訊息` 權限
-                            > 無法刪除的訊息: 
-                                {}
-                            '''
-                            .format(len(cant_delete_m), '\n'.join( [f"- Content: {m.content}; Time: {m.created_at.strftime('%Y-%m-%d %H:%M:%S')}" for m in cant_delete_m] )),
+                        name=cant_delete_msg_field_name,
+                        value=cant_delete_msg_field_value.format(
+                            count=len(cant_delete_m),
+                            messages='\n'.join([f"- Content: {m.content}; Time: {m.created_at.strftime('%Y-%m-%d %H:%M:%S')}" for m in cant_delete_m])
+                        ),
                         inline=False
                     )
                 if cant_delete_c:
                     embed.add_field(
-                        name='無法刪除訊息的頻道數', 
-                        value='''\
-                            > `{}`
-                            > reason: 沒有該頻道的 `閱讀訊息歷史` 權限
-                            > 無法刪除訊息的頻道: {} 
-                            '''
-                            .format(len(cant_delete_c), '\n'.join([c.name for c in cant_delete_c])),
+                        name=cant_delete_channel_field_name,
+                        value=cant_delete_channel_field_value.format(
+                            count=len(cant_delete_c),
+                            channels='\n'.join([c.name for c in cant_delete_c])
+                        ),
                         inline=False
                     )
 

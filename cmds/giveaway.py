@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from core.functions import read_json, write_json
 from core.classes import Cog_Extension
+from core.translator import locale_str, load_translated
 
 load_dotenv()
 embed_link = os.getenv('embed_default_link')
@@ -59,7 +60,7 @@ async def start(data, message_id):
     # 取得 winner
     winners = data[str(message_id)]['Participants']
     if not winners:
-        value = '沒有winner'
+        value = await bot.get_user(bot.user.id).translate('send_giveaway_no_winner')
     else:
         winner_id = random.sample(winners, data[message_id]['WinnerTotal'] if len(winners) >= data[message_id]['WinnerTotal'] else len(winners))
         winner = [await bot.fetch_user(winner) for winner in winner_id]
@@ -72,10 +73,17 @@ async def start(data, message_id):
     author = await bot.fetch_user(data[message_id]['Hosted_by'])
 
     # Embed
+    '''i18n'''
+    eb_template = await bot.get_user(bot.user.id).translate('embed_giveaway_end')
+    eb_data = load_translated(eb_template)[0]
+    winner_field_name = eb_data.get('fields')[0].get('name')
+    footer_text = eb_data.get('footer')
+    ''''''
+
     embed=discord.Embed(title=data[message_id]['Prize'], color=author.color, timestamp=datetime.now())
-    embed.add_field(name="獲獎者", value=value, inline=False)
-    embed.set_footer(text=f"預設獲獎人數: {data[message_id]['WinnersTotal']} | 參加人數: {count}")
-    await message.edit(content=f'🎉 **GIVEAWAY 已結束** 🎉\n{author.mention}\n{value}', embed=embed, view=None)
+    embed.add_field(name=winner_field_name, value=value, inline=False)
+    embed.set_footer(text=footer_text.format(winners_total=data[message_id]['WinnersTotal'], count=count))
+    await message.edit(content=(await bot.get_user(bot.user.id).translate('send_giveaway_ended_message')).format(mention=author.mention, winner=value), embed=embed, view=None)
 
     del data[str(message.id)]
 
@@ -95,17 +103,22 @@ async def button_callback(interaction: discord.Interaction):
         # 更改embed
         count -= 1
         #傳送取消訊息給user
-        await interaction.response.send_message(content='已取消參加Giveaway', ephemeral=True)
+        await interaction.response.send_message(content=await interaction.translate('send_giveaway_left'), ephemeral=True)
     else:
         # 更改json
         data[str(interaction.message.id)]['Participants'].append(interaction.user.id)
         # 更改embed
         count += 1
         # 傳送取消訊息給user
-        await interaction.response.send_message(content='已參加Giveaway', ephemeral=True)
+        await interaction.response.send_message(content=await interaction.translate('send_giveaway_joined'), ephemeral=True)
 
     # 更新Embed
-    embed.set_field_at(1, name="目前參加人數", value=str(count), inline=False)
+    '''i18n'''
+    eb_template = await interaction.translate('embed_giveaway_start')
+    eb_data = load_translated(eb_template)[0]
+    participants_field_name = eb_data.get('fields')[1].get('name')
+    ''''''
+    embed.set_field_at(1, name=participants_field_name, value=str(count), inline=False)
     await interaction.message.edit(embed=embed)
 
     write_json(data, path)
@@ -123,34 +136,48 @@ class Giveaway(Cog_Extension):
         for message_id in data:
             await start(data, message_id)
 
-    @commands.hybrid_command(name='giveaway', description='Giveaway')
-    @app_commands.describe(獎品='輸入你要讓別人獲得的獎品', 中獎人數='輸入一個「數字」', date = "格式:年-月-日", time = "時:分 (請使用24小時制)")
+    @commands.hybrid_command(name=locale_str('giveaway'), description=locale_str('giveaway'))
+    @app_commands.describe(中獎人數=locale_str('giveaway_winners_total'), 獎品=locale_str('giveaway_prize'), date=locale_str('giveaway_date'), time=locale_str('giveaway_time'))
     async def giveaway(self, ctx: commands.Context, 中獎人數: int, 獎品: str, date: str, time: str):
         '''[giveaway 中獎人數 獎品 date(日期, 格式:年-月-日) time(日期, 格式: 時:分)
         順便說一下 現在這功能如果遇到我重啟bot的話，還不確定能不能正常運作'''
         try:        #如果使用者輸入錯誤的格式，則返回訊息並結束keep command
             keep_time = datetime.strptime(f'{date} {time}', '%Y-%m-%d %H:%M')
         except Exception:
-            await ctx.send('你輸入了錯誤的格式', ephemeral=True)
+            await ctx.send(await ctx.interaction.translate('send_giveaway_invalid_format'), ephemeral=True)
             return
         try:
             now = datetime.now()
             delay = (keep_time - now).total_seconds()
 
             if delay <= 0:      #如果使用者輸入現在或過去的時間，則返回訊息並結束keep command
-                await ctx.send(f'{ctx.author.mention}, 你指定的時間已經過去了，請選擇一個未來的時間。', ephemeral=True)
+                await ctx.send((await ctx.interaction.translate('send_giveaway_time_passed')).format(mention=ctx.author.mention), ephemeral=True)
                 return
             if delay > 31557600000:
-                await ctx.send('你設置了1000年後的時間??\n 我都活不到那時候你憑什麼:sob:')
+                await ctx.send(await ctx.interaction.translate('send_giveaway_too_far'))
                 return
             
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_giveaway_start')
+            eb_data = load_translated(eb_template)[0]
+            
+            author_text = eb_data.get('author')
+            fields_data = eb_data.get('fields', [])
+            winners_field_name = fields_data[0].get('name')
+            participants_field_name = fields_data[1].get('name')
+            participants_field_value = fields_data[1].get('value')
+            note_field_name = fields_data[2].get('name')
+            note_field_value = fields_data[2].get('value')
+            footer_text = eb_data.get('footer')
+            ''''''
+
             # Embed
             embed=discord.Embed(title=f'**{獎品}**', color=ctx.author.color, timestamp=keep_time)
-            embed.set_author(name='Giveaway', icon_url=ctx.author.avatar.url)
-            embed.add_field(name="中獎人數:", value=中獎人數, inline=False)
-            embed.add_field(name='目前參加人數:', value=0, inline=False)
-            embed.add_field(name='注意事項', value='如果點擊按鈕後 bot沒有傳送任何訊息給你，就代表你尚未參加這個活動')
-            embed.set_footer(text="結束時間")
+            embed.set_author(name=author_text, icon_url=ctx.author.avatar.url)
+            embed.add_field(name=winners_field_name, value=中獎人數, inline=False)
+            embed.add_field(name=participants_field_name, value=participants_field_value, inline=False)
+            embed.add_field(name=note_field_name, value=note_field_value, inline=False)
+            embed.set_footer(text=footer_text)
 
             # Button
             button = discord.ui.Button(label="🎉")
@@ -183,7 +210,7 @@ class Giveaway(Cog_Extension):
 
             winners = data[str(message.id)]['Participants']
             if not winners:
-                value = '沒有winner'
+                value = await ctx.interaction.translate('send_giveaway_no_winner')
             else:
                 winner_id = random.sample(winners, 中獎人數 if len(winners) >= 中獎人數 else len(winners))
                 winner = [await self.bot.fetch_user(winner) for winner in winner_id]
@@ -192,11 +219,17 @@ class Giveaway(Cog_Extension):
             # 取得當前參加giveaway人數
             count = int(embed.fields[1].value)
 
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_giveaway_end')
+            eb_data = load_translated(eb_template)[0]
+            winner_field_name = eb_data.get('fields')[0].get('name')
+            footer_text = eb_data.get('footer')
+            ''''''
             # Embed
             embed=discord.Embed(title=獎品, color=ctx.author.color, timestamp=datetime.now())
-            embed.add_field(name="獲獎者", value=value, inline=False)
-            embed.set_footer(text=f'預設獲獎人數: {中獎人數} | 參加人數: {count}')
-            await message.edit(content=f'🎉 **GIVEAWAY 已結束** 🎉\n{ctx.author.mention}\n{value}', embed=embed, view=None)
+            embed.add_field(name=winner_field_name, value=value, inline=False)
+            embed.set_footer(text=footer_text.format(winners_total=中獎人數, count=count))
+            await message.edit(content=(await ctx.interaction.translate('send_giveaway_ended_message')).format(mention=ctx.author.mention, winner=value), embed=embed, view=None)
 
             del data[str(message.id)]
 

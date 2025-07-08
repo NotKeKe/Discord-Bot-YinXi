@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 
 from core.functions import read_json, write_json, settings
 from core.classes import Cog_Extension
+from core.translator import locale_str
 
 s_path = './Suggest_Report/suggests.json'
 r_path = './Suggest_Report/reports.json'
@@ -15,7 +17,8 @@ class SuggestReport(Cog_Extension):
     async def on_ready(self):
         print(f'已載入「{__name__}」')
 
-    @commands.hybrid_command(aliases=['suggest'], name='建議', description='Send some suggests to me!')
+    @commands.hybrid_command(name=locale_str('suggest'), description=locale_str('suggest'))
+    @app_commands.describe(建議=locale_str('suggest_suggestion'))
     async def suggest(self, ctx:commands.Context, * , 建議: str):
         '''
         [建議 建議(輸入文字) 或是 [suggest 建議(輸入文字)
@@ -28,20 +31,21 @@ class SuggestReport(Cog_Extension):
 
         channel = await self.bot.fetch_channel(suggest_channel)
         if channel is None:
-            await ctx.send("Channel not found.")
+            await ctx.send(await ctx.interaction.translate('send_suggest_channel_not_found'))
             return
 
         try:
             await channel.create_thread(name=建議, content=f'{ctx.author.name} ({ctx.author.id}) 建議: {建議}')
-            await ctx.send(f"已成功發送 「{建議}」", ephemeral=True)
+            await ctx.send((await ctx.interaction.translate('send_suggest_success')).format(suggestion=建議), ephemeral=True)
         except discord.HTTPException:
-            await ctx.send("目前無法建議", ephemeral=True)
+            await ctx.send(await ctx.interaction.translate('send_suggest_fail'), ephemeral=True)
         except discord.Forbidden:
-            await ctx.send("I don't have permission to create threads in this channel.")
+            await ctx.send(await ctx.interaction.translate('send_suggest_no_permission'))
         except Exception as exception:
             await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
 
-    @commands.hybrid_command(aliases=['report', 'error'], name='錯誤回報', description='Report some errors to me!')
+    @commands.hybrid_command(name=locale_str('report'), description=locale_str('report'), aliases=['error'])
+    @app_commands.describe(錯誤=locale_str('report_error'))
     async def report(self, ctx:commands.Context, * , 錯誤: str):
         '''
         [錯誤回報 錯誤(輸入文字) 或是 [report 建議(輸入文字) 或是 [error 建議(輸入文字)
@@ -54,16 +58,16 @@ class SuggestReport(Cog_Extension):
 
         channel = await self.bot.fetch_channel(report_channel)
         if channel is None:
-            await ctx.send("Channel not found.")
+            await ctx.send(await ctx.interaction.translate('send_report_channel_not_found'))
             return
 
         try:
             await channel.create_thread(name=錯誤, content=f'{ctx.author.name} ({ctx.author.id}) 建議: {錯誤}')
-            await ctx.send(f"問題「{錯誤}」 已成功回報錯誤", ephemeral=True)
+            await ctx.send((await ctx.interaction.translate('send_report_success')).format(error=錯誤), ephemeral=True)
         except discord.HTTPException:
-            await ctx.send("目前回報錯誤", ephemeral=True)
+            await ctx.send(await ctx.interaction.translate('send_report_fail'), ephemeral=True)
         except discord.Forbidden:
-            await ctx.send("I don't have permission to create threads in this channel.")
+            await ctx.send(await ctx.interaction.translate('send_report_no_permission'))
         except Exception as exception:
             await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
 
@@ -72,7 +76,7 @@ class SuggestReport(Cog_Extension):
         '''
         只有克克能用的話  還需要幫助嗎:thinking:
         '''
-        if not isinstance(ctx.channel, discord.Thread): await ctx.send('這不是Thread啊 你在幹嘛'); return
+        if not isinstance(ctx.channel, discord.Thread): await ctx.send(await ctx.interaction.translate('send_issue_solve_not_thread')); return
         if ctx.channel.parent.name == '建議':
             data = read_json(s_path)
 
@@ -87,9 +91,9 @@ class SuggestReport(Cog_Extension):
                 #     await ctx.send("This is not a thread.")
                 #     return
 
-                await ctx.send("Issue Solve")
+                await ctx.send(await ctx.interaction.translate('send_issue_solve_success'))
             else:
-                await ctx.send('事件不存在')
+                await ctx.send(await ctx.interaction.translate('send_issue_solve_not_found'))
                 
         elif ctx.channel.parent.name == '錯誤回報':
             data = read_json(r_path)
@@ -105,9 +109,9 @@ class SuggestReport(Cog_Extension):
                 #     await ctx.send("This is not a thread.")
                 #     return
                     
-                await ctx.send("Issue Solve")
+                await ctx.send(await ctx.interaction.translate('send_issue_solve_success'))
             else:
-                await ctx.send('事件不存在')
+                await ctx.send(await ctx.interaction.translate('send_issue_solve_not_found'))
         
 
 

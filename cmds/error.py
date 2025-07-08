@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from core.classes import Cog_Extension
+from core.translator import locale_str
 import os
 import traceback, logging
 
@@ -24,7 +25,7 @@ class ErrorHandler(Cog_Extension):
         string = f'有個在「{檔案名稱} {指令名稱}」的錯誤: 「{error}」'
         logging.error(string)
         print(string)
-        await ctx.send(content='該程式出現錯誤', ephemeral=ephemeral)
+        await ctx.send(content=await ctx.interaction.translate('send_error_occurred'), ephemeral=ephemeral)
         if user_send:
             await user.send(string)
 

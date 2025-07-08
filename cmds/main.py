@@ -15,6 +15,7 @@ from cmds.AIsTwo.utils import image_url_to_base64
 
 from core.classes import Cog_Extension
 from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow
+from core.translator import locale_str, load_translated
 
 # get env
 load_dotenv()
@@ -36,38 +37,52 @@ class Main(Cog_Extension):
         print(f'已載入「{__name__}」')
 
     #Owner ID回覆
-    @commands.hybrid_command(aliases=['ownerid'], name = "管理員id回覆", description = "OwnerID")
-    async def ownerid(self, ctx):
+    @commands.hybrid_command(name=locale_str("owner_id"), description=locale_str("owner_id"), aliases=['ownerid'])
+    async def ownerid(self, ctx: commands.Context):
         '''
         [管理員id回覆
         會傳個訊息跟你說這群的群主名字 跟他的ID
         '''
-        guild_owner = await self.bot.fetch_user(int(ctx.guild.owner_id))
-        embed=discord.Embed(title="Owner名字", description=guild_owner.mention, color=discord.Color.blue(), timestamp=datetime.now())
-        embed.set_author(name="管理員是誰?", icon_url=embed_link)
-        embed.add_field(name='Owner ID', value=ctx.guild.owner_id, inline=False)
-        await ctx.send(embed=embed)
+        async with ctx.typing():
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_owner_id')
+            eb_data = load_translated(eb_template)[0]
+            author_name = eb_data.get('author')
+            title = eb_data.get('title')
+            field_name = eb_data.get('field').get('name')
+            ''''''
+            guild_owner = await self.bot.fetch_user(int(ctx.guild.owner_id))
+            embed=discord.Embed(title=title.format(owner_mention=guild_owner.mention), color=discord.Color.blue(), timestamp=datetime.now())
+            embed.set_author(name=author_name, icon_url=embed_link)
+            embed.add_field(name=field_name, value=ctx.guild.owner_id, inline=False)
+            await ctx.send(embed=embed)
 
     #取得延遲
-    @commands.hybrid_command(name="ping", description="取得延遲")
-    async def ping(self, ctx):
+    @commands.hybrid_command(name=locale_str("ping"), description=locale_str("ping"))
+    async def ping(self, ctx: commands.Context):
         '''
         [ping
         傳送延遲(我也不知道這延遲是怎麼來的)
         '''
-        embed = discord.Embed(
-        color=discord.Color.red(), 
-        title="延遲", 
-        description=f'**{round(self.bot.latency*1000)}** (ms)', 
-        timestamp=datetime.now()
-        )
-
-        await ctx.send(embed = embed)
+        async with ctx.typing():
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_ping')
+            eb_data = load_translated(eb_template)[0]
+            title = eb_data.get('title')
+            description = eb_data.get('description').format(latency=round(self.bot.latency*1000))
+            ''''''
+            embed = discord.Embed(
+                color=discord.Color.red(),
+                title=title,
+                description=description,
+                timestamp=datetime.now()
+            )
+            await ctx.send(embed = embed)
 
     #重複我說的話
-    @commands.hybrid_command(name = "重複你說的話", description = "Repeat you")
-    @discord.app_commands.describe(arg = '你要bot說的話')
-    async def test(self, ctx, *, arg):
+    @commands.hybrid_command(name=locale_str("repeat"), description=locale_str("repeat"))
+    @app_commands.describe(arg=locale_str('repeat_text'))
+    async def test(self, ctx: commands.Context, *, arg: str):
         '''
         [重複你說的話 arg(然後打你要的字)
         沒啥用的功能，如果你想要bot重複你說的話就用吧
@@ -75,47 +90,56 @@ class Main(Cog_Extension):
         await ctx.send(arg)
 
     #我在哪
-    @commands.hybrid_command(name = "我在哪裡", description = "Where are you, 說出你在的伺服器名稱以及頻道")
-    async def whereAmI(self, ctx):
+    @commands.hybrid_command(name=locale_str("where_am_i"), description=locale_str("where_am_i"))
+    async def whereAmI(self, ctx: commands.Context):
         '''
         [我在哪裡
         說出你在哪 會有伺服器名稱跟頻道的名稱
         '''
-        embed = discord.Embed(
-        color=discord.Color.blue(),
-        title="Where Are You?",
-        description=f"你在 「{ctx.guild.name}」的 {ctx.channel.mention} 頻道當中",
-        timestamp=datetime.now()
-        )
-
-        await ctx.send(embed=embed)
+        async with ctx.typing():
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_where_am_i')
+            eb_data = load_translated(eb_template)[0]
+            title = eb_data.get('title')
+            description = eb_data.get('description').format(guild_name=ctx.guild.name, channel_mention=ctx.channel.mention)
+            ''''''
+            embed = discord.Embed(
+                color=discord.Color.blue(),
+                title=title,
+                description=description,
+                timestamp=datetime.now()
+            )
+            await ctx.send(embed=embed)
 
     #回傳使用者頭貼
-    @commands.hybrid_command()
-    async def avatar(self, ctx, member: discord.Member = None):
+    @commands.hybrid_command(name=locale_str("avatar"), description=locale_str("avatar"))
+    @app_commands.describe(member=locale_str('avatar_member'))
+    async def avatar(self, ctx: commands.Context, member: discord.Member = None):
         '''
         [avatar member
         member的話能tag人，或是都沒輸入的話就回傳你自己的頭貼
         '''
-        if member is None:
-            member = ctx.author
+        async with ctx.typing():
+            if member is None:
+                member = ctx.author
 
-        try:        
-            embed=discord.Embed(title=member, color=member.color).set_image(url=member.avatar.url)
-        except:
-            await ctx.send(f"使用者「 {member} 」沒有頭貼")
-            return
-        embed.set_author(name="name", icon_url=embed_link)
-        await ctx.send(embed=embed)
+            try:
+                embed=discord.Embed(title=member, color=member.color).set_image(url=member.avatar.url)
+            except:
+                await ctx.send((await ctx.interaction.translate('send_avatar_no_avatar')).format(member_name=member.display_name))
+                return
+            
+            await ctx.send(embed=embed)
     
     #獲得該guild的system channel
-    @commands.hybrid_command(name='取得伺服器預設頻道', description='Get the system channel')
-    async def systemChannel(self, ctx):
-        channel = await self.bot.fetch_channel(ctx.guild.system_channel.id)
-        if channel is None:
-            await ctx.send('此伺服器沒有預設頻道')
-        else:
-            await ctx.send(channel.mention)
+    @commands.hybrid_command(name=locale_str('get_system_channel'), description=locale_str('get_system_channel'))
+    async def systemChannel(self, ctx: commands.Context):
+        async with ctx.typing():
+            channel = ctx.guild.system_channel
+            if channel is None:
+                await ctx.send(await ctx.interaction.translate('send_get_system_channel_no_system_channel'))
+            else:
+                await ctx.send(channel.mention)
 
     @commands.command(name='add_admin')
     async def add_admin(self, ctx: commands.Context, userID: int = None):
@@ -131,61 +155,67 @@ class Main(Cog_Extension):
         write_json(data, './cmds/data.json/admins.json')
         await ctx.send(f'已將 {userName} ({userID=}) 加入管理員', ephemeral=True)
 
-    @commands.hybrid_command(name='伺服器資訊', description='Server info')
+    @commands.hybrid_command(name=locale_str('server_info'), description=locale_str('server_info'))
     async def get_server_info(self, ctx: commands.Context):
-        if not ctx.guild: return await ctx.send('你不在伺服器當中')
+        async with ctx.typing():
+            if not ctx.guild: return await ctx.send(await ctx.interaction.translate('send_server_info_not_in_guild'))
 
-        name = ctx.guild.name
-        id = ctx.guild.id
-        total_member_counts = len(ctx.guild.members)
-        true_member_counts = len([m for m in ctx.guild.members if not m.bot])
-        bot_counts = total_member_counts - true_member_counts
-        channel_counts = len(ctx.guild.channels)
-        owner = ctx.guild.owner.global_name
-        ownerID = ctx.guild.owner.id
-        online_member_counts = len([m for m in ctx.guild.members if m.status not in (discord.Status.offline, discord.Status.invisible)])
-        # items = []
-        # for m in ctx.guild.members:
-        #     items.append(f'{m.name}: {m.status}\n')
-        # await ctx.send(''.join(items))
-        system_channel = ctx.guild.system_channel or 'None'
+            name = ctx.guild.name
+            id = ctx.guild.id
+            total_member_counts = len(ctx.guild.members)
+            true_member_counts = len([m for m in ctx.guild.members if not m.bot])
+            bot_counts = total_member_counts - true_member_counts
+            channel_counts = len(ctx.guild.channels)
+            owner = ctx.guild.owner.global_name
+            ownerID = ctx.guild.owner.id
+            online_member_counts = len([m for m in ctx.guild.members if m.status not in (discord.Status.offline, discord.Status.invisible)])
+            system_channel = ctx.guild.system_channel or 'None'
 
-        eb = create_basic_embed(f'**{name}** 伺服器資訊', color=ctx.author.color)
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_server_info')
+            eb_data = load_translated(eb_template)[0]
+            title = eb_data.get('title').format(guild_name=name)
+            fields = eb_data.get('fields')
+            ''''''
+            eb = create_basic_embed(title, color=ctx.author.color)
+            
+            values = [name, id, total_member_counts, true_member_counts, bot_counts, channel_counts, owner, ownerID, online_member_counts, system_channel.mention]
+            for i, field in enumerate(fields):
+                eb.add_field(name=field.get('name'), value=values[i])
+            await ctx.send(embed=eb)
 
-        eb.add_field(name='📌 伺服器名稱', value=name)
-        eb.add_field(name='🆔 伺服器ID', value=id)
-        eb.add_field(name='👥 伺服器總人數', value=total_member_counts)
-        eb.add_field(name='👤 成員數量', value=true_member_counts)
-        eb.add_field(name='🤖 Bot數量', value=bot_counts)
-        eb.add_field(name='📢 頻道數量', value=channel_counts)
-        eb.add_field(name='👑 Owner', value=owner)
-        eb.add_field(name='🆔 Owner ID', value=ownerID)
-        eb.add_field(name='🟢 在線人數', value=online_member_counts)
-        eb.add_field(name='📣 系統頻道', value=system_channel.mention)
-        await ctx.send(embed=eb)
-
-    @commands.hybrid_command(name='convert_timestamp', description='Convert Unix(or timestamp) to readable string')
+    @commands.hybrid_command(name=locale_str('convert_timestamp'), description=locale_str('convert_timestamp'))
+    @app_commands.describe(unix_second=locale_str('convert_timestamp_timestamp'))
     async def unixSecondToReadalbe(self, ctx: commands.Context, unix_second: str):
         async with ctx.typing():
             try: unix_second = int(unix_second)
-            except: return await ctx.send('請輸入有效的數字')
+            except: return await ctx.send(await ctx.interaction.translate('send_convert_timestamp_invalid_number'))
             readable = UnixToReadable(unix_second)
             await ctx.send(readable)
 
-    @commands.hybrid_command(name='高中生總分計算機', description='This function is for Taiwan high school students to calculate their total score')
-    @app_commands.describe(image='上傳一張圖片', prompt='你想讓AI幫你什麼(僅在你有上傳圖片時，會使用此欄)')
+    @commands.hybrid_command(name=locale_str('tw_high_school_score_calculator'), description=locale_str('tw_high_school_score_calculator'))
+    @app_commands.describe(image=locale_str('tw_high_school_score_calculator_image'), prompt=locale_str('tw_high_school_score_calculator_prompt'))
     async def high_school_totalScore_calculate(self, ctx: commands.Context, 國文: float = 0.0, 英文: float = 0.0, 數學: float = 0.0, 化學: float = 0.0, 生物: float = 0.0, 物理: float = 0.0, 歷史: float = 0.0, 地理: float = 0.0, 公民: float = 0.0, 體育: float = 0.0, image: discord.Attachment = None, prompt: str = None):
         async with ctx.typing():
-            eb = create_basic_embed(功能='總分計算機', color=ctx.author.color, time=False)
+            '''i18n'''
+            eb_template = await ctx.interaction.translate('embed_tw_high_school_score_calculator')
+            eb_data = load_translated(eb_template)[0]
+            title = eb_data.get('title')
+            fields = eb_data.get('fields')
+            weighted_field_name = fields[0].get('name')
+            unweighted_field_name = fields[1].get('name')
+            ai_response_field_name = fields[2].get('name')
+            ''''''
+            eb = create_basic_embed(功能=title, color=ctx.author.color, time=False)
 
             if not image:
                 weight_total = (國文 + 數學 + 英文) * 4 + (化學 + 生物 + 物理 + 歷史 + 地理 + 公民 + 體育) * 2
                 total = 國文 + 數學 + 英文 + 化學 + 生物 + 物理 + 歷史 + 地理 + 公民 + 體育
-                eb.add_field(name='加權總分', value=f'`{weight_total}`')
-                eb.add_field(name='未加權總分', value=f'`{total}`')
+                eb.add_field(name=weighted_field_name, value=f'`{weight_total}`')
+                eb.add_field(name=unweighted_field_name, value=f'`{total}`')
                 await ctx.send(embed=eb)
             else:
-                if not prompt: return await ctx.send('請輸入你要讓AI幹嘛的`prompt`', ephemeral=True)
+                if not prompt: return await ctx.send(await ctx.interaction.translate('send_tw_high_school_score_calculator_no_prompt'), ephemeral=True)
                 os.makedirs('./data/upload', exist_ok=True)
                 path = f'./data/upload/{ctx.author.id}_{UnixNow()}_{uuid.uuid4()}.jpg'
                 absolute_path = os.path.abspath(path)
@@ -195,15 +225,15 @@ class Main(Cog_Extension):
                 await download_image(image.url, path=path)
 
                 result = await thread_pool(image_read, prompt, final_url)
-                eb.add_field(name='**AI response**', value=result)
+                eb.add_field(name=ai_response_field_name, value=result)
                 eb.set_footer(text='Powered by glm-4v-flash')
                 await ctx.send(embed=eb)
 
                 await asyncio.sleep(300)
                 os.remove(path)
 
-    @commands.hybrid_command(name = "random_number", description = "從範圍中隨機選取整數")
-    @app_commands.describe(range1 = '輸入你要隨機取數的起始數字', range2 = '輸入你要隨機取數的終止數字', times = "你要在這個範圍內隨機選出多少數字 (未輸入則預設為1)")
+    @commands.hybrid_command(name=locale_str("random_number"), description=locale_str("random_number"))
+    @app_commands.describe(range1=locale_str('random_number_start'), range2=locale_str('random_number_end'), times=locale_str('random_number_times'))
     async def random_number(self, ctx: commands.Context, range1: int, range2: int, times:int = None):
         async with ctx.typing():
             if times is None:
@@ -213,7 +243,7 @@ class Main(Cog_Extension):
                 range1, range2 = range2, range1
 
             if times > range2-range1+1:
-                await ctx.send(f'你無法在{range1}~{range2}中選出{times}個數字 (太多了!)')
+                await ctx.send((await ctx.interaction.translate('send_random_number_too_many')).format(range1=range1, range2=range2, times=times))
                 return
 
             def for_loop(times, range1, range2):

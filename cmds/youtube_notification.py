@@ -8,6 +8,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 from cmds.music_bot.play4.utils import is_url
 from core.functions import read_json, write_json
+from core.translator import locale_str
 
 path = './cmds/data.json/youtube_update_channels.json'
     
@@ -102,78 +103,90 @@ class YoutubeNotification(commands.Cog):
                             # print('not')
                             url = f"https://youtu.be/{video_id}"
                             yt_name = await 取得頻道名稱(yt_channel)
-                            await discord_channel.send(f"**{yt_name}** 發送了影片\n\n{url}")
+                            locale = discord_channel.guild.preferred_locale.value if discord_channel.guild else 'zh-TW'
+                            translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
+                            send_str = translations.get('components', {}).get('send_youtube_notification_new_video', '**{yt_name}** 發布了新影片！\n\n{url}')
+                            await discord_channel.send(send_str.format(yt_name=yt_name, url=url))
 
                     self.videos[yt_channel] = video_ids
         except Exception as e:
             print(e)
 
-    @commands.hybrid_command(name='設定yt通知', description='Set YT notification')
+    @commands.hybrid_command(name=locale_str('youtube_notification'), description=locale_str('youtube_notification'))
+    @app_commands.describe(youtuber=locale_str('youtube_notification_youtuber'))
     @commands.has_permissions(administrator=True)
-    @app_commands.describe(youtuber = '貼上你要通知的youtuber的連結')
     async def ytnotice(self, ctx: commands.Context, youtuber: str = None):
         '''
         [設定yt通知 youtuber(貼上你要的youtuber的連結)
         '''
-        Save_YoutubeNT.initdata()
-        j = Save_YoutubeNT.channels
-        channel_id = str(ctx.channel.id)
+        async with ctx.typing():
+            Save_YoutubeNT.initdata()
+            j = Save_YoutubeNT.channels
+            channel_id = str(ctx.channel.id)
 
-        # 使用者要新增
-        if youtuber is not None:
-            if not is_url(youtuber): await ctx.send('請使用正常的YouTube連結', ephemeral=True); return
-            if youtuber in j[channel_id]['artist']: await ctx.send('此頻道已經被設定過'); return
-            channel_name = await 取得頻道名稱(youtuber)
-
-            if channel_name == 1: 
-                await ctx.send('請輸入有效的連結', ephemeral=True)
-                return
-            elif channel_name == 2:
-                e = "無法找到頻道名稱的 meta 標籤"
-                await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=e, user_send=False, ephemeral=True)
-                return
-            elif channel_name == 3:
-                e = '未知的頻道名稱'
-                await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=e, user_send=False, ephemeral=True)
-                return
-
-            if channel_id not in j: 
-                j[channel_id] = {
-                    '設定人': [ctx.author.id],
-                    'artist': [youtuber],
-                    "Error_times": 0
-                }
-            else: # 有人設定過
-                if ctx.author.id not in j[channel_id]['設定人']: # 如果是新的人設定
-                    j[channel_id]['設定人'].append(ctx.author.id)
+            # 使用者要新增
+            if youtuber is not None:
+                if not is_url(youtuber): await ctx.send(await ctx.interaction.translate('send_youtube_notification_invalid_url'), ephemeral=True); return
+                if channel_id in j and youtuber in j[channel_id]['artist']: await ctx.send(await ctx.interaction.translate('send_youtube_notification_already_set')); return
                 
-                j[channel_id]['artist'].append(youtuber)
-                
-            Save_YoutubeNT.savedata(j)
-            await ctx.send(f'已開啟對 「{channel_name}」 的通知')
+                channel_name = await 取得頻道名稱(youtuber)
 
-        else:
-            if not j[channel_id]['artist']: await ctx.send('你尚未設置任何的YouTuber通知', ephemeral=True); return
+                if channel_name == 1:
+                    await ctx.send(await ctx.interaction.translate('send_youtube_notification_invalid_url'), ephemeral=True)
+                    return
+                elif channel_name == 2:
+                    e = await ctx.interaction.translate('send_youtube_notification_no_meta_tag')
+                    await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=e, user_send=False, ephemeral=True)
+                    return
+                elif channel_name == 3:
+                    e = await ctx.interaction.translate('send_youtube_notification_unknown_channel_name')
+                    await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=e, user_send=False, ephemeral=True)
+                    return
 
-            async def select_callback(interaction: discord.Interaction):
-                youtuber = interaction.data['values'][0]
-                j[str(ctx.channel.id)]['artist'].remove(youtuber)
-                if not j[str(ctx.channel.id)]['artist']: del j[str(ctx.channel.id)]
+                if channel_id not in j:
+                    j[channel_id] = {
+                        '設定人': [ctx.author.id],
+                        'artist': [youtuber],
+                        "Error_times": 0
+                    }
+                else: # 有人設定過
+                    if ctx.author.id not in j[channel_id]['設定人']: # 如果是新的人設定
+                        j[channel_id]['設定人'].append(ctx.author.id)
+                    
+                    j[channel_id]['artist'].append(youtuber)
+                    
                 Save_YoutubeNT.savedata(j)
-                await interaction.response.send_message(content=f'已取消對「{await 取得頻道名稱(youtuber)}」的通知')
-                view.stop()
+                await ctx.send((await ctx.interaction.translate('send_youtube_notification_set_success')).format(channel_name=channel_name))
 
-            select = discord.ui.Select(placeholder='選擇一個你要刪除通知的YouTuber', 
-                    options=[discord.SelectOption(label=url, description=(await 取得頻道名稱(url))) for url in j[str(ctx.channel.id)]['artist']],
-                    min_values=1,
-                    max_values=1
-                )
-            select.callback = select_callback
+            else:
+                if channel_id not in j or not j[channel_id]['artist']: await ctx.send(await ctx.interaction.translate('send_youtube_notification_no_youtuber_set'), ephemeral=True); return
 
-            view = discord.ui.View(timeout=60)
-            view.add_item(select)
+                async def select_callback(interaction: discord.Interaction):
+                    youtuber_url = interaction.data['values'][0]
+                    channel_name = await 取得頻道名稱(youtuber_url)
+                    j[str(ctx.channel.id)]['artist'].remove(youtuber_url)
+                    if not j[str(ctx.channel.id)]['artist']: del j[str(ctx.channel.id)]
+                    Save_YoutubeNT.savedata(j)
+                    await interaction.response.send_message(content=(await interaction.translate('send_youtube_notification_cancel_success')).format(channel_name=channel_name))
+                    view.stop()
 
-            await ctx.send(content='選擇一你要取消的YouTuber', view=view)
+                options = []
+                for url in j[str(ctx.channel.id)]['artist']:
+                    name = await 取得頻道名稱(url)
+                    options.append(discord.SelectOption(label=name, description=url, value=url))
+
+                select = discord.ui.Select(
+                        placeholder=await ctx.interaction.translate('select_youtube_notification_placeholder'),
+                        options=options,
+                        min_values=1,
+                        max_values=1
+                    )
+                select.callback = select_callback
+
+                view = discord.ui.View(timeout=60)
+                view.add_item(select)
+
+                await ctx.send(content=await ctx.interaction.translate('select_youtube_notification_prompt'), view=view)
 
     @tasks.loop(seconds=30)
     async def write_data_task(self):

@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 
 from core.functions import read_json, write_json, create_basic_embed, math_round
+from core.translator import locale_str, load_translated
 
 PATH = './cmds/data.json/counting.json'
 
@@ -59,28 +60,36 @@ class Counting(commands.Cog):
         eb = None
         userID = message.author.id
 
+        '''i18n'''
+        locale = message.guild.preferred_locale.value if message.guild else 'zh-TW'
+        translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
+        components = translations.get('components', {})
+        eb_template_str = components.get('embed_counting_error', '[{}]')
+        eb_data = load_translated(eb_template_str)[0]
+        ''''''
+
         if preUserID == userID:
             if str(content) == '6': return
             await message.add_reaction('❌')
-            eb = create_basic_embed(f'❌ 你剛剛輸入過數字了，你不能一直輸入 \n下一個數字為 **1**', color=message.author.color, time=False)
+            eb = create_basic_embed(eb_data.get('double_input'), color=message.author.color, time=False)
             userID = 0
             count = 0
         elif count == 0 and content != 1:
             if str(content) == '6': return
             await message.add_reaction('⚠️')
-            eb = create_basic_embed(f'⚠️ 請從 **1** 開始輸入，而不是 {content}', color=message.author.color, time=False)
+            eb = create_basic_embed(eb_data.get('wrong_start').format(content=content), color=message.author.color, time=False)
             userID = 0
             count = 0
         elif content > count + 100: # 使用者輸入過大的數字
             await message.add_reaction('⚠️')
-            eb = create_basic_embed(f'⚠️ 你輸入了過大的數字 **{content}**', color=message.author.color, time=False)
+            eb = create_basic_embed(eb_data.get('too_large').format(content=content), color=message.author.color, time=False)
         elif content < count - 100:
             await message.add_reaction('⚠️')
-            eb = create_basic_embed(f'⚠️ 你輸入了過小的數字 **{content}**', color=message.author.color, time=False)
+            eb = create_basic_embed(eb_data.get('too_small').format(content=content), color=message.author.color, time=False)
         elif content != count + 1: # 使用者數錯
             if str(content) == '6': return
             await message.add_reaction('❌')
-            eb = create_basic_embed(f'❌ 你輸入了錯誤的數字 **{content}**\n你應該輸入 **{count+1}**\n下一個數字為 **1**', color=message.author.color, time=False)
+            eb = create_basic_embed(eb_data.get('wrong_number').format(content=content, next_count=count+1), color=message.author.color, time=False)
             userID = 0
             count = 0
         else: # 正常情況
@@ -93,18 +102,27 @@ class Counting(commands.Cog):
         if eb:
             await message.channel.send(message.author.mention, embed=eb)
 
-    @commands.hybrid_command(name='數數頻道', description="Set a count channel.", aliases=['counting', 'count'])
-    async def counting(self, ctx):
-        self.initdata()
-        data = self.__class__.data
-        channelID = str(ctx.channel.id)
-        if channelID in data: return await ctx.send(f'此頻道正在數數，數字為 {data[channelID]}')
-        data[channelID] = {
-            'user': 0,
-            'count': 0
-        }
-        self.writeData(data)
-        await ctx.send('此頻道已加入數字計數')
+    @commands.hybrid_command(name=locale_str('counting'), description=locale_str('counting'), aliases=['count'])
+    async def counting(self, ctx: commands.Context):
+        async with ctx.typing():
+            '''i18n'''
+            already_counting_str = await ctx.interaction.translate('send_counting_already_counting')
+            set_success_str = await ctx.interaction.translate('send_counting_set_success')
+            ''''''
+
+            self.initdata()
+            data = self.__class__.data
+            channelID = str(ctx.channel.id)
+            if channelID in data:
+                count_data = data[channelID].get('count', 0)
+                return await ctx.send(already_counting_str.format(count=count_data))
+            
+            data[channelID] = {
+                'user': 0,
+                'count': 0
+            }
+            self.writeData(data)
+            await ctx.send(set_success_str)
 
     @tasks.loop(minutes=1)
     async def storage_data_task(self):

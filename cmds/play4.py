@@ -15,6 +15,7 @@ from cmds.music_bot.play4.buttons import VolumeControlButtons
 
 from core.classes import Cog_Extension
 from core.functions import KeJCID, create_basic_embed
+from core.translator import locale_str
 
 players = {}
 
@@ -34,16 +35,17 @@ class Music(Cog_Extension):
         self.update_music_data.start()
         self.update_recommendations.start()
 
-    @commands.hybrid_command(name='play', description='播放音樂', aliases=['p', '播放'])
+    @commands.hybrid_command(name=locale_str('play'), description=locale_str('play_description'), aliases=['p', '播放'])
+    @app_commands.describe(query=locale_str('play_query'))
     async def _play(self, ctx: commands.Context, *, query: str = None):
         try:
             async with ctx.typing():
-                if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
+                if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
                 if not ctx.voice_client:
                     await ctx.author.voice.channel.connect()
 
                 if ctx.voice_client.is_paused(): return await ctx.invoke(self.bot.get_command('resume'))
-                elif not query: return await ctx.send('我沒有接收到你的關鍵字欸... 記得輸入 `query`')
+                elif not query: return await ctx.send(await ctx.interaction.translate('send_play_no_query'))
                 if players.get(ctx.guild.id): return await ctx.invoke(self.bot.get_command('add'), query=query)
 
                 player = Player(ctx)
@@ -52,49 +54,50 @@ class Music(Cog_Extension):
                 self.recommend.record_data(data, str(ctx.author.id))
                 await player.play()
                 await send_info_embed(player, ctx)
-        except: 
+        except:
             traceback.print_exc()
-            await ctx.send('疑? 好像出錯了 要不換個 `query` 試試看?')
+            await ctx.send(await ctx.interaction.translate('send_play_error'))
             del players[ctx.guild.id]
 
-    @commands.hybrid_command(name='add', description='添加歌曲到播放清單')
+    @commands.hybrid_command(name=locale_str('add'), description=locale_str('add_description'))
+    @app_commands.describe(query=locale_str('add_query'))
     async def _add(self, ctx: commands.Context, *, query: str):
         async with ctx.typing():
-            if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧')
-            if not ctx.voice_client: return await ctx.send('使用 `/play` 來點播音樂吧~')
-            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send(f'你跟我不在同一個頻道裡欸... 先跟加到 {ctx.guild.voice_client.channel.mention}')
+            if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_add_not_in_voice'))
+            if not ctx.voice_client: return await ctx.send(await ctx.interaction.translate('send_add_use_play_first'))
+            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send((await ctx.interaction.translate('send_add_not_in_same_channel')).format(channel_mention=ctx.guild.voice_client.channel.mention))
 
             player: Player = players.get(ctx.guild.id)
-            if not player: return await ctx.send('音汐剛剛好像不正常退出了欸... 要不讓我重新加入看看?')
+            if not player: return await ctx.send(await ctx.interaction.translate('send_add_player_crashed'))
 
             data = await player.add(query, ctx)
             size = data[0]
             self.recommend.record_data(data, str(ctx.author.id))
 
             await send_info_embed(player, ctx, size-1)
-            await ctx.send(f'已成功添加歌曲到播放清單中! 你現在有 {size} 首歌在播放清單裡了！', ephemeral=True)
+            await ctx.send((await ctx.interaction.translate('send_add_success')).format(size=size), ephemeral=True)
 
-    @commands.hybrid_command(name='skip', description='跳過當前歌曲', aliases=['s'])
+    @commands.hybrid_command(name=locale_str('skip'), description=locale_str('skip_description'), aliases=['s'])
     async def _skip(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
             if not status: return
 
-            if not (await player.skip()): return await ctx.send('先加入一首歌吧~ 播放清單裡沒有更多的歌了')
+            if not (await player.skip()): return await ctx.send(await ctx.interaction.translate('send_skip_no_more_songs'))
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name='back', description='播放上一首歌曲')
+    @commands.hybrid_command(name=locale_str('back'), description=locale_str('back_description'))
     async def _back(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
             if not status: return
             
-            if not (await player.back()): return await ctx.send('先加入一首歌吧~ 播放清單裡沒有更多的歌了')
+            if not (await player.back()): return await ctx.send(await ctx.interaction.translate('send_back_no_more_songs'))
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name='pause', description='暫停播放音樂', aliases=['ps', '暫停'])
+    @commands.hybrid_command(name=locale_str('pause'), description=locale_str('pause_description'), aliases=['ps', '暫停'])
     async def _pause(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -102,7 +105,7 @@ class Music(Cog_Extension):
 
             await player.pause()
     
-    @commands.hybrid_command(name='resume', description='恢復播放音樂', aliases=['rs'])
+    @commands.hybrid_command(name=locale_str('resume'), description=locale_str('resume_description'), aliases=['rs'])
     async def resume(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -111,29 +114,30 @@ class Music(Cog_Extension):
             # 修正邏輯：當暫停時才恢復播放
             await player.resume()
 
-    @commands.hybrid_command(name="stop", description='Clear the queue and leave channel')
+    @commands.hybrid_command(name=locale_str('stop'), description=locale_str('stop_description'))
     async def _stop(self, ctx: commands.Context):
         async with ctx.typing():
-            if not (ctx.author.voice and ctx.voice_client): return await ctx.send('疑? 是你還是我不在語音頻道裡面啊')
-            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send('疑? 我們好像在不同的頻道裡面欸')
+            if not (ctx.author.voice and ctx.voice_client): return await ctx.send(await ctx.interaction.translate('send_stop_not_in_voice'))
+            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send(await ctx.interaction.translate('send_stop_not_in_same_channel'))
             channel = ctx.voice_client.channel
             await utils.leave(ctx)
-            await ctx.send(f'已經停止音樂 並離開 {channel.mention} 囉~')
+            await ctx.send((await ctx.interaction.translate('send_stop_success')).format(channel_mention=channel.mention))
 
-    @commands.hybrid_command(name='loop', description='設置循環播放模式')
+    @commands.hybrid_command(name=locale_str('loop'), description=locale_str('loop_description'))
     @app_commands.choices(loop_type = [Choice(name=item, value=item) for item in loop_option])
+    @app_commands.describe(loop_type=locale_str('loop_loop_type'))
     async def _loop(self, ctx: commands.Context, loop_type: str):
         async with ctx.typing():
             loop_option_str = ', '.join(loop_option)
-            if loop_type not in loop_option: return await ctx.send(f'你給了我錯誤的循環類型欸，可用的循環類型有`{loop_option_str}`\n再試一次吧~')
+            if loop_type not in loop_option: return await ctx.send((await ctx.interaction.translate('send_loop_invalid_type')).format(loop_option_str=loop_option_str))
 
             player, status = await check_and_get_player(ctx)
             if not status: return
 
             player.loop(loop_type)
-            await ctx.send(f'已將音樂循環模式設為 `{loop_type}`')
+            await ctx.send((await ctx.interaction.translate('send_loop_success')).format(loop_type=loop_type))
 
-    @commands.hybrid_command(name='current_playing', description='顯示當前播放的歌曲', aliases=['np', '當前播放', 'now'])
+    @commands.hybrid_command(name=locale_str('nowplaying'), description=locale_str('nowplaying_description'), aliases=['np', '當前播放', 'now'])
     async def current_playing(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx, check_user_in_channel=False)
@@ -141,18 +145,18 @@ class Music(Cog_Extension):
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name='list', description='顯示播放清單', aliases=['q', '清單', 'queue'])
+    @commands.hybrid_command(name=locale_str('queue'), description=locale_str('queue_description'), aliases=['q', '清單'])
     async def _list(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx, check_user_in_channel=False)
             if not status: return
 
-            eb = player.show_list()
+            eb = await player.show_list()
 
             await ctx.send(embed=eb)
 
-    @commands.hybrid_command(name='delete_song', description='刪除播放清單中的歌曲', aliases=['rm', '刪除'])
-    @app_commands.describe(number='輸入你要刪除第幾首歌')
+    @commands.hybrid_command(name=locale_str('remove'), description=locale_str('remove_description'), aliases=['rm', '刪除'])
+    @app_commands.describe(number=locale_str('remove_number'))
     async def delete_song(self, ctx: commands.Context, number: int):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -160,39 +164,39 @@ class Music(Cog_Extension):
 
             item = player.delete_song(number - 1)
 
-            await ctx.send(f"已刪除 `{item.get('title')}`，點播人: `{item.get('user').global_name}`")
+            await ctx.send((await ctx.interaction.translate('send_remove_success')).format(title=item.get('title'), user_name=item.get('user').global_name))
 
-    @commands.hybrid_command(name='clear_queue', description='清除整個播放清單', aliases=['cq', '清除', 'clear'])
+    @commands.hybrid_command(name=locale_str('clear'), description=locale_str('clear_description'), aliases=['cq', '清除'])
     async def clear_queue(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
             if not status: return
-            if not player.list: return await ctx.send('播放清單本來就是空的窩~')
+            if not player.list: return await ctx.send(await ctx.interaction.translate('send_clear_already_empty'))
 
             view = discord.ui.View(timeout=60)
-            button_check = discord.ui.Button(emoji='✅', label='確認', style=discord.ButtonStyle.green)
+            button_check = discord.ui.Button(emoji='✅', label=await ctx.interaction.translate('send_clear_confirm_button'), style=discord.ButtonStyle.green)
             async def clear_queue_callback(interaction: discord.Interaction):
                 player.clear_list()
                 button_reject.disabled = True
                 button_check.disabled = True
-                await interaction.response.edit_message(content="✅ 已刪除播放清單", embed=None, view=None)
+                await interaction.response.edit_message(content=await interaction.translate('send_clear_success'), embed=None, view=None)
             button_check.callback = clear_queue_callback
 
-            button_reject = discord.ui.Button(emoji='❌', label='取消', style=discord.ButtonStyle.red)
+            button_reject = discord.ui.Button(emoji='❌', label=await ctx.interaction.translate('send_clear_reject_button'), style=discord.ButtonStyle.red)
             async def button_reject_callback(interaction: discord.Interaction):
                 button_reject.disabled = True
                 button_check.disabled = True
-                await interaction.response.edit_message(content="❌ 已取消", embed=None, view=None)
+                await interaction.response.edit_message(content=await interaction.translate('send_clear_cancelled'), embed=None, view=None)
             button_reject.callback = button_reject_callback
 
             view.add_item(button_check)
             view.add_item(button_reject)
 
-            eb = create_basic_embed('確定要刪除播放列表嗎?', color=ctx.author.color)
+            eb = create_basic_embed(await ctx.interaction.translate('embed_clear_confirm_title'), color=ctx.author.color)
             eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await ctx.send(embed=eb, view=view)
 
-    @commands.hybrid_command(name='leave', description='離開語音頻道')
+    @commands.hybrid_command(name=locale_str('leave'), description=locale_str('leave_description'))
     async def _leave(self, ctx: commands.Context):
         await ctx.invoke(self.bot.get_command('stop'))
 
@@ -249,17 +253,17 @@ class Music(Cog_Extension):
 
             await ctx.send(view=view, embed=create_eb(), ephemeral=True)
 
-    @commands.hybrid_command(name='歌詞搜尋', description='Search lyrics with LrcApi (https://github.com/HisAtri/LrcApi)')
-    @app_commands.describe(lrc='是否顯示 LRC 格式 (帶有時間) 的歌詞，預設為 False')
+    @commands.hybrid_command(name=locale_str('lyrics'), description=locale_str('lyrics_description'))
+    @app_commands.describe(query=locale_str('lyrics_query'), artist=locale_str('lyrics_artist'), lrc=locale_str('lyrics_lrc'))
     async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None, lrc: bool = False):
         async with ctx.typing():
             result = await search_lyrics(query, artist, lrc)
-            await ctx.send(result if result else '找不到這首歌的歌詞欸... 要不考慮換個關鍵字試試?')
+            await ctx.send(result if result else await ctx.interaction.translate('send_lyrics_not_found'))
 
-            if len(result.splitlines()) < 10: await ctx.send('如果歌詞看起來太短的話 可以試試把 `lrc` 設為 `True` 窩w', ephemeral=True)
+            if len(result.splitlines()) < 10: await ctx.send(await ctx.interaction.translate('send_lyrics_too_short_tip'), ephemeral=True)
 
-    @commands.hybrid_command(name='音量調整', description='Adjust the volume of the bot')
-    @app_commands.describe(volume='0~100 (單位為 `%` )，如果不輸入的話 可以用按鈕點')
+    @commands.hybrid_command(name=locale_str('volume'), description=locale_str('volume_description'))
+    @app_commands.describe(volume=locale_str('volume_volume'))
     async def volume_adjust(self, ctx: commands.Context, volume: int = None):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -268,7 +272,7 @@ class Music(Cog_Extension):
             if volume:
                 await player.volume_adjust(volume=volume / 100)
 
-            await ctx.send('音量大小按鈕', view=VolumeControlButtons(player))
+            await ctx.send(await ctx.interaction.translate('send_volume_buttons_title'), view=VolumeControlButtons(player))
 
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):

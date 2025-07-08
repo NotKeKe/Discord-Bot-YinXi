@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed, read_json, write_json
+from core.translator import locale_str
 
 PATH = './cmds/data.json/events_record.json'
 
@@ -52,8 +53,8 @@ class Events_Recording(Cog_Extension):
         channel = before.channel
         embed = create_basic_embed(color=discord.Color.light_gray)
         embed.set_author(name=member.global_name, icon_url=member.avatar_url)
-        embed.add_field(name='編輯前', value=f'```{before.content}```', inline=False)
-        embed.add_field(name='編輯後', value=f'```{after.content}```', inline=False)
+        embed.add_field(name=await self.bot.tree.translator.translate(locale_str('embed_events_recording_message_edit_before'), sended_channel.guild.preferred_locale, None), value=f'```{before.content}```', inline=False)
+        embed.add_field(name=await self.bot.tree.translator.translate(locale_str('embed_events_recording_message_edit_after'), sended_channel.guild.preferred_locale, None), value=f'```{after.content}```', inline=False)
         embed.set_footer(text=channel.name)
         await sended_channel.send(embed=embed)
 
@@ -72,7 +73,7 @@ class Events_Recording(Cog_Extension):
         channel = message.channel
         embed = create_basic_embed(color=discord.Color.light_gray)
         embed.set_author(name=user.global_name, icon_url=user.avatar_url)
-        embed.add_field(name='刪除的訊息', value=f'```{message.content}```', inline=False)
+        embed.add_field(name=await self.bot.tree.translator.translate(locale_str('embed_events_recording_message_delete'), sended_channel.guild.preferred_locale, None), value=f'```{message.content}```', inline=False)
         embed.set_footer(text=channel.name)
         await sended_channel.send(embed=embed)
 
@@ -89,7 +90,7 @@ class Events_Recording(Cog_Extension):
         
         embed = create_basic_embed(color=discord.Color.light_gray)
         embed.set_author(name=guild.name, icon_url=guild.icon_url)
-        embed.add_field(name='新增的身分組', value=f'```{role.name}```', inline=True)
+        embed.add_field(name=await self.bot.tree.translator.translate(locale_str('embed_events_recording_role_create'), sended_channel.guild.preferred_locale, None), value=f'```{role.name}```', inline=True)
 
         await sended_channel.send(embed=embed)
     

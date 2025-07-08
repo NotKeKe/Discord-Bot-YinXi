@@ -2,17 +2,143 @@
     "name": {
         "keep": "記事",
         "translate": "翻譯",
-        "qrcode_generator": "qrcode生成器"
+        "qrcode_generator": "qrcode生成器",
+        "botinfo": "機器人資訊",
+        "help": "指令幫助",
+        "checkin": "每日簽到",
+        "counting": "數數頻道",
+        "output_chat_history": "輸出聊天紀錄",
+        "giveaway": "抽獎",
+        "chat_hugging": "hugging_face_對話",
+        "join_leave_message": "設定加入離開訊息",
+        "delete_spam_messages": "刪除垃圾訊息",
+        "rank": "聊天等級",
+        "levels": "伺服器聊天等級排行",
+        "owner_id": "管理員id",
+        "ping": "延遲",
+        "repeat": "重複你說的話",
+        "where_am_i": "我在哪裡",
+        "avatar": "頭像",
+        "get_system_channel": "取得伺服器預設頻道",
+        "server_info": "伺服器資訊",
+        "convert_timestamp": "轉換時間戳",
+        "tw_high_school_score_calculator": "高中生總分計算機",
+        "random_number": "隨機數字",
+        "suggest": "建議",
+        "report": "錯誤回報",
+        "tictactoe": "圈圈叉叉",
+        "world_chat": "世界頻道",
+        "report_bad_image": "不良圖片檢舉",
+        "youtube_notification": "youtube通知設定",
+        "play": "播放音樂",
+        "add": "新增歌曲至播放清單",
+        "skip": "跳過目前歌曲",
+        "back": "回到上一首歌曲",
+        "pause": "暫停音樂",
+        "resume": "繼續播放音樂",
+        "stop": "停止播放並離開頻道",
+        "loop": "設定循環播放模式",
+        "nowplaying": "顯示目前播放的歌曲",
+        "queue": "顯示播放清單",
+        "remove": "移除播放清單中的歌曲",
+        "clear": "清除整個播放清單",
+        "leave": "離開語音頻道",
+        "lyrics": "搜尋歌詞",
+        "volume": "調整音量"
     },
     "description": {
         "translate": "翻譯一些文字",
-        "qrcode_generator": "生成一個QRcode"
+        "qrcode_generator": "生成一個QRcode",
+        "botinfo": "查看關於這台機器的資訊",
+        "help": "顯示所有指令的幫助選單",
+        "checkin": "每日簽到",
+        "counting": "設置或取消數數頻道",
+        "output_chat_history": "將頻道的聊天紀錄輸出成檔案",
+        "giveaway": "舉辦一個抽獎活動",
+        "chat_hugging": "使用 HuggingFace 上的模型進行對話",
+        "join_leave_message": "設定當使用者加入或離開伺服器時，要在哪個頻道發送訊息。",
+        "delete_spam_messages": "刪除特定使用者在特定時間內發送的訊息",
+        "keep": "讓機器人在指定時間提醒你",
+        "rank": "查看你在此伺服器的聊天等級",
+        "levels": "查看此伺服器的聊天等級排行榜",
+        "owner_id": "取得伺服器擁有者的ID",
+        "ping": "取得機器人延遲",
+        "repeat": "讓機器人重複你說的話",
+        "where_am_i": "告訴你所在的伺服器與頻道",
+        "avatar": "取得使用者頭像",
+        "get_system_channel": "取得此伺服器的系統頻道",
+        "server_info": "顯示此伺服器的詳細資訊",
+        "convert_timestamp": "將Unix時間戳轉換為可讀的時間格式",
+        "tw_high_school_score_calculator": "計算台灣高中學測總分",
+        "random_number": "在指定範圍內產生隨機數字",
+        "suggest": "向開發者發送建議",
+        "report": "向開發者回報錯誤",
+        "tictactoe": "開始一場圈圈叉叉遊戲",
+        "world_chat": "將目前頻道設定為世界頻道",
+        "report_bad_image": "檢舉在世界頻道發送不良圖片的使用者",
+        "youtube_notification": "設定或取消特定 YouTube 頻道的更新通知",
+        "play": "播放音樂",
+        "add": "新增歌曲至播放清單",
+        "skip": "跳過目前歌曲",
+        "back": "回到上一首歌曲",
+        "pause": "暫停音樂",
+        "resume": "繼續播放音樂",
+        "stop": "停止播放並離開頻道",
+        "loop": "設定循環播放模式",
+        "nowplaying": "顯示目前播放的歌曲",
+        "queue": "顯示播放清單",
+        "remove": "移除播放清單中的歌曲",
+        "clear": "清除整個播放清單",
+        "leave": "離開語音頻道",
+        "lyrics": "搜尋歌詞",
+        "volume": "調整音量"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
         "translate_content": "輸入你要翻譯的文字",
         "translate_target": "選擇目標語言（你希望翻譯成哪種語言，預設為zh-TW）",
-        "qrcode_generator_url": "在此輸入連結"
+        "qrcode_generator_url": "在此輸入連結",
+        "help_cog_name": "要查詢的指令類別名稱",
+        "help_cmd_name": "要查詢的指令名稱",
+        "output_chat_history_count": "要輸出的訊息數量 (預設 10)",
+        "output_chat_history_file_type": "輸出的檔案類型 (txt/json, 預設 json)",
+        "output_chat_history_reverse": "是否反轉訊息順序 (預設為否)",
+        "giveaway_winners_total": "中獎人數",
+        "giveaway_prize": "獎品",
+        "giveaway_date": "結束日期 (格式: YYYY-MM-DD)",
+        "giveaway_time": "結束時間 (格式: HH:MM)",
+        "chat_hugging_prompt": "您想對AI說什麼？",
+        "chat_hugging_model": "選擇一個對話模型",
+        "chat_hugging_history": "選擇一個歷史紀錄以繼續對話",
+        "chat_hugging_temperature": "設定模型的溫度 (隨機性)",
+        "chat_hugging_show_thoughts": "是否顯示 AI 的思考過程 (僅自己可見)",
+        "join_leave_message_join_channel": "使用者加入時要發送訊息的頻道",
+        "join_leave_message_leave_channel": "使用者離開時要發送訊息的頻道",
+        "delete_spam_messages_hours": "要刪除幾小時前的訊息",
+        "delete_spam_messages_user": "要刪除訊息的使用者",
+        "keep_event": "要提醒的事項",
+        "repeat_text": "要讓機器人重複的文字",
+        "avatar_member": "要取得頭像的使用者 (可留空)",
+        "convert_timestamp_timestamp": "Unix 時間戳 (秒)",
+        "tw_high_school_score_calculator_image": "上傳你的成績單圖片讓AI辨識",
+        "tw_high_school_score_calculator_prompt": "你想讓AI幫你什麼 (僅在你有上傳圖片時，會使用此欄)",
+        "random_number_start": "隨機範圍的起始數字",
+        "random_number_end": "隨機範圍的結束數字",
+        "random_number_times": "要產生幾個隨機數字 (預設為1)",
+        "play_query": "輸入歌曲名稱、YouTube 連結或播放清單",
+        "add_query": "輸入要新增的歌曲名稱或 YouTube 連結",
+        "loop_loop_type": "選擇循環模式 (None: 無, single: 單曲, list: 清單)",
+        "remove_number": "要移除的歌曲編號 (可從 /queue 查看)",
+        "lyrics_query": "歌曲名稱",
+        "lyrics_artist": "歌手名稱 (選填)",
+        "lyrics_lrc": "是否顯示帶有時間軸的歌詞 (預設為否)",
+        "volume_volume": "設定音量 (0-200)，或使用按鈕微調",
+        "suggest_suggestion": "你的建議內容",
+        "report_error": "你遇到的錯誤資訊",
+        "world_chat_cancel": "是否要取消世界頻道設定",
+        "report_bad_image_author": "發送不良圖片的使用者名稱",
+        "report_bad_image_reason": "你檢舉的原因",
+        "youtube_notification_youtuber": "要設定通知的 YouTube 頻道連結 (留空以取消)"
     },
     "components": {
         "yin_xi": "音汐",
@@ -20,9 +146,8 @@
         "send_keep_time_passed": "{}, 你指定的時間已經過去了，請選擇一個未來的時間。",
         "send_keep_too_far": "你設置了1000年後的時間??\n 我都活不到那時候你憑什麼:sob:",
         "send_qrcode_generator_invalid_url": "該功能目前無法使用 或你的連結有問題，請稍後再試",
-        "embed_keep_提醒事件": [{
+        "embed_keep_created": [{
             "title": "提醒事件:",
-            "description": "",
             "field": [{
                 "name": "注意事項: ",
                 "value": "記得開啟此頻道的mentions通知 以免錯過提醒!"
@@ -37,9 +162,334 @@
         "embed_qrcode_generator_1": [{
             "author": "QRcode生成器"
         }],
-        "embed_command2_DESCRIPTIONHERE": [""],
-
-        "button_command1_DESCRIPTIONHERE": "",
-        "button_command2_DESCRIPTIONHERE": ""
+        "select_bot_info_help_command_placeholder": "選擇一個指令",
+        "send_bot_info_help_command_no_description": "該指令沒有描述",
+        "send_bot_info_help_view_error": "此操作發生錯誤: 「{e}」，請回報給開發者。",
+        "select_bot_info_help_cog_placeholder": "選擇一個類別",
+        "send_bot_info_help_cog_no_commands": "該類別沒有指令",
+        "send_bot_info_help_more_commands_cannot_display": "尚有其他來自 {value} 的指令無法顯示",
+        "button_botinfo_command_intro_label": "指令簡介",
+        "embed_help_cog": [{
+            "title": "指令列表",
+            "description": "指令數量: `{total_cmds}`",
+            "fields": [
+                { "name": "**{command_name}**", "value": "{command_description}" }
+            ]
+        }],
+        "embed_botinfo_info": [{
+            "author": "Bot資訊",
+            "fields": [
+                { "name": "🤖 **名字**", "value": "音汐" },
+                { "name": "👨 **作者**", "value": "克克 KeJC" },
+                { "name": "⚙️ **已知指令類別**", "value": "{cogs_list}" },
+                { "name": "🐙 **我的Github連結**", "value": "[NotKeKe](https://github.com/NotKeKe)" },
+                { "name": "🔗 **此專案連結**", "value": "[音汐](https://github.com/NotKeKe/Discord-Bot-YinXi)" }
+            ]
+        }],
+        "embed_help_main": [{
+            "author": "指令幫助",
+            "fields": [{
+                    "name": "**特點**",
+                    "value": "> ✅ 與 AI 結合的 Discord Bot\n> ✅ 提供許多實用小功能"
+                },
+                {
+                    "name": "**🌟 AI 功能**",
+                    "value": "> `/chat` —— 與 AI 交流\n> `/ai頻道` —— 設定 AI 頻道，**無需輸入指令** 即可對話\n> `/圖片生成` —— 使用 **AI 生成圖片** (cogview-3-flash)\n> 直接私訊音汐，也可以跟他聊天!"
+                },
+                {
+                    "name": "**👥 伺服器功能**",
+                    "value": "> `/伺服器資訊` —— 快速取得這個**伺服器 的 重要資訊**\n> `/世界頻道` —— 與其他設定該功能的使用者 **跨伺服器** 交流\n> `/數數頻道` —— 與伺服器成員玩 **數字接力**\n> `/取得伺服器預設頻道` —— 如名\n> `/avatar` —— 趁別人不注意的時候拿走別人的 **頭像** w"
+                },
+                {
+                    "name": "**🎶 音樂功能**",
+                    "value": "> `/play` or `[p` `{query}` —— 播放歌曲 ▶️\n> `/add` `{query}` —— 添加歌曲到播放清單 ➕\n> `/skip` or `[s` —— 跳過當前歌曲 ⏭️\n> `/back` —— 回到上一首歌 ⏮️\n> `/pause` or `[ps` or `[暫停` —— 暫停播放音樂 ⏸️\n> `/resume` or `[rs` —— 恢復播放音樂 ▶️\n> `/stop` —— 清除播放清單並離開頻道 ⏹️\n> `/loop {loop_type}` —— 設置循環播放模式 🔁\n> `/current_playing` or `[np` or `[now` —— 顯示當前播放歌曲 ℹ️\n> `/list` or `[q` —— 顯示播放清單 📋\n> `/delete_song` or `[rm` `{number}` —— 刪除播放清單中的歌曲 ❌\n> `/clear_queue` or `[clear` —— 清除整個播放清單 🧹\n> `/leave` —— 離開語音頻道 🚪\n> **有些指令也有其他呼叫方法，記得多試試喔~**"
+                },
+                {
+                    "name": "**🔧 實用小功能**",
+                    "value": "> `/minecraft_server_status` —— 查看 Minecraft 伺服器的狀態\n> `[nasa` —— 獲取 NASA 提供的**每日圖片**\n> `[cat` —— 獲得每日的 **貓貓知識** 🐱\n> `[image {query} {number}` —— 放入你要搜尋的 **關鍵字** 和要搜尋的 **圖片數量** ，就能得到你想要的圖片 (不放也可以!)\n> `[gif` —— 使用 `/gif` 來直接看怎麼使用吧~\n> `[舔狗` —— 來一句**舔狗**愛說的話🐶🐶🐶** **~~(不過官方說他是渣男語錄)~~  \n> `/qrcode生成器` —— 轉換連結為 **QR Code**\n> `/keep` —— **提醒功能!** 在你設置完成後，會在時間到的時候 於相同頻道提醒你要做的事情\n> `/設定yt通知` —— 通知你追蹤的 **YouTuber** 更新了! (如果在youtuber欄位不輸入的話就會取消)\n> `/輸出聊天紀錄` —— 頻道聊天紀錄輸出 (可以輸出成 `json` or `txt` 檔)"
+                },
+                {
+                    "name": "**🤫 一般人用不到的功能**",
+                    "value": "> `/convert_timestamp` 將**timestamp**轉換為可讀的時間"
+                },
+                {
+                    "name": "其他:",
+                    "value": "> 還有更多功能等著你去探索!"
+                }
+            ]
+        }],
+        "send_checkin_already_checked_in": "你今天已經簽到過了。",
+        "send_checkin_success": "您已在「{time}」時簽到, 目前總簽到次數為: {times}",
+        "send_counting_already_counting": "此頻道已經在數數了，目前的數字是 {count}。",
+        "send_counting_set_success": "此頻道已成功設定為數數頻道。",
+        "embed_counting_error": [{
+            "double_input": "❌ 你剛剛輸入過數字了，不能連續輸入！\n下一個數字為 **1**",
+            "wrong_start": "⚠️ 請從 **1** 開始輸入，而不是 {content}。",
+            "too_large": "⚠️ 你輸入的數字 **{content}** 太大了！",
+            "too_small": "⚠️ 你輸入的數字 **{content}** 太小了！",
+            "wrong_number": "❌ 你輸入了錯誤的數字 **{content}**！\n你應該輸入 **{next_count}**。\n遊戲重置，下一個數字為 **1**"
+        }],
+        "send_output_chat_history_no_read_permission": "你沒有權限讀取此頻道的聊天紀錄。",
+        "send_output_chat_history_bot_no_read_permission": "我沒有權限讀取此頻道的聊天紀錄。",
+        "send_channel_history_file_template": [{
+            "author": "作者",
+            "avatar_url": "頭像連結",
+            "time": "時間",
+            "content": "內容",
+            "none": "無",
+            "attachments": "附件",
+            "embed": "嵌入訊息 (embed)",
+            "embed_title": "嵌入標題",
+            "embed_description": "嵌入描述",
+            "embed_fields": "嵌入欄位",
+            "embed_image": "嵌入圖片"
+        }],
+        "send_error_occurred": "此指令發生了一個錯誤。",
+        "embed_events_recording_message_edit_before": "編輯前",
+        "embed_events_recording_message_edit_after": "編輯後",
+        "embed_events_recording_message_delete": "刪除的訊息",
+        "embed_events_recording_role_create": "新增的身分組",
+        "send_giveaway_invalid_format": "你輸入了錯誤的日期或時間格式。",
+        "send_giveaway_time_passed": "{mention}, 你指定的時間已經過去了，請選擇一個未來的時間。",
+        "send_giveaway_too_far": "你設置了1000年後的時間??\n 我都活不到那時候你憑什麼:sob:",
+        "send_giveaway_left": "已取消參加抽獎。",
+        "send_giveaway_joined": "已成功參加抽獎！",
+        "send_giveaway_no_winner": "沒有人參加抽獎...",
+        "send_giveaway_ended_message": "🎉 **抽獎已結束** 🎉\n發起人: {mention}\n幸運中獎者: {winner}",
+        "embed_giveaway_start": [{
+            "author": "抽獎活動",
+            "fields": [
+                { "name": "中獎人數:" },
+                { "name": "目前參加人數:", "value": "0" },
+                { "name": "注意事項", "value": "如果點擊按鈕後 bot沒有傳送任何訊息給你，就代表你尚未參加這個活動" }
+            ],
+            "footer": "結束時間"
+        }],
+        "embed_giveaway_end": [{
+            "fields": [
+                { "name": "獲獎者" }
+            ],
+            "footer": "預計中獎人數: {winners_total} | 最終參加人數: {count}"
+        }],
+        "send_chat_hugging_fail": "目前無法生成回應，請稍後再試。",
+        "embed_on_guild_join": [{
+            "title": "我的自我介紹!",
+            "author": "Hello",
+            "fields": [
+                { "name": "作者:", "value": "克克 KeJC", "inline": true },
+                { "name": "Github連結:", "value": "[NotKeKe](https://github.com/NotKeKe)", "inline": true },
+                { "name": "注意事項:", "value": "目前這隻bot還在測試階段，不要給他任何的管理權限!\n不要給他任何的管理權限!\n不要給他任何的管理權限!", "inline": false }
+            ]
+        }],
+        "send_on_member_join": "「{member_name}」滑進了這個了伺服器!",
+        "send_on_member_remove": "「{member_name}」從進來的地方又出去了 （ ´☣///_ゝ///☣｀）",
+        "send_join_leave_message_cancel_success": "已取消操作",
+        "send_join_leave_message_delete_success": "已為 {guild_name} 刪除此功能",
+        "embed_join_leave_message_confirm_delete": [{
+            "title": "你確定不讓Bot在使用者加入及退出伺服器時 發送訊息嗎?",
+            "description": "✅表示繼續讓Bot發送 ❌表示**不**讓Bot繼續發送"
+        }],
+        "send_join_leave_message_no_channel_input": "請輸入頻道",
+        "send_join_leave_message_no_join_channel": "請輸入加入頻道",
+        "send_join_leave_message_no_leave_channel": "請輸入離開頻道",
+        "send_join_leave_message_no_permission": "請選取能讓我發送訊息的頻道",
+        "embed_join_leave_message_set_success": [{
+            "title": "已為 {guild_name} 新增此功能",
+            "description": "(加入頻道: {join_channel_name} 離開頻道: {leave_channel_name})"
+        }],
+        "send_delete_spam_messages_no_permission": "我沒有權限刪除訊息",
+        "embed_delete_spam_messages": [{
+            "title": "刪除訊息",
+            "fields": [
+                { "name": "刪除訊息數", "value": "`{count}`", "inline": false },
+                { "name": "無法刪除訊息數", "value": "> `{count}`\n> reason: 沒有 `管理訊息` 權限\n> 無法刪除的訊息: \n{messages}", "inline": false },
+                { "name": "無法刪除訊息的頻道數", "value": "> `{count}`\n> reason: 沒有該頻道的 `閱讀訊息歷史` 權限\n> 無法刪除訊息的頻道: {channels}", "inline": false }
+            ]
+        }],
+        "send_keep_remind": "{mention}, 你需要做 {event}",
+        "send_levels_level_up": "你的長度變成{level}公分了",
+        "send_levels_no_data_yet": "尚未儲存任何聊天等級",
+        "send_levels_no_guild_data": "此伺服器尚未儲存任何聊天等級資訊",
+        "send_levels_not_enough_messages": "你尚未在此伺服器傳送足夠的訊息",
+        "embed_rank": [{
+            "description": "你現在是 {rank_name} ({level}等)"
+        }],
+        "embed_levels": [{
+            "title": "伺服器等級排行",
+            "footer": "{user_name}獲得了第一名🎉🎉🎉",
+            "field": { "name": "{rank}. {user_name} ({level}等，{count}則訊息)", "value": " " }
+        }],
+        "embed_owner_id": [{
+            "author": "管理員是誰?",
+            "title": "{owner_mention}",
+            "field": { "name": "Owner ID" }
+        }],
+        "embed_ping": [{
+            "title": "延遲",
+            "description": "**{latency}** (ms)"
+        }],
+        "embed_where_am_i": [{
+            "title": "你在哪裡?",
+            "description": "你在「{guild_name}」的 {channel_mention} 頻道當中"
+        }],
+        "send_avatar_no_avatar": "使用者「{member_name}」沒有頭像",
+        "send_get_system_channel_no_system_channel": "此伺服器沒有預設頻道",
+        "send_server_info_not_in_guild": "你不在一個伺服器當中",
+        "embed_server_info": [{
+            "title": "**{guild_name}** 伺服器資訊",
+            "fields": [
+                { "name": "📌 伺服器名稱" },
+                { "name": "🆔 伺服器ID" },
+                { "name": "👥 伺服器總人數" },
+                { "name": "👤 成員數量" },
+                { "name": "🤖 Bot數量" },
+                { "name": "📢 頻道數量" },
+                { "name": "👑 Owner" },
+                { "name": "🆔 Owner ID" },
+                { "name": "🟢 在線人數" },
+                { "name": "📣 系統頻道" }
+            ]
+        }],
+        "send_convert_timestamp_invalid_number": "請輸入有效的數字",
+        "embed_tw_high_school_score_calculator": [{
+            "title": "總分計算機",
+            "fields": [
+                { "name": "加權總分" },
+                { "name": "未加權總分" },
+                { "name": "**AI 回應**" }
+            ]
+        }],
+        "send_tw_high_school_score_calculator_no_prompt": "請輸入你要讓AI做什麼 (`prompt`)",
+        "send_random_number_too_many": "你無法在{range1}~{range2}中選出{times}個數字 (太多了!)",
+        "send_play_not_in_voice": "你好像不在語音頻道裡面？ 先加入一個吧",
+        "send_play_no_query": "我沒有接收到你的關鍵字欸... 記得輸入 `query`",
+        "send_play_error": "疑？ 好像出錯了，要不換個 `query` 試試看？",
+        "send_add_not_in_voice": "你好像不在語音頻道裡面？ 先加入一個吧",
+        "send_add_use_play_first": "使用 `/play` 來點播音樂吧~",
+        "send_add_not_in_same_channel": "你跟我不在同一個頻道裡欸... 先加入到 {channel_mention}",
+        "send_add_player_crashed": "音汐剛剛好像不正常退出了欸... 要不讓我重新加入看看？",
+        "send_add_success": "已成功添加歌曲到播放清單中！ 你現在有 {size} 首歌在播放清單裡了！",
+        "send_skip_no_more_songs": "先加入一首歌吧~ 播放清單裡沒有更多的歌了",
+        "send_back_no_more_songs": "先加入一首歌吧~ 播放清單裡沒有更多的歌了",
+        "send_stop_not_in_voice": "疑？ 是你還是我不在語音頻道裡面啊",
+        "send_stop_not_in_same_channel": "疑？ 我們好像在不同的頻道裡面欸",
+        "send_stop_success": "已經停止音樂 並離開 {channel_mention} 囉~",
+        "send_loop_invalid_type": "你給了我錯誤的循環類型欸，可用的循環類型有`{loop_option_str}`\n再試一次吧~",
+        "send_loop_success": "已將音樂循環模式設為 `{loop_type}`",
+        "send_remove_success": "已刪除 `{title}`，點播人: `{user_name}`",
+        "send_clear_already_empty": "播放清單本來就是空的窩~",
+        "send_clear_confirm_button": "確認",
+        "send_clear_reject_button": "取消",
+        "send_clear_success": "✅ 已刪除播放清單",
+        "send_clear_cancelled": "❌ 已取消",
+        "embed_clear_confirm": [{
+            "title": "確定要刪除播放列表嗎？"
+        }],
+        "send_lyrics_not_found": "找不到這首歌的歌詞欸... 要不考慮換個關鍵字試試？",
+        "send_lyrics_too_short_tip": "如果歌詞看起來太短的話 可以試試把 `lrc` 設為 `True` 窩w",
+        "send_volume_buttons_title": "音量大小按鈕",
+        "embed_music_now_playing": [{
+            "requester": "點播者",
+            "author": "作者",
+            "duration": "長度",
+            "list_size": "播放清單數量",
+            "now_playing": "正在播放"
+        }],
+        "embed_music_info": [{
+            "title": "♪ 現正播放",
+            "field": [
+                { "name": "🌐 影片連結" },
+                { "name": "🎶 歌曲時長" },
+                { "name": "🔁 循環狀態" },
+                { "name": "🔊 音量" },
+                { "name": "📊 進度條", "inline": false }
+            ],
+            "footer": "點播者：{user_name}"
+        }],
+        "send_check_not_in_voice": "你需要先加入一個語音頻道！",
+        "send_button_not_in_voice": "你好像不在語音頻道裡面？",
+        "send_button_bot_not_in_voice": "音汐不在語音頻道內欸 :thinking:",
+        "send_button_player_crashed": "音汐剛剛好像不正常退出了呢 :thinking:",
+        "send_button_stopped_music": "( {user} ) 已經停止音樂 並離開 {channel_mention} 囉 ~",
+        "send_button_loop_changed": "已將循環狀態改為 `{loop_status}`",
+        "send_button_recommend_not_enabled": "你沒有開啟音樂推薦功能，請使用 `/音樂推薦` 來開啟此功能！",
+        "send_button_no_recommendations": "目前沒有為您推薦的歌曲。",
+        "embed_button_recommend_title": "歌曲推薦",
+        "send_check_bot_not_in_voice": "我現在不在任何語音頻道裡欸",
+        "embed_player_queue": [{
+            "title": "播放清單",
+            "description": "目前共有 `{count}` 首歌",
+            "field": [
+                { "name": "**正在播放**" },
+                { "name": "**接下來**" }
+            ]
+        }],
+        "send_player_not_found_song": "找不到第{index}首歌曲",
+        "send_player_play_error": "播放失敗，可能因為你播放太久了，導致音訊連結過期  或者其他原因，建議使用 `/remove` 刪除後再重新加入音樂。\n(原因: {e})\n(如果你不確定原因的話可以使用 `/錯誤回報` 進行回報。)",
+        "send_player_already_paused": "音樂已經暫停了欸:thinking:",
+        "send_player_not_playing": "沒有正在播放的音樂呢",
+        "send_player_paused_success": "已經幫你暫停音樂囉",
+        "send_player_is_playing": "音汐正在播放中，不需要恢復喔:thinking:",
+        "send_player_not_paused": "這裡沒有暫停中的音樂",
+        "send_player_resumed_success": "已經幫你繼續播放音樂囉~",
+        "send_player_playlist_empty": "播放列表為空，無法播放下一首",
+        "send_player_finished_playlist": "我已經播完所有歌曲啦！ 我就離開囉",
+        "send_player_lyrics_not_found": "沒有搜尋結果，建議使用 `/lyrics {query} {artist}` 來搜尋歌詞",
+        "send_player_volume_adjusted": "已將音量調整為 `{volume}%`",
+        "send_suggest_channel_not_found": "建議頻道未找到。",
+        "send_suggest_success": "已成功發送建議「{suggestion}」",
+        "send_suggest_fail": "目前無法發送建議",
+        "send_suggest_no_permission": "我沒有權限在此頻道建立討論串。",
+        "send_report_channel_not_found": "回報頻道未找到。",
+        "send_report_success": "問題「{error}」已成功回報",
+        "send_report_fail": "目前無法回報錯誤",
+        "send_report_no_permission": "我沒有權限在此頻道建立討論串。",
+        "send_issue_solve_not_thread": "這不是Thread啊 你在幹嘛",
+        "send_issue_solve_success": "Issue Solve",
+        "send_issue_solve_not_found": "事件不存在",
+        "embed_tictactoe_game": [{
+            "title": "圈圈叉叉",
+            "field": [
+                { "name": "輪到", "inline": false }
+            ],
+            "winner_description": "{winner} 獲勝！"
+        }],
+        "button_tictactoe_labels": [{
+            "top_left": "左上",
+            "top_center": "中上",
+            "top_right": "右上",
+            "middle_left": "左中",
+            "middle_center": "中間",
+            "middle_right": "右中",
+            "bottom_left": "左下",
+            "bottom_center": "中下",
+            "bottom_right": "右下"
+        }],
+        "send_tictactoe_no_game": "請先使用 /tictactoe 指令開始一個新遊戲。",
+        "send_tictactoe_position_taken": "這個位置已經被佔用了，請選擇其他位置。",
+        "embed_world_chat": [{
+            "field": [
+                { "name": "**:speech_balloon: {author_name}: **" }
+            ],
+            "image_sent_value": "使用者傳送了 {count} 張圖片"
+        }],
+        "choice_world_chat_cancel_no": "否",
+        "choice_world_chat_cancel_yes": "是",
+        "send_world_chat_not_world_channel": "此頻道不是世界頻道。",
+        "send_world_chat_cancelled": "已取消世界頻道設定。",
+        "send_world_chat_already_set": "此頻道已經是世界頻道了。",
+        "send_world_chat_set_success": "已將此頻道設定為世界頻道。",
+        "send_report_bad_image_log": "{guild_name} | {reporter_name} 於 {now} 舉報了\nauthor={author}\nreason={reason}\n舉報人ID: {reporter_id}",
+        "send_report_bad_image_success": "已成功向開發者舉報 {author}。",
+        "send_youtube_notification_new_video": "**{yt_name}** 發布了新影片！\n\n{url}",
+        "send_youtube_notification_invalid_url": "請使用有效的 YouTube 頻道連結。",
+        "send_youtube_notification_already_set": "此頻道已經設定過此 YouTube頻道的通知了。",
+        "send_youtube_notification_set_success": "已開啟對「{channel_name}」的通知。",
+        "send_youtube_notification_no_youtuber_set": "你尚未設定任何的 YouTube 通知。",
+        "send_youtube_notification_cancel_success": "已取消對「{channel_name}」的通知。",
+        "send_youtube_notification_no_meta_tag": "無法找到頻道名稱的 meta 標籤",
+        "send_youtube_notification_unknown_channel_name": "未知的頻道名稱",
+        "select_youtube_notification_placeholder": "選擇一個你要刪除通知的YouTuber",
+        "select_youtube_notification_prompt": "選擇一個你要取消通知的YouTuber"
     }
 }

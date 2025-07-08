@@ -5,6 +5,7 @@ from pytubefix import Search
 from datetime import timedelta
 
 from core.functions import create_basic_embed
+from core.translator import load_translated
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
@@ -115,7 +116,7 @@ async def send_info_embed(player, ctx: commands.Context | discord.Interaction, i
     player: Player = player
     
     index = index or player.current_index
-    if not (0 <= index < len(player.list)): return await send(ctx, f'找不到第{index+1}首歌曲', ephemeral=True)
+    if not (0 <= index < len(player.list)): return await send(ctx, (await player.translator.get_translate('send_player_not_found_song', player.locale)).format(index=index+1), ephemeral=True)
 
     title = player.list[index]['title']
     video_url = player.list[index]['video_url']
@@ -125,14 +126,28 @@ async def send_info_embed(player, ctx: commands.Context | discord.Interaction, i
     loop_status = player.loop_status
     is_current = index == player.current_index
 
-    eb = create_basic_embed(f'{'▶️ 正在播放 ' if is_current else '已新增 '}`{title}`', color=user.color, 功能='音樂播放')
+    '''i18n'''
+    i18n_info_str = await player.translator.get_translate('embed_music_info', player.locale)
+    i18n_info_data = load_translated(i18n_info_str)[0]
+    ''''''
+
+    eb = create_basic_embed(f'{'▶️ ' + i18n_info_data['title'] if is_current else '已新增 '}`{title}`', color=user.color, 功能='音樂播放')
     eb.set_image(url=thumbnail_url)
-    eb.add_field(name='🌐 Video url', value=f'[url]({video_url})')
-    eb.add_field(name='⏱️ Duration', value=f'{duration}')
-    eb.add_field(name='🔁 Loop status', value=loop_status)
-    eb.add_field(name='🔊 Volume', value=f'{player.volume * 100}%')
-    eb.add_field(name='Progress bar', value=player.progress_bar, inline=False)
-    eb.set_footer(text=f'Requested by {user.global_name}', icon_url=user.avatar.url if user.avatar else None)
+
+    field_names = i18n_info_data['field']
+    field_values = [
+        f'[url]({video_url})',
+        duration,
+        loop_status,
+        f'{player.volume * 100}%',
+        player.progress_bar
+    ]
+
+    for i, field in enumerate(field_names):
+        eb.add_field(name=field['name'], value=field_values[i], inline=field.get('inline', True))
+
+    footer_text = i18n_info_data['footer'].format(user_name=user.global_name)
+    eb.set_footer(text=footer_text, icon_url=user.avatar.url if user.avatar else None)
 
     view = MusicControlButtons(player)
     if if_send:
@@ -145,12 +160,15 @@ async def check_and_get_player(ctx: commands.Context, *, check_user_in_channel=T
     from cmds.music_bot.play4.player import Player
     
     if check_user_in_channel:
-        if not ctx.author.voice: return await ctx.send('你好像不在語音頻道裡面? 先加一個吧~'), False
-    if not ctx.voice_client: return await ctx.send('音汐不在語音頻道內欸:thinking:'), False
+        if not ctx.author.voice:
+            return await ctx.send(await ctx.bot.translator.get_translate('send_check_not_in_voice', ctx.interaction.locale.value)), False
+    if not ctx.voice_client:
+        return await ctx.send(await ctx.bot.translator.get_translate('send_check_bot_not_in_voice', ctx.interaction.locale.value)), False
 
     player: Player = players.get(ctx.guild.id)
 
-    if not player: return await ctx.send('音汐剛剛好像不正常退出了呢:thinking:'), False
+    if not player:
+        return await ctx.send(await ctx.bot.translator.get_translate('send_add_player_crashed', ctx.interaction.locale.value)), False
     return player, True
 
 

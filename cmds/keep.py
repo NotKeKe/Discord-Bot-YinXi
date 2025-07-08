@@ -173,7 +173,7 @@ class RunKeep:
                 }
             )
         '''i18n'''
-        embed_translated = await self.interaction.translate('embed_keep_提醒事件')
+        embed_translated = await self.interaction.translate('embed_keep_created')
         embed_translated: dict = (load_translated(embed_translated))[0]
 
         title = embed_translated.get('title')
@@ -182,7 +182,6 @@ class RunKeep:
         embed = create_basic_embed(title=title, description=f'**{event}**', color=ctx.author.color, time=False)
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
         embed.add_field(name=field_1.get('name'), value=field_1.get('value'), inline=True)
-        embed.set_footer(text=f'時間: {keep_time}')
         embed.set_footer(text=embed_translated.get('footer').format(keep_time=keep_time))
 
         await ctx.send(embed=embed)
@@ -193,7 +192,7 @@ class RunKeep:
     @staticmethod
     async def keepMessage(channel, user, event, delay, uuid: str):
         await asyncio.sleep(delay)
-        await channel.send(f'{user.mention}, 你需要做 {event}')
+        await channel.send((await channel.guild.get_member(bot.user.id).translate('send_keep_remind')).format(mention=user.mention, event=event))
         SaveKeep.deletekeepEvent(str(user.id), uuid)
 
     @classmethod
@@ -231,8 +230,8 @@ class Keep(Cog_Extension):
         await RunKeep.create_KeepTask()
 
     # Create a Keep
-    @commands.hybrid_command()
-    @app_commands.describe(time=locale_str('keep_time'))
+    @commands.hybrid_command(name=locale_str('keep'), description=locale_str('keep'))
+    @app_commands.describe(time=locale_str('keep_time'), event=locale_str('keep_event'))
     async def keep(self, ctx:commands.Context, time: str, * , event: str):
         '''[keep time(會使用AI作分析) event: str'''
         async with ctx.typing():
