@@ -57,12 +57,13 @@ class WorldChat(Cog_Extension):
                     translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
                     eb_template_str = translations.get('components', {}).get('embed_world_chat', '[{}]')
                     eb_data = load_translated(eb_template_str)[0]
-                    field_name_template = eb_data['field'][0]['name']
-                    image_sent_value = eb_data.get('image_sent_value')
+                    field = eb_data['field'][0]
+                    field_name_template = field['name']
+                    field_value_template = field.get('value', '')
                     ''''''
                     field_name = field_name_template.format(author_name=msg.author.global_name)
                     if attachments:
-                        eb.add_field(name=field_name, value=image_sent_value.format(count=len(attachments)), inline=True)
+                        eb.add_field(name=field_name, value=field_value_template.format(count=len(attachments)), inline=True)
                         await channel.send(embed=eb)
                         for a in attachments:
                             await channel.send(a)

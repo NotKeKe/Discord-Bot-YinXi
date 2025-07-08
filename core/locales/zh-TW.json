@@ -44,7 +44,20 @@
         "clear": "清除整個播放清單",
         "leave": "離開語音頻道",
         "lyrics": "搜尋歌詞",
-        "volume": "調整音量"
+        "volume": "調整音量",
+        "joke": "笑話",
+        "news": "新聞",
+        "cat_fact": "貓貓冷知識",
+        "nasa": "NASA每日圖片",
+        "number_history": "數字歷史",
+        "unsplash_image": "看圖",
+        "get_gifs": "GIF",
+        "tiangou": "舔狗語錄",
+        "minecraft_server_status": "MC伺服器狀態",
+        "yiyan": "一言",
+        "toxic_jacket_soup": "毒雞湯",
+        "lovelive": "lovelive",
+        "yt_downloader": "影片下載"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -91,7 +104,20 @@
         "clear": "清除整個播放清單",
         "leave": "離開語音頻道",
         "lyrics": "搜尋歌詞",
-        "volume": "調整音量"
+        "volume": "調整音量",
+        "joke": "隨機抽一個笑話 (英文的)",
+        "news": "查詢最近的新聞",
+        "cat_fact": "獲得一個關於貓的隨機事實",
+        "nasa": "獲取 NASA 每日一天文圖",
+        "number_history": "查詢一個數字的相關歷史事實",
+        "unsplash_image": "從 Unsplash 獲取圖片",
+        "get_gifs": "從 Giphy 獲取 GIF",
+        "tiangou": "獲取一句舔狗語錄",
+        "minecraft_server_status": "獲取 Minecraft 伺服器的狀態",
+        "yiyan": "獲取一句一言",
+        "toxic_jacket_soup": "獲取一句毒雞湯",
+        "lovelive": "獲取一句 lovelive 語錄",
+        "yt_downloader": "透過 yt-dlp 下載影片或音訊"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -138,7 +164,23 @@
         "world_chat_cancel": "是否要取消世界頻道設定",
         "report_bad_image_author": "發送不良圖片的使用者名稱",
         "report_bad_image_reason": "你檢舉的原因",
-        "youtube_notification_youtuber": "要設定通知的 YouTube 頻道連結 (留空以取消)"
+        "youtube_notification_youtuber": "要設定通知的 YouTube 頻道連結 (留空以取消)",
+        "news_options": "選擇要查詢 '所有新聞' 還是 '頭條新聞'",
+        "news_question": "要搜尋的關鍵字 (僅在選擇 '所有新聞' 時有效)",
+        "news_language": "新聞的語言 (預設為中文)",
+        "news_country": "要查詢頭條新聞的國家 (僅在選擇 '頭條新聞' 時有效)",
+        "news_count": "要輸出的新聞數量 (預設為 3)",
+        "number_history_number": "輸入一個數字來查詢它的故事",
+        "unsplash_image_query": "要搜尋的圖片關鍵字 (留空則隨機)",
+        "unsplash_image_num": "要獲取的圖片數量 (僅在輸入關鍵字時有效)",
+        "get_gifs_query": "要搜尋的 GIF 關鍵字 (留空則隨機)",
+        "get_gifs_num": "要獲取的 GIF 數量 (僅在輸入關鍵字時有效)",
+        "get_gifs_lang": "GIF 的語言 (僅在輸入關鍵字時有效)",
+        "minecraft_server_status_address": "伺服器位址 (例如: play.hypixel.net)",
+        "minecraft_server_status_edition": "選擇伺服器版本 (Java/Bedrock)",
+        "yt_downloader_url": "輸入影片/音訊的網址",
+        "yt_downloader_type": "選擇要下載的格式 (mp4/mp3)",
+        "yt_downloader_quality": "選擇影片品質 (僅在選擇 mp4 時有效)"
     },
     "components": {
         "yin_xi": "音汐",
@@ -468,10 +510,10 @@
         "send_tictactoe_no_game": "請先使用 /tictactoe 指令開始一個新遊戲。",
         "send_tictactoe_position_taken": "這個位置已經被佔用了，請選擇其他位置。",
         "embed_world_chat": [{
-            "field": [
-                { "name": "**:speech_balloon: {author_name}: **" }
-            ],
-            "image_sent_value": "使用者傳送了 {count} 張圖片"
+            "field": [{
+                "name": "**:speech_balloon: {author_name}: **",
+                "value": "使用者傳送了 {count} 張圖片"
+            }]
         }],
         "choice_world_chat_cancel_no": "否",
         "choice_world_chat_cancel_yes": "是",
@@ -490,6 +532,57 @@
         "send_youtube_notification_no_meta_tag": "無法找到頻道名稱的 meta 標籤",
         "send_youtube_notification_unknown_channel_name": "未知的頻道名稱",
         "select_youtube_notification_placeholder": "選擇一個你要刪除通知的YouTuber",
-        "select_youtube_notification_prompt": "選擇一個你要取消通知的YouTuber"
+        "select_youtube_notification_prompt": "選擇一個你要取消通知的YouTuber",
+        "send_api_request_failed": "請求失敗，請稍後再試",
+        "send_api_error_retry": "發生錯誤，請再試一次",
+        "send_joke_template": "**英文版:**\n笑話: {joke}\n答案: ||{answer}||\n**中文版:**\n笑話: {translated_joke}\n答案: ||{translated_answer}||",
+        "send_news_too_many_confirm": "你確定要輸出那麼多的新聞數量嗎？這可能會洗版喔！(將分 {count} 次輸出)",
+        "send_news_confirm_cancelled": "已取消輸出",
+        "send_news_question_required": "當選擇 '所有新聞' 時，必須輸入要搜尋的關鍵字 (`question`)",
+        "send_news_api_error": "API 錯誤: {reason}",
+        "send_cat_fact_template": "{translated_fact}\n原文: {original_fact}",
+        "send_nasa_explanation_template": "{translated_explanation}\n原文: {original_explanation}",
+        "send_number_history_not_found": "找不到關於 {number} 的結果",
+        "send_number_history_template": "**{number}** 的資訊:\n{translated_text}\n原文: {original_text}",
+        "send_unsplash_no_results": "沒有查到任何結果",
+        "send_gif_too_many": "請輸入小於 50 的數字",
+        "send_tiangou_api_error": "API 無法使用，請稍後再試",
+        "send_mc_status_invalid_edition": "請輸入有效的版本 (`java` 或 `bedrock`)",
+        "send_mc_status_api_error": "API 無法使用，請稍後再試",
+        "send_mc_status_error": "發生錯誤，請稍後再試 (原因: {reason})",
+        "button_mc_status_show_details": "查看 {type} 版本",
+        "send_yiyan_api_error": "請稍後再試",
+        "send_toxic_soup_api_error": "請稍後再試",
+        "send_lovelive_api_error": "請稍後再試",
+        "send_yt_download_api_offline": "目前無法下載影片或音訊",
+        "send_yt_download_tracking": "正在追蹤任務 ID: {task_id}",
+        "send_yt_download_error": "出現了一個錯誤 (原因: {reason})",
+        "send_yt_download_nsfw_error": "出現了一個錯誤 (原因: yt-dlp 不允許我們下載好康的影片)",
+        "send_yt_download_tracking_failed": "追蹤失敗",
+        "embed_news_search_results": [{
+            "title": "新聞搜尋結果",
+            "field": [{ "name": "搜尋到的總數", "value": "{count} (因 Discord 限制，不會全部顯示)\n每個文章的連結都在作者名稱上" }]
+        }],
+        "embed_news_article": [{
+            "footer": "發布時間"
+        }],
+        "embed_nasa_apod": [{
+            "footer": "NASA API | {date}"
+        }],
+        "embed_mc_server_status": [{
+            "title": "Minecraft 伺服器狀態",
+            "fields": [
+                { "name": "在線狀態" }, { "name": "IP 位址" }, { "name": "主機名稱" },
+                { "name": "遊戲模式" }, { "name": "在線玩家" }, { "name": "最大玩家數" },
+                { "name": "版本" }, { "name": "插件" }, { "name": "模組" }
+            ]
+        }],
+        "embed_yt_downloader": [{
+            "title": "{type} 下載",
+            "fields": [
+                { "name": "來源連結" }, { "name": "時長" }, { "name": "花費時間(秒)" }
+            ],
+            "footer": "不建議您將其用於商業用途"
+        }]
     }
 }

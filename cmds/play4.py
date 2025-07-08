@@ -35,7 +35,7 @@ class Music(Cog_Extension):
         self.update_music_data.start()
         self.update_recommendations.start()
 
-    @commands.hybrid_command(name=locale_str('play'), description=locale_str('play_description'), aliases=['p', '播放'])
+    @commands.hybrid_command(name=locale_str('play'), description=locale_str('play'), aliases=['p', '播放'])
     @app_commands.describe(query=locale_str('play_query'))
     async def _play(self, ctx: commands.Context, *, query: str = None):
         try:
@@ -59,7 +59,7 @@ class Music(Cog_Extension):
             await ctx.send(await ctx.interaction.translate('send_play_error'))
             del players[ctx.guild.id]
 
-    @commands.hybrid_command(name=locale_str('add'), description=locale_str('add_description'))
+    @commands.hybrid_command(name=locale_str('add'), description=locale_str('add'))
     @app_commands.describe(query=locale_str('add_query'))
     async def _add(self, ctx: commands.Context, *, query: str):
         async with ctx.typing():
@@ -77,7 +77,7 @@ class Music(Cog_Extension):
             await send_info_embed(player, ctx, size-1)
             await ctx.send((await ctx.interaction.translate('send_add_success')).format(size=size), ephemeral=True)
 
-    @commands.hybrid_command(name=locale_str('skip'), description=locale_str('skip_description'), aliases=['s'])
+    @commands.hybrid_command(name=locale_str('skip'), description=locale_str('skip'), aliases=['s'])
     async def _skip(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -87,7 +87,7 @@ class Music(Cog_Extension):
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name=locale_str('back'), description=locale_str('back_description'))
+    @commands.hybrid_command(name=locale_str('back'), description=locale_str('back'))
     async def _back(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -97,7 +97,7 @@ class Music(Cog_Extension):
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name=locale_str('pause'), description=locale_str('pause_description'), aliases=['ps', '暫停'])
+    @commands.hybrid_command(name=locale_str('pause'), description=locale_str('pause'), aliases=['ps', '暫停'])
     async def _pause(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -105,7 +105,7 @@ class Music(Cog_Extension):
 
             await player.pause()
     
-    @commands.hybrid_command(name=locale_str('resume'), description=locale_str('resume_description'), aliases=['rs'])
+    @commands.hybrid_command(name=locale_str('resume'), description=locale_str('resume'), aliases=['rs'])
     async def resume(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -114,7 +114,7 @@ class Music(Cog_Extension):
             # 修正邏輯：當暫停時才恢復播放
             await player.resume()
 
-    @commands.hybrid_command(name=locale_str('stop'), description=locale_str('stop_description'))
+    @commands.hybrid_command(name=locale_str('stop'), description=locale_str('stop'))
     async def _stop(self, ctx: commands.Context):
         async with ctx.typing():
             if not (ctx.author.voice and ctx.voice_client): return await ctx.send(await ctx.interaction.translate('send_stop_not_in_voice'))
@@ -123,7 +123,7 @@ class Music(Cog_Extension):
             await utils.leave(ctx)
             await ctx.send((await ctx.interaction.translate('send_stop_success')).format(channel_mention=channel.mention))
 
-    @commands.hybrid_command(name=locale_str('loop'), description=locale_str('loop_description'))
+    @commands.hybrid_command(name=locale_str('loop'), description=locale_str('loop'))
     @app_commands.choices(loop_type = [Choice(name=item, value=item) for item in loop_option])
     @app_commands.describe(loop_type=locale_str('loop_loop_type'))
     async def _loop(self, ctx: commands.Context, loop_type: str):
@@ -137,7 +137,7 @@ class Music(Cog_Extension):
             player.loop(loop_type)
             await ctx.send((await ctx.interaction.translate('send_loop_success')).format(loop_type=loop_type))
 
-    @commands.hybrid_command(name=locale_str('nowplaying'), description=locale_str('nowplaying_description'), aliases=['np', '當前播放', 'now'])
+    @commands.hybrid_command(name=locale_str('nowplaying'), description=locale_str('nowplaying'), aliases=['np', '當前播放', 'now'])
     async def current_playing(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx, check_user_in_channel=False)
@@ -145,7 +145,7 @@ class Music(Cog_Extension):
 
             await send_info_embed(player, ctx)
 
-    @commands.hybrid_command(name=locale_str('queue'), description=locale_str('queue_description'), aliases=['q', '清單'])
+    @commands.hybrid_command(name=locale_str('queue'), description=locale_str('queue'), aliases=['q', '清單'])
     async def _list(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx, check_user_in_channel=False)
@@ -155,7 +155,7 @@ class Music(Cog_Extension):
 
             await ctx.send(embed=eb)
 
-    @commands.hybrid_command(name=locale_str('remove'), description=locale_str('remove_description'), aliases=['rm', '刪除'])
+    @commands.hybrid_command(name=locale_str('remove'), description=locale_str('remove'), aliases=['rm', '刪除'])
     @app_commands.describe(number=locale_str('remove_number'))
     async def delete_song(self, ctx: commands.Context, number: int):
         async with ctx.typing():
@@ -166,7 +166,7 @@ class Music(Cog_Extension):
 
             await ctx.send((await ctx.interaction.translate('send_remove_success')).format(title=item.get('title'), user_name=item.get('user').global_name))
 
-    @commands.hybrid_command(name=locale_str('clear'), description=locale_str('clear_description'), aliases=['cq', '清除'])
+    @commands.hybrid_command(name=locale_str('clear'), description=locale_str('clear'), aliases=['cq', '清除'])
     async def clear_queue(self, ctx: commands.Context):
         async with ctx.typing():
             player, status = await check_and_get_player(ctx)
@@ -196,7 +196,7 @@ class Music(Cog_Extension):
             eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await ctx.send(embed=eb, view=view)
 
-    @commands.hybrid_command(name=locale_str('leave'), description=locale_str('leave_description'))
+    @commands.hybrid_command(name=locale_str('leave'), description=locale_str('leave'))
     async def _leave(self, ctx: commands.Context):
         await ctx.invoke(self.bot.get_command('stop'))
 
@@ -253,7 +253,7 @@ class Music(Cog_Extension):
 
             await ctx.send(view=view, embed=create_eb(), ephemeral=True)
 
-    @commands.hybrid_command(name=locale_str('lyrics'), description=locale_str('lyrics_description'))
+    @commands.hybrid_command(name=locale_str('lyrics'), description=locale_str('lyrics'))
     @app_commands.describe(query=locale_str('lyrics_query'), artist=locale_str('lyrics_artist'), lrc=locale_str('lyrics_lrc'))
     async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None, lrc: bool = False):
         async with ctx.typing():
@@ -262,7 +262,7 @@ class Music(Cog_Extension):
 
             if len(result.splitlines()) < 10: await ctx.send(await ctx.interaction.translate('send_lyrics_too_short_tip'), ephemeral=True)
 
-    @commands.hybrid_command(name=locale_str('volume'), description=locale_str('volume_description'))
+    @commands.hybrid_command(name=locale_str('volume'), description=locale_str('volume'))
     @app_commands.describe(volume=locale_str('volume_volume'))
     async def volume_adjust(self, ctx: commands.Context, volume: int = None):
         async with ctx.typing():

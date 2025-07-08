@@ -44,7 +44,20 @@
         "clear": "clear",
         "leave": "leave",
         "lyrics": "lyrics",
-        "volume": "volume"
+        "volume": "volume",
+        "joke": "joke",
+        "news": "news",
+        "cat_fact": "cat_fact",
+        "nasa": "nasa",
+        "number_history": "number_history",
+        "unsplash_image": "unsplash_image",
+        "get_gifs": "get_gifs",
+        "tiangou": "tiangou",
+        "minecraft_server_status": "minecraft_server_status",
+        "yiyan": "yiyan",
+        "toxic_jacket_soup": "toxic_jacket_soup",
+        "lovelive": "lovelive",
+        "yt_downloader": "yt_downloader"
     },
     "description": {
         "translate": "Translate some text",
@@ -91,7 +104,20 @@
         "clear": "Clear the entire playlist",
         "leave": "Leave the voice channel",
         "lyrics": "Search for lyrics",
-        "volume": "Adjust the volume"
+        "volume": "Adjust the volume",
+        "joke": "Get a random joke (in English)",
+        "news": "Search for recent news",
+        "cat_fact": "Get a random fact about cats",
+        "nasa": "Get the NASA Astronomy Picture of the Day",
+        "number_history": "Query historical facts about a number",
+        "unsplash_image": "Get an image from Unsplash",
+        "get_gifs": "Get a GIF from Giphy",
+        "tiangou": "Get a simp quote",
+        "minecraft_server_status": "Get the status of a Minecraft server",
+        "yiyan": "Get a quote from Yiyan",
+        "toxic_jacket_soup": "Get a toxic chicken soup for the soul quote",
+        "lovelive": "Get a lovelive quote",
+        "yt_downloader": "Download a video or audio via yt-dlp"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -138,7 +164,23 @@
         "world_chat_cancel": "Whether to cancel the world chat setting",
         "report_bad_image_author": "The username of the user who sent the inappropriate image",
         "report_bad_image_reason": "The reason for your report",
-        "youtube_notification_youtuber": "The YouTube channel link to set notifications for (leave blank to cancel)"
+        "youtube_notification_youtuber": "The YouTube channel link to set notifications for (leave blank to cancel)",
+        "news_options": "Choose to query 'all news' or 'top headlines'",
+        "news_question": "Keyword to search for (only effective when 'all news' is selected)",
+        "news_language": "Language of the news (default is Chinese)",
+        "news_country": "Country to query for top headlines (only effective when 'top headlines' is selected)",
+        "news_count": "Number of news articles to output (default is 3)",
+        "number_history_number": "Enter a number to query its story",
+        "unsplash_image_query": "Image keyword to search for (random if left blank)",
+        "unsplash_image_num": "Number of images to retrieve (only effective when a keyword is entered)",
+        "get_gifs_query": "GIF keyword to search for (random if left blank)",
+        "get_gifs_num": "Number of GIFs to retrieve (only effective when a keyword is entered)",
+        "get_gifs_lang": "Language of the GIF (only effective when a keyword is entered)",
+        "minecraft_server_status_address": "Server address (e.g., play.hypixel.net)",
+        "minecraft_server_status_edition": "Select server edition (Java/Bedrock)",
+        "yt_downloader_url": "Enter the URL of the video/audio",
+        "yt_downloader_type": "Select the format to download (mp4/mp3)",
+        "yt_downloader_quality": "Select the video quality (only effective when mp4 is selected)"
     },
     "components": {
         "yin_xi": "YinXi",
@@ -468,10 +510,10 @@
         "send_tictactoe_no_game": "Please start a new game using the /tictactoe command first.",
         "send_tictactoe_position_taken": "This position is already taken, please choose another position.",
         "embed_world_chat": [{
-            "field": [
-                { "name": "**:speech_balloon: {author_name}: **" }
-            ],
-            "image_sent_value": "User sent {count} image(s)"
+            "field": [{
+                "name": "**:speech_balloon: {author_name}: **",
+                "value": "User sent {count} image(s)"
+            }]
         }],
         "choice_world_chat_cancel_no": "No",
         "choice_world_chat_cancel_yes": "Yes",
@@ -490,6 +532,57 @@
         "send_youtube_notification_no_meta_tag": "Could not find the meta tag for the channel name",
         "send_youtube_notification_unknown_channel_name": "Unknown channel name",
         "select_youtube_notification_placeholder": "Select a YouTuber whose notifications you want to delete",
-        "select_youtube_notification_prompt": "Select a YouTuber whose notifications you want to cancel"
+        "select_youtube_notification_prompt": "Select a YouTuber whose notifications you want to cancel",
+        "send_api_request_failed": "Request failed, please try again later",
+        "send_api_error_retry": "An error occurred, please try again",
+        "send_joke_template": "**English:**\nJoke: {joke}\nAnswer: ||{answer}||\n**Chinese:**\nJoke: {translated_joke}\nAnswer: ||{translated_answer}||",
+        "send_news_too_many_confirm": "Are you sure you want to output that many news articles? This might flood the chat! (Will be output in {count} times)",
+        "send_news_confirm_cancelled": "Output cancelled",
+        "send_news_question_required": "When selecting 'all news', a search keyword (`question`) is required",
+        "send_news_api_error": "API error: {reason}",
+        "send_cat_fact_template": "{translated_fact}\nOriginal: {original_fact}",
+        "send_nasa_explanation_template": "{translated_explanation}\nOriginal: {original_explanation}",
+        "send_number_history_not_found": "No results found for {number}",
+        "send_number_history_template": "Information about **{number}**:\n{translated_text}\nOriginal: {original_text}",
+        "send_unsplash_no_results": "No results found",
+        "send_gif_too_many": "Please enter a number less than 50",
+        "send_tiangou_api_error": "API is unavailable, please try again later",
+        "send_mc_status_invalid_edition": "Please enter a valid edition (`java` or `bedrock`)",
+        "send_mc_status_api_error": "API is unavailable, please try again later",
+        "send_mc_status_error": "An error occurred, please try again later (Reason: {reason})",
+        "button_mc_status_show_details": "View {type} version",
+        "send_yiyan_api_error": "Please try again later",
+        "send_toxic_soup_api_error": "Please try again later",
+        "send_lovelive_api_error": "Please try again later",
+        "send_yt_download_api_offline": "Unable to download video or audio at this time",
+        "send_yt_download_tracking": "Tracking task ID: {task_id}",
+        "send_yt_download_error": "An error occurred (Reason: {reason})",
+        "send_yt_download_nsfw_error": "An error occurred (Reason: yt-dlp does not allow us to download NSFW videos)",
+        "send_yt_download_tracking_failed": "Tracking failed",
+        "embed_news_search_results": [{
+            "title": "News Search Results",
+            "field": [{ "name": "Total results found", "value": "{count} (Not all will be displayed due to Discord limitations)\nThe link to each article is on the author's name" }]
+        }],
+        "embed_news_article": [{
+            "footer": "Published at"
+        }],
+        "embed_nasa_apod": [{
+            "footer": "NASA API | {date}"
+        }],
+        "embed_mc_server_status": [{
+            "title": "Minecraft Server Status",
+            "fields": [
+                { "name": "Online Status" }, { "name": "IP Address" }, { "name": "Hostname" },
+                { "name": "Game Mode" }, { "name": "Online Players" }, { "name": "Max Players" },
+                { "name": "Version" }, { "name": "Plugins" }, { "name": "Mods" }
+            ]
+        }],
+        "embed_yt_downloader": [{
+            "title": "{type} Download",
+            "fields": [
+                { "name": "Source URL" }, { "name": "Duration" }, { "name": "Time spent (seconds)" }
+            ],
+            "footer": "It is not recommended to use it for commercial purposes"
+        }]
     }
 }

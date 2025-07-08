@@ -4,6 +4,8 @@ import aiofiles
 import orjson
 import traceback
 
+from core.mock_interaction import MockInteraction
+
 class i18n(Translator):
     def __init__(self):
         super().__init__()
@@ -49,7 +51,7 @@ class i18n(Translator):
             }
         }
 
-    async def get_translate(self, string: str, lang_code: str = 'zh-TW'):
+    async def get_translate(self, string: str, lang_code: str = None):
         """這是一個能夠透過 lang code 與指定 key 來獲得翻譯的方法，因為 translate 會被 interaction.translate 呼叫，但不一定每個 ctx 都有 interaction (我不確定，但我的理解是這樣)。
 
         Args:
@@ -130,6 +132,7 @@ class i18n(Translator):
     async def reload(self, lang: str = None):
         await self.unload(lang)
         await self.load(lang)
+
 
 def load_translated(item: str):
     return orjson.loads(item.encode('utf-8'))

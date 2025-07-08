@@ -171,7 +171,7 @@ class Load(Cog_Extension):
     async def restart(self, ctx):
         if str(ctx.author.id) != KeJCID: return
 
-        message = await ctx.send('嘗試重啟bot...', ephemeral=True)
+        message = await ctx.send('嘗試重啟bot...')
         os.system('pm2 restart DiscordBot')
         await asyncio.sleep(10)
         try: await message.delete()
@@ -182,7 +182,7 @@ class Load(Cog_Extension):
     async def clear(self, ctx):
         if str(ctx.author.id) != KeJCID: return
 
-        await ctx.send('正在清除日誌', ephemeral=True)
+        await ctx.send('正在清除日誌')
         os.system('pm2 flush')
 
     @commands.command(name='系統指令')
@@ -190,7 +190,7 @@ class Load(Cog_Extension):
     async def system_command(self, ctx, * , command):
         if str(ctx.author.id) != KeJCID: return
         
-        await ctx.send(f'Running command: {command}', ephemeral=True)
+        await ctx.send(f'Running command: {command}')
         try:
             os.system(command)
         except:
@@ -210,7 +210,7 @@ class Load(Cog_Extension):
         content = msg.content.replace('`', '')
         name = msg.author.global_name or msg.author.name
         await msg.delete()
-        await ctx.send('已刪除訊息\nMessage ID: `{}`\nMessage Content: ```{}```\nMessage Author: `{}`'.format(msgID, content, name), ephemeral=True)
+        await ctx.send('已刪除訊息\nMessage ID: `{}`\nMessage Content: ```{}```\nMessage Author: `{}`'.format(msgID, content, name))
 
 
 

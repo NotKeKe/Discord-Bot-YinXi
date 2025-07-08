@@ -44,13 +44,26 @@
         "clear": "清除整个播放清单",
         "leave": "离开语音频道",
         "lyrics": "搜寻歌词",
-        "volume": "调整音量"
+        "volume": "调整音量",
+        "joke": "笑话",
+        "news": "新闻",
+        "cat_fact": "猫猫冷知识",
+        "nasa": "NASA每日图片",
+        "number_history": "数字历史",
+        "unsplash_image": "看图",
+        "get_gifs": "GIF",
+        "tiangou": "舔狗语录",
+        "minecraft_server_status": "MC服务器状态",
+        "yiyan": "一言",
+        "toxic_jacket_soup": "毒鸡汤",
+        "lovelive": "lovelive",
+        "yt_downloader": "影片下载"
     },
     "description": {
         "translate": "翻译一些文字",
         "qrcode_generator": "生成一个QRcode",
         "botinfo": "查看关于这台机器的信息",
-        "help": "显示所有指令的帮助菜单",
+        "help": "显示所有指令的帮助选单",
         "checkin": "每日签到",
         "counting": "设置或取消数数频道",
         "output_chat_history": "将频道的聊天记录输出成档案",
@@ -91,7 +104,20 @@
         "clear": "清除整个播放清单",
         "leave": "离开语音频道",
         "lyrics": "搜寻歌词",
-        "volume": "调整音量"
+        "volume": "调整音量",
+        "joke": "随机抽一个笑话 (英文的)",
+        "news": "查询最近的新闻",
+        "cat_fact": "获得一个关于猫的随机事实",
+        "nasa": "获取 NASA 每日一天文图",
+        "number_history": "查询一个数字的相关历史事实",
+        "unsplash_image": "从 Unsplash 获取图片",
+        "get_gifs": "从 Giphy 获取 GIF",
+        "tiangou": "获取一句舔狗语录",
+        "minecraft_server_status": "获取 Minecraft 服务器的状态",
+        "yiyan": "获取一句一言",
+        "toxic_jacket_soup": "获取一句毒鸡汤",
+        "lovelive": "获取一句 lovelive 语录",
+        "yt_downloader": "透过 yt-dlp 下载影片或音讯"
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
@@ -138,7 +164,23 @@
         "world_chat_cancel": "是否要取消世界频道设定",
         "report_bad_image_author": "发送不良图片的使用者名称",
         "report_bad_image_reason": "你检举的原因",
-        "youtube_notification_youtuber": "要设定通知的 YouTube 频道连结 (留空以取消)"
+        "youtube_notification_youtuber": "要设定通知的 YouTube 频道连结 (留空以取消)",
+        "news_options": "选择要查询 '所有新闻' 还是 '头条新闻'",
+        "news_question": "要搜寻的关键字 (仅在选择 '所有新闻' 时有效)",
+        "news_language": "新闻的语言 (预设为中文)",
+        "news_country": "要查询头条新闻的国家 (仅在选择 '头条新闻' 时有效)",
+        "news_count": "要输出的新闻数量 (预设为 3)",
+        "number_history_number": "输入一个数字来查询它的故事",
+        "unsplash_image_query": "要搜寻的图片关键字 (留空则随机)",
+        "unsplash_image_num": "要获取的图片数量 (仅在输入关键字时有效)",
+        "get_gifs_query": "要搜寻的 GIF 关键字 (留空则随机)",
+        "get_gifs_num": "要获取的 GIF 数量 (仅在输入关键字时有效)",
+        "get_gifs_lang": "GIF 的语言 (仅在输入关键字时有效)",
+        "minecraft_server_status_address": "服务器位址 (例如: play.hypixel.net)",
+        "minecraft_server_status_edition": "选择服务器版本 (Java/Bedrock)",
+        "yt_downloader_url": "输入影片/音讯的网址",
+        "yt_downloader_type": "选择要下载的格式 (mp4/mp3)",
+        "yt_downloader_quality": "选择影片品质 (仅在选择 mp4 时有效)"
     },
     "components": {
         "yin_xi": "音汐",
@@ -468,10 +510,10 @@
         "send_tictactoe_no_game": "请先使用 /tictactoe 指令开始一个新游戏。",
         "send_tictactoe_position_taken": "这个位置已经被占用了，请选择其他位置。",
         "embed_world_chat": [{
-            "field": [
-                { "name": "**:speech_balloon: {author_name}: **" }
-            ],
-            "image_sent_value": "使用者传送了 {count} 张图片"
+            "field": [{
+                "name": "**:speech_balloon: {author_name}: **",
+                "value": "使用者传送了 {count} 张图片"
+            }]
         }],
         "choice_world_chat_cancel_no": "否",
         "choice_world_chat_cancel_yes": "是",
@@ -490,6 +532,57 @@
         "send_youtube_notification_no_meta_tag": "无法找到频道名称的 meta 标签",
         "send_youtube_notification_unknown_channel_name": "未知的频道名称",
         "select_youtube_notification_placeholder": "选择一个你要删除通知的YouTuber",
-        "select_youtube_notification_prompt": "选择一个你要取消通知的YouTuber"
+        "select_youtube_notification_prompt": "选择一个你要取消通知的YouTuber",
+        "send_api_request_failed": "请求失败，请稍后再试",
+        "send_api_error_retry": "发生错误，请再试一次",
+        "send_joke_template": "**英文版:**\n笑话: {joke}\n答案: ||{answer}||\n**中文版:**\n笑话: {translated_joke}\n答案: ||{translated_answer}||",
+        "send_news_too_many_confirm": "你确定要输出那么多的新闻数量吗？这可能会洗版喔！(将分 {count} 次输出)",
+        "send_news_confirm_cancelled": "已取消输出",
+        "send_news_question_required": "当选择 '所有新闻' 时，必须输入要搜寻的关键字 (`question`)",
+        "send_news_api_error": "API 错误: {reason}",
+        "send_cat_fact_template": "{translated_fact}\n原文: {original_fact}",
+        "send_nasa_explanation_template": "{translated_explanation}\n原文: {original_explanation}",
+        "send_number_history_not_found": "找不到关于 {number} 的结果",
+        "send_number_history_template": "**{number}** 的信息:\n{translated_text}\n原文: {original_text}",
+        "send_unsplash_no_results": "没有查到任何结果",
+        "send_gif_too_many": "请输入小于 50 的数字",
+        "send_tiangou_api_error": "API 无法使用，请稍后再试",
+        "send_mc_status_invalid_edition": "请输入有效的版本 (`java` 或 `bedrock`)",
+        "send_mc_status_api_error": "API 无法使用，请稍后再试",
+        "send_mc_status_error": "发生错误，请稍后再试 (原因: {reason})",
+        "button_mc_status_show_details": "查看 {type} 版本",
+        "send_yiyan_api_error": "请稍后再试",
+        "send_toxic_soup_api_error": "请稍后再试",
+        "send_lovelive_api_error": "请稍后再试",
+        "send_yt_download_api_offline": "目前无法下载影片或音讯",
+        "send_yt_download_tracking": "正在追踪任务 ID: {task_id}",
+        "send_yt_download_error": "出现了一个错误 (原因: {reason})",
+        "send_yt_download_nsfw_error": "出现了一个错误 (原因: yt-dlp 不允许我们下载好康的影片)",
+        "send_yt_download_tracking_failed": "追踪失败",
+        "embed_news_search_results": [{
+            "title": "新闻搜寻结果",
+            "field": [{ "name": "搜寻到的总数", "value": "{count} (因 Discord 限制，不会全部显示)\n每个文章的连结都在作者名称上" }]
+        }],
+        "embed_news_article": [{
+            "footer": "发布时间"
+        }],
+        "embed_nasa_apod": [{
+            "footer": "NASA API | {date}"
+        }],
+        "embed_mc_server_status": [{
+            "title": "Minecraft 服务器状态",
+            "fields": [
+                { "name": "在线状态" }, { "name": "IP 位址" }, { "name": "主机名称" },
+                { "name": "游戏模式" }, { "name": "在线玩家" }, { "name": "最大玩家数" },
+                { "name": "版本" }, { "name": "插件" }, { "name": "模组" }
+            ]
+        }],
+        "embed_yt_downloader": [{
+            "title": "{type} 下载",
+            "fields": [
+                { "name": "来源连结" }, { "name": "时长" }, { "name": "花费时间(秒)" }
+            ],
+            "footer": "不建议您将其用于商业用途"
+        }]
     }
 }

@@ -27,7 +27,8 @@ import re
 import aiofiles
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, translate, secondToReadable, strToDatetime, BASE_DIR, current_time, async_translate
+from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable, strToDatetime, BASE_DIR, current_time, DEVICE_IP
+from core.translator import locale_str, load_translated
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY
 
 app = FastAPI()
@@ -182,20 +183,35 @@ class ApiCog(commands.Cog):
         except Exception as e:
             print(f'An error accur while bind address 0.0.0.0:3000 reason: {e}')
     
-    @commands.hybrid_command(name='joke', description='隨機抽一個笑話 (英文的)', aliases=['jokes'])
-    async def _joke(self, ctx: commands.Context):
+    @commands.hybrid_command(name=locale_str('joke'), description=locale_str('joke'), aliases=['jokes'])
+    async def joke(self, ctx: commands.Context):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://sv443.net/jokeapi/v2/joke/Any') as response:
-                    if response.status != 200: return await ctx.send('請稍後在試')
+                    if response.status != 200:
+                        return await ctx.send(await ctx.interaction.translate('send_api_request_failed'), ephemeral=True)
                     data = await response.json()
-                    if data['error']: await ctx.send('Bug了:< 再重試一次')
-                    joke = data['setup']
-                    answer = data['delivery']
-            await ctx.send(f'**英文版:**\n笑話: {joke}\n答案: ||{answer}||\n' + 
-                           f'**中文版:**\n笑話: {translate(joke)}\n答案: ||{translate(answer)}||')
+                    if data['error']:
+                        return await ctx.send(await ctx.interaction.translate('send_api_error_retry'), ephemeral=True)
+                    
+                    joke_text = data['setup']
+                    answer_text = data['delivery']
 
-    @commands.hybrid_command(name='新聞', description='查詢最近的新聞(雖然我實測 他內文有時候會bug)', aliases=['news'])
+            translated_joke = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, joke_text)
+            translated_answer = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, answer_text)
+            
+            '''i18n'''
+            template = await ctx.interaction.translate('send_joke_template')
+            ''''''
+
+            await ctx.send(template.format(
+                joke=joke_text,
+                answer=answer_text,
+                translated_joke=translated_joke,
+                translated_answer=translated_answer
+            ))
+
+    @commands.hybrid_command(name=locale_str('news'), description=locale_str('news'), aliases=['新聞'])
     @app_commands.choices(options=[
         Choice(name='Everything', value=1),
         Choice(name='Top_Headlines', value=2),
@@ -216,79 +232,93 @@ class ApiCog(commands.Cog):
             app_commands.Choice(name="Chinese", value="zh"),
         ])
     @app_commands.autocomplete(country=select_autocomplete.country)
-    @app_commands.describe(question='只有在你選擇Everything時才要輸入', language='只有在選擇Everything時才要輸入', country='只有在選擇Top_headlines時才要輸入')
-    async def _news(self, ctx: commands.Context, options: int, question: str=None, language: str = 'zh', country: str='tw', 輸出數量: int=3):
+    @app_commands.describe(
+        options=locale_str('news_options'),
+        question=locale_str('news_question'),
+        language=locale_str('news_language'),
+        country=locale_str('news_country'),
+        輸出數量=locale_str('news_count')
+    )
+    async def news(self, ctx: commands.Context, options: int, question: str=None, language: str = 'zh', country: str='tw', 輸出數量: int=3):
         try:
             async with ctx.typing():
                 if 輸出數量 > 5:
+                    '''i18n'''
+                    confirm_msg_template = await ctx.interaction.translate('send_news_too_many_confirm')
+                    cancel_msg = await ctx.interaction.translate('send_news_confirm_cancelled')
+                    ''''''
+                    
                     view = discord.ui.View()
-
                     button1 = discord.ui.Button(label = "✅", style = discord.ButtonStyle.blurple)
                     button2 = discord.ui.Button(label='❌', style=discord.ButtonStyle.blurple)
 
                     async def button1_callback(interaction: discord.Interaction):
                         await interaction.response.defer()
                     async def button2_callback(interaction: discord.Interaction):
-                        await interaction.response.send_message('已取消輸出', ephemeral=True)
+                        await interaction.response.send_message(cancel_msg, ephemeral=True)
                         return
 
                     button1.callback = button1_callback
                     button2.callback = button2_callback
                     view.add_item(button1)
                     view.add_item(button2)
-                    await ctx.send(f'你確定要輸出那麼多的新聞數量嗎:thinking:\n 醬會吵到別人欸 (因為他會分{輸出數量}次輸出)', view=view, ephemeral=True)
-                    view.wait()
-
+                    await ctx.send(confirm_msg_template.format(count=輸出數量), view=view, ephemeral=True)
+                    await view.wait()
 
                 if options == 1:
                     if not question:
-                        await ctx.send('請輸入question (一個你要搜尋的問題)', ephemeral=True); return
+                        return await ctx.send(await ctx.interaction.translate('send_news_question_required'), ephemeral=True)
                     async with aiohttp.ClientSession() as session:
                         async with session.get(f'https://newsapi.org/v2/everything?q={question}&language={language}&apiKey={NewsApiKEY}') as response:
                             data = await response.json()
-
                 elif options == 2:
                     async with aiohttp.ClientSession() as session:
                         async with session.get(f'https://newsapi.org/v2/top-headlines?country={country}&apiKey={NewsApiKEY}') as response:
                             data = await response.json()
 
-                if data['status'] != 'ok': await ctx.send('Bug了:< 再重試一次' + f'reason: {data["code"]}')
-                # pp(data)
+                if data['status'] != 'ok':
+                    return await ctx.send((await ctx.interaction.translate('send_news_api_error')).format(reason=data.get('code', 'N/A')))
+                
                 result_count = data['totalResults']
-                eb = create_basic_embed(color=ctx.author.color, 功能='News')
-                eb.add_field(name='搜尋到的總數: ', value=f'{result_count} (因為discord限制 所以不會全部顯示)\n每個文章的連結都在作者上面窩')
+                
+                '''i18n'''
+                embed_template_str = await ctx.interaction.translate('embed_news_search_results')
+                embed_template = load_translated(embed_template_str)[0]
+                article_template_str = await ctx.interaction.translate('embed_news_article')
+                article_template = load_translated(article_template_str)[0]
+                ''''''
+                
+                eb = create_basic_embed(title=embed_template['title'], color=ctx.author.color)
+                eb.add_field(name=embed_template['field'][0]['name'], value=embed_template['field'][0]['value'].format(count=result_count))
                 await ctx.send(embed=eb)
 
                 for result in data["articles"][:輸出數量]:                    
-                    title = result["title"]
-                    url = result["url"]
-                    description = result["description"]
-                    content = result.get("content")
-                    publistAt = result["publishedAt"]
-                    source = result["source"]['name']
-                    image = result["urlToImage"]
-                    
-                    eb = create_basic_embed(title=title, description=content, time=False)
-                    eb.set_author(name=source, url=url)
-                    eb.set_footer(text='創建時間:')
-                    eb.set_image(url=image)
-                    eb.timestamp = self.utils.stringToDatetime(publistAt)
+                    eb = create_basic_embed(title=result["title"], description=result.get("content"), time=False)
+                    eb.set_author(name=result["source"]['name'], url=result["url"])
+                    eb.set_footer(text=article_template['footer'])
+                    eb.set_image(url=result["urlToImage"])
+                    eb.timestamp = self.utils.stringToDatetime(result["publishedAt"])
                     await ctx.send(embed=eb)
         except:
             traceback.print_exc()
 
-    @commands.hybrid_command(name='貓貓冷知識', description='cat fact (https://catfact.ninja/)', aliases=['貓咪冷知識', 'cat', 'cat_fact', 'catfact'])
+    @commands.hybrid_command(name=locale_str('cat_fact'), description=locale_str('cat_fact'), aliases=['貓貓冷知識', 'cat', 'catfact'])
     async def cat_fact(self, ctx: commands.Context):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://catfact.ninja/fact?max_length=2000') as response:
                     result = await response.json()
             source = result['fact']
-            translated = translate(source)
-            await ctx.send(translated + f'\n原文: {source}')
+            translated = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, source)
+            
+            '''i18n'''
+            template = await ctx.interaction.translate('send_cat_fact_template')
+            ''''''
+            
+            await ctx.send(template.format(translated_fact=translated, original_fact=source))
 
-    @commands.hybrid_command(name='nasa每日圖片', description='nasa daily image (NASA API)', aliases=['nasa'])
-    async def _nasa(self, ctx: commands.Context):
+    @commands.hybrid_command(name=locale_str('nasa'), description=locale_str('nasa'), aliases=['nasa每日圖片'])
+    async def nasa(self, ctx: commands.Context):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(f'https://api.nasa.gov/planetary/apod?api_key={nasaApiKEY}') as response:
@@ -298,31 +328,44 @@ class ApiCog(commands.Cog):
             url = data['url']
             date = data["date"]
             explanation = data["explanation"]
-            translated_explanation = translate(explanation)
+            translated_explanation = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, explanation)
 
             await download_image(url, 'nasa_apod.jpg')
             file = discord.File(fp='./cmds/data.json/nasa_apod.jpg', filename='nasa_apod.png')
             os.remove('./cmds/data.json/nasa_apod.jpg')
+            
+            '''i18n'''
+            embed_template_str = await ctx.interaction.translate('embed_nasa_apod')
+            embed_template = load_translated(embed_template_str)[0]
+            desc_template = await ctx.interaction.translate('send_nasa_explanation_template')
+            ''''''
 
-            eb = create_basic_embed(title=title, description=translated_explanation + f'\n原文: {explanation}', time=False)
-            eb.set_image(url='attachment://nasa_apod.jpg')
-            eb.set_footer(text=f'NASA API | {date}')
+            eb = create_basic_embed(title=title, description=desc_template.format(translated_explanation=translated_explanation, original_explanation=explanation), time=False)
+            eb.set_image(url='attachment://nasa_apod.png')
+            eb.set_footer(text=embed_template['footer'].format(date=date))
             await ctx.send(file=file, embed=eb)
 
-    @commands.hybrid_command(name='數字歷史', description="Show the number's history", aliases=['num_history', 'n_history'])
-    @app_commands.describe(number = '輸入一個數字 然後你就能知道他的故事:D')
+    @commands.hybrid_command(name=locale_str('number_history'), description=locale_str('number_history'), aliases=['num_history', 'n_history'])
+    @app_commands.describe(number=locale_str('number_history_number'))
     async def number_history(self, ctx: commands.Context, number: int):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(f'http://numbersapi.com/{number}?json') as response:
                     data = await response.json()
-            if not data['found']: await ctx.send(f'找不到有關於{number}的結果'); return
+            if not data['found']:
+                return await ctx.send((await ctx.interaction.translate('send_number_history_not_found')).format(number=number))
+            
             text = data["text"]
-            traslated = translate(text)
-            await ctx.send(f"**{number}**的資訊: \n{traslated}\n原文: {text}")
+            translated = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
+            
+            '''i18n'''
+            template = await ctx.interaction.translate('send_number_history_template')
+            ''''''
+            
+            await ctx.send(template.format(number=number, translated_text=translated, original_text=text))
 
-    @commands.hybrid_command(name='看圖', description='Get some photo from unsplash', aliases=['photo', 'image'])
-    @app_commands.describe(query='輸入你要搜尋的結果', num='輸入你要幾個結果 (如果你query沒輸入的話 輸入這個也沒用)')
+    @commands.hybrid_command(name=locale_str('unsplash_image'), description=locale_str('unsplash_image'), aliases=['photo', 'image', '看圖'])
+    @app_commands.describe(query=locale_str('unsplash_image_query'), num=locale_str('unsplash_image_num'))
     async def unsplash_image(self, ctx: commands.Context, query: str=None, num: int=1):
         async with ctx.typing():
             urls = []
@@ -331,130 +374,139 @@ class ApiCog(commands.Cog):
                     async with session.get(f'https://api.unsplash.com/search/photos?query={query}&client_id={unsplashKEY}') as response:
                         data = await response.json()
                         for index, photo in enumerate(data['results'][:num]):
-                            urls += [f"作者: [{photo['user']['username']}](<{photo['user']['links']['html']}>)"]
-                            urls += [f"[圖片連結{index+1}]({photo['urls']['regular']})"]
+                            urls.append(f"作者: [{photo['user']['username']}](<{photo['user']['links']['html']}>)")
+                            urls.append(f"[圖片連結{index+1}]({photo['urls']['regular']})")
                 else:
                     async with session.get(f'https://api.unsplash.com/photos/random?client_id={unsplashKEY}') as response:
                         data = await response.json()
-                        urls += [f"作者: [{data['user']['username']}](<{data['user']['links']['html']}>)"]
-                        urls += [f"[圖片連結]({data['urls']['regular']})"]
+                        urls.append(f"作者: [{data['user']['username']}](<{data['user']['links']['html']}>)")
+                        urls.append(f"[圖片連結]({data['urls']['regular']})")
+            
             result = '\n'.join(urls)
-            await ctx.send(result if result else '沒有查到任何結果')
+            if not result:
+                result = await ctx.interaction.translate('send_unsplash_no_results')
+            await ctx.send(result)
 
-    @commands.hybrid_command(name='gif', description='Get some gifs from api.giphy.com')
-    @app_commands.describe(query='輸入關鍵字(不輸入的話則隨機獲得gif)', num='輸入你要幾張gif (僅在選擇query後才有用)', lang='選擇你的語言 (僅在選擇query後才有用)')
+    @commands.hybrid_command(name=locale_str('get_gifs'), description=locale_str('get_gifs'), aliases=['gif'])
+    @app_commands.describe(query=locale_str('get_gifs_query'), num=locale_str('get_gifs_num'), lang=locale_str('get_gifs_lang'))
     @app_commands.autocomplete(lang = select_autocomplete.langs_for_gifs)
     async def get_gifs(self, ctx: commands.Context, query: str=None, num: int=1, lang: str = None):
-        '''從api.giphy.com獲取gif。query: 輸入關鍵字，不輸入的話就會隨機找gif、num: 輸入你要幾張gif (僅在選擇query後才有用)、lang: 選擇你的語言 (僅在選擇query後才有用)'''
         async with ctx.typing():
-            if num > 50: return await ctx.send('請輸入比50更小的數') 
+            if num > 50:
+                return await ctx.send(await ctx.interaction.translate('send_gif_too_many'), ephemeral=True) 
 
             search_url = 'https://api.giphy.com/v1/gifs/search'
             random_url = 'https://api.giphy.com/v1/gifs/random'
-
             results = []
 
             async with aiohttp.ClientSession() as session:
                 if query:
-                    async with session.get(search_url, params={'api_key': GIPHYKEY, 'q': query, 'limit': num, **({'lang': lang} if lang else {})}) as resp:
+                    params = {'api_key': GIPHYKEY, 'q': query, 'limit': num}
+                    if lang:
+                        params['lang'] = lang
+                    async with session.get(search_url, params=params) as resp:
                         data = await resp.json()
                         for item in data['data']:
-                            url = item['images']['original']['url']
-                            title = item['title']
-                            results.append((title, url))
+                            results.append((item['title'], item['images']['original']['url']))
                 else:
                     async with session.get(random_url, params={'api_key': GIPHYKEY}) as resp:
                         data = await resp.json()
-                        url = data['data']['images']['original']['url']
-                        title = data['data']['title']
-                        results.append((title, url))
+                        results.append((data['data']['title'], data['data']['images']['original']['url']))
 
-            await ctx.send('\n'.join([f'[{title if title else 'title'}]({url})' for title, url in results]))
+            await ctx.send('\n'.join([f'[{title if title else "gif"}]({url})' for title, url in results]))
 
-    @commands.hybrid_command(name='舔狗')
-    async def 舔狗語錄(self, ctx: commands.Context):
+    @commands.hybrid_command(name=locale_str('tiangou'), description=locale_str('tiangou'), aliases=['舔狗'])
+    async def tiangou(self, ctx: commands.Context):
         async with ctx.typing():
             async with aiohttp.ClientSession() as sess:
                 async with sess.get('https://api.zxki.cn/api/tgrj') as resp:
-                    if resp.status != 200: return await ctx.send('API無法使用，請稍後在試', ephemeral=True)
-                    await ctx.send(await async_translate(await resp.text(), 'zh-CN'))
+                    if resp.status != 200:
+                        return await ctx.send(await ctx.interaction.translate('send_tiangou_api_error'), ephemeral=True)
+                    text = await resp.text()
+                    translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
+                    await ctx.send(translated_text)
 
-    @commands.hybrid_command(name='minecraft_server_status', description='獲取minecraft伺服器的狀態', aliases=['mc_status'])
+    @commands.hybrid_command(name=locale_str('minecraft_server_status'), description=locale_str('minecraft_server_status'), aliases=['mc_status'])
     @app_commands.choices(edition=[Choice(name=edit, value=edit) for edit in ('java', 'bedrock')])
+    @app_commands.describe(address=locale_str('minecraft_server_status_address'), edition=locale_str('minecraft_server_status_edition'))
     async def minecraft_server_status(self, ctx: commands.Context, address: str, edition: str = 'java'):
         try:
-            if edition not in ('java', 'bedrock'): return await ctx.send('請輸入有效的`edition`')
+            if edition not in ('java', 'bedrock'):
+                return await ctx.send(await ctx.interaction.translate('send_mc_status_invalid_edition'), ephemeral=True)
+            
             async with ctx.typing():
                 async with aiohttp.ClientSession() as sess:
                     url = f'https://api.mcsrvstat.us/3/{address}' if edition == 'java' else f'https://api.mcsrvstat.us/bedrock/3/{address}'
                     async with sess.get(url) as resp:
-                        if resp.status != 200: return await ctx.send('API無法使用，請稍後在試', ephemeral=True)
+                        if resp.status != 200:
+                            return await ctx.send(await ctx.interaction.translate('send_mc_status_api_error'), ephemeral=True)
                         data = await resp.json()
                 
-                    ip = data.get('ip', 'None')
-                    port = data.get('port', 'None')
-                    hostname = data.get('hostname', 'None')
+                icon = data.get('icon')
+                file = None
+                if icon:
+                    base64_pattern = r"^data:image\/png;base64,"
+                    clean_base64_data = re.sub(base64_pattern, "", icon)
+                    if clean_base64_data:
+                        image_bytes = base64.b64decode(clean_base64_data)
+                        image = Image.open(io.BytesIO(image_bytes))
+                        image_buffer = io.BytesIO()
+                        image.save(image_buffer, format="PNG")
+                        image_buffer.seek(0)
+                        file = discord.File(image_buffer, filename="icon.png")
+                
+                '''i18n'''
+                embed_template_str = await ctx.interaction.translate('embed_mc_server_status')
+                embed_template = load_translated(embed_template_str)[0]
+                ''''''
 
-                    icon = data.get('icon', 'None')
-                    gamemode = data.get('gamemode', 'None')
-                    players = data.get('players', 'None') # dict
-                    version = data.get('version', 'None')
-                    plugins = data.get('plugins', 'None') # list
-                    mods = data.get('mods', 'None') # list
-                    online = None
-                    max_player = None
-                    file = None
-
-                    if players != 'None':
-                        online = players.get('online')
-                        max_player = players.get('max')
-                    if icon != 'None':
-                        # 使用正則表達式去掉開頭的識別字串
-                        base64_pattern = r"^data:image\/png;base64,"
-                        clean_base64_data = re.sub(base64_pattern, "", icon)
-                        if clean_base64_data:
-                            # 解碼 Base64 並轉換為 PIL 圖像
-                            image_bytes = base64.b64decode(clean_base64_data)
-                            image = Image.open(io.BytesIO(image_bytes))
-
-                            # 轉換為 Discord 可用的文件物件
-                            image_buffer = io.BytesIO()
-                            image.save(image_buffer, format="PNG")
-                            image_buffer.seek(0)
-
-                            # 建立 Discord Embed 並設定圖片
-                            file = discord.File(image_buffer, filename="icon.png")
-
-                eb = create_basic_embed(功能='Get Minecraft Server Status', color=ctx.author.color)
+                eb = create_basic_embed(title=embed_template['title'], color=ctx.author.color)
                 view = discord.ui.View()
 
-                eb.add_field(name='Online', value=str(data.get('online')))
-                eb.add_field(name='IP', value=f"{ip}:{port}")
-                eb.add_field(name='Hostname', value=hostname)
-                eb.add_field(name='Gamemode', value=gamemode)
-                eb.add_field(name='Current Players', value=online)
-                eb.add_field(name='Max Players', value=max_player)
-                eb.add_field(name='Version', value=version)
-                def format_list_field(items, limit=1020):
-                    if isinstance(items, list):
-                        joined = ', '.join(item['name'] for item in items)
-                        return (joined[:limit - 3] + '...') if len(joined) > limit else joined
-                    return items
-                eb.add_field(name='Plugins', value=format_list_field(plugins))
-                eb.add_field(name='Mods', value=format_list_field(mods))
-                eb.set_image(url="attachment://icon.png" if file else file)
-                eb.set_footer(text=url)
+                fields = embed_template['fields']
+                values = [
+                    str(data.get('online')), f"{data.get('ip', 'N/A')}:{data.get('port', 'N/A')}", data.get('hostname', 'N/A'),
+                    data.get('gamemode', 'N/A'), data.get('players', {}).get('online', 'N/A'), data.get('players', {}).get('max', 'N/A'),
+                    data.get('version', 'N/A'), data.get('plugins'), data.get('mods')
+                ]
 
-                if 'None' in (mods, plugins) and ( isinstance(mods, list) or isinstance(plugins, list) ):
-                    button = discord.ui.Button(label=f'查看{'模組' if mods != 'None' else '插件'}版本', style=discord.ButtonStyle.blurple)
+                def format_list_field(items, limit=1020):
+                    if isinstance(items, dict) and 'names' in items:
+                        items = items['names']
+                    
+                    if isinstance(items, list):
+                        joined = ', '.join(items)
+                        return (joined[:limit - 3] + '...') if len(joined) > limit else joined
+                    return items or 'None'
+                
+                for i, field in enumerate(fields):
+                    eb.add_field(name=field['name'], value=format_list_field(values[i]))
+
+                eb.set_image(url="attachment://icon.png" if file else None)
+                eb.set_footer(text=url)
+                
+                mods = data.get('mods')
+                plugins = data.get('plugins')
+
+                if isinstance(mods, dict) or isinstance(plugins, dict):
+                    button_type = '模組' if isinstance(mods, dict) else '插件'
+                    
+                    '''i18n'''
+                    button_label_template = await ctx.interaction.translate('button_mc_status_show_details')
+                    ''''''
+                    
+                    button = discord.ui.Button(label=button_label_template.format(type=button_type), style=discord.ButtonStyle.blurple)
+                    
                     async def button_callback(interaction: discord.Interaction, *args):
-                        text = '\n'.join([f"{item['name']} - {item['version']}" for item in (mods if mods != 'None' else plugins)])
+                        items_dict = mods if isinstance(mods, dict) else plugins
+                        text = '\n'.join([f"{name} - {version}" for name, version in items_dict.get('raw', {}).items()])
                         path = './data/temp'
+                        if not os.path.exists(path): os.makedirs(path)
                         new_path = f'{path}/minecraft_server_status_{ctx.author.id}.txt'
                         async with aiofiles.open(new_path, mode='w', encoding='utf-8') as f:
                             await f.write(text)
                         file = discord.File(new_path, f'minecraft_server_status_{ctx.author.id}.txt')
-                        await interaction.response.send_message(file=file)
+                        await interaction.response.send_message(file=file, ephemeral=True)
                         await asyncio.sleep(300)
                         try: os.remove(new_path)
                         except: ...
@@ -464,60 +516,69 @@ class ApiCog(commands.Cog):
                 await ctx.send(embed=eb, file=file, view=view)
         except Exception as e:
             traceback.print_exc()
-            return await ctx.send('Error, please try again later (reason: {})'.format(e))
+            await ctx.send((await ctx.interaction.translate('send_mc_status_error')).format(reason=str(e)))
         
-    @commands.hybrid_command(name='一言', description="https://v1.hitokoto.cn/", aliases=['yiyan'])
+    @commands.hybrid_command(name=locale_str('yiyan'), description=locale_str('yiyan'), aliases=['一言'])
     async def yiyan(self, ctx: commands.Context):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://v1.hitokoto.cn/?c=d&c=e&c=f&encode=text') as resp:
-                    if not resp.status == 200: return await ctx.send('請稍後再試', ephemeral=True)
+                    if not resp.status == 200:
+                        return await ctx.send(await ctx.interaction.translate('send_yiyan_api_error'), ephemeral=True)
                     data = await resp.text()
-            await ctx.send(await async_translate(data, 'zh-CN', 'zh-TW'))
+            
+            translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, data)
+            await ctx.send(translated_text)
 
-    @commands.hybrid_command(name='毒雞湯', description='https://api.btstu.cn')
+    @commands.hybrid_command(name=locale_str('toxic_jacket_soup'), description=locale_str('toxic_jacket_soup'), aliases=['毒雞湯'])
     async def toxic_jacket_soup(self, ctx: commands.Context):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://api.btstu.cn/yan/api.php?charset=utf-8&encode=text') as resp:
-                    if resp.status != 200: return await ctx.send('請稍後再試', ephemeral=True)
+                    if resp.status != 200:
+                        return await ctx.send(await ctx.interaction.translate('send_toxic_soup_api_error'), ephemeral=True)
                     text = await resp.text()
-            await ctx.send(await async_translate(text, 'zh-CN', 'zh-TW'))
+            
+            translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
+            await ctx.send(translated_text)
 
-    @commands.hybrid_command(name='lovelive', description='https://api.lovelive.tools/api/SweetNothings', aliases=['love'])
+    @commands.hybrid_command(name=locale_str('lovelive'), description=locale_str('lovelive'), aliases=['love'])
     async def lovelive(self, ctx: commands.Context):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://api.lovelive.tools/api/SweetNothings') as resp:
-                    if resp.status != 200: return await ctx.send('請稍後再試')
+                    if resp.status != 200:
+                        return await ctx.send(await ctx.interaction.translate('send_lovelive_api_error'), ephemeral=True)
                     text = await resp.text()
             await ctx.send(text)
 
-    @commands.hybrid_command(name='影片下載', description='Download the video or audio by yt-dlp (from youtube twitter etc.)', aliases=['yt_downlaod', 'ytdownload'])
+    @commands.hybrid_command(name=locale_str('yt_downloader'), description=locale_str('yt_downloader'), aliases=['yt_download', 'ytdownload', '影片下載'])
     @app_commands.choices(
         type = [Choice(name=s, value=s) for s in ('mp4', 'mp3')],
         quality = [Choice(name=s, value=s) for s in ('high', 'medium', 'low')]
     )
     @app_commands.describe(
-        type = '選擇你要下載mp4還是mp3 (預設: mp3)',
-        quality = '(僅在選擇mp4時 這個選項才有效) high-高，medium-中，low-低'
+        url=locale_str('yt_downloader_url'),
+        type=locale_str('yt_downloader_type'),
+        quality=locale_str('yt_downloader_quality')
     )
     async def yt_downloader(self, ctx: commands.Context, url: str, type: str = 'mp3', quality: str = None):
         try:
             async with ctx.typing():
                 data = {
                     "url": url, 
-                    "media_type": type, # 可以是 "mp4" 或 "mp3" 
-                    "quality": quality # 僅在 media_type 為 mp4 時有效
+                    "media_type": type,
+                    "quality": quality
                 }
 
                 async with aiohttp.ClientSession() as sess:
                     async with sess.post(f'{youtube_download_base_url}/api/download', json=data) as resp:
-                        if resp.status == 404: return await ctx.send('目前無法下載影片或音訊 (原因: 我也不知道 可能我壞掉了(?) )')
+                        if resp.status == 404:
+                            return await ctx.send(await ctx.interaction.translate('send_yt_download_api_offline'))
                         resp_json = await resp.json()
                         task_id = resp_json.get('task_id')
 
-                await ctx.send(f'Tracking task id: {task_id}')
+                await ctx.send((await ctx.interaction.translate('send_yt_download_tracking')).format(task_id=task_id))
 
                 for _ in range(10):
                     await asyncio.sleep(3)
@@ -528,26 +589,36 @@ class ApiCog(commands.Cog):
                             status = resp_json.get('status')
                             if status == 'error': 
                                 reason = resp_json.get('message')
-                                return await ctx.send(f"出現了一個錯誤:< (原因: {'yt-dlp不讓我們下載好康的影片:<' if 'NSFW' in reason else reason})")
+                                if 'NSFW' in reason:
+                                    return await ctx.send(await ctx.interaction.translate('send_yt_download_nsfw_error'))
+                                else:
+                                    return await ctx.send((await ctx.interaction.translate('send_yt_download_error')).format(reason=reason))
                             if status == 'started': continue
-                            url = resp_json.get('download_url')
+                            
                             info = resp_json.get('info')
-                                        
-                    eb = create_basic_embed(info.get('title'), color=ctx.author.color, 功能=f'{type.upper()}下載')
+                            
+                            '''i18n'''
+                            embed_template_str = await ctx.interaction.translate('embed_yt_downloader')
+                            embed_template = load_translated(embed_template_str)[0]
+                            ''''''
+                            
+                            eb = create_basic_embed(embed_template['title'].format(type=type.upper()), color=ctx.author.color)
 
-                    eb.add_field(name='Source_url', value=f"[來源連結(SOURCE_URL)]({resp_json.get('source_url')})")
-                    eb.add_field(name='Duration', value=secondToReadable(info.get('duration')))
-                    eb.set_image(url=info.get('thumbnail'))
-                    eb.add_field(name='花費時間(秒)', value=int(resp_json.get('process_time')))
-                    eb.set_footer(text='不建議你把它拿去商業用途窩')
+                            fields = embed_template['fields']
+                            eb.add_field(name=fields[0]['name'], value=f"[{fields[0]['name']}]({resp_json.get('source_url')})")
+                            eb.add_field(name=fields[1]['name'], value=secondToReadable(info.get('duration')))
+                            eb.add_field(name=fields[2]['name'], value=int(resp_json.get('process_time')))
+                            
+                            eb.set_image(url=info.get('thumbnail'))
+                            eb.set_footer(text=embed_template['footer'])
 
-                    await ctx.send(f"[下載連結(DOWNLOAD_URL)]({resp_json.get('download_url')})", embed=eb)
-                    return
-                await ctx.send('Tracking failed')
+                            await ctx.send(f"[下載連結]({resp_json.get('download_url')})", embed=eb)
+                            return
+                
+                await ctx.send(await ctx.interaction.translate('send_yt_download_tracking_failed'))
         except Exception as e: 
-            await ctx.send(f'有蟲蟲(Bug)出現了:< 請稍後再試 (reason: {str(e)})')
+            await ctx.send((await ctx.interaction.translate('send_mc_status_error')).format(reason=str(e)))
             traceback.print_exc()
-            print(resp_json)
 
     @tasks.loop(minutes=1)
     async def update_alive(self):

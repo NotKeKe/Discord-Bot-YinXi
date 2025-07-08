@@ -1,7 +1,7 @@
 import re
 import aiohttp
 
-from core.functions import async_translate
+from core.functions import async_translate, DEVICE_IP
     
 def clean_keywords_text(text: str) -> str:
     pattern = r".*[:：].*"
@@ -28,7 +28,7 @@ async def search_lyrics(query: str, artist: str, lrc: bool = False) -> str | boo
     query = await async_translate(query, 'zh-TW', 'zh-CN')
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(f'http://192.168.31.99:28883/jsonapi', params={'title': query, **({'artist': artist} if artist else {})}) as resp:
+        async with session.get(f'http://{DEVICE_IP}:28883/jsonapi', params={'title': query, **({'artist': artist} if artist else {})}) as resp:
             js = await resp.json()
 
     if not js: return False

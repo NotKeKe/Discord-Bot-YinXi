@@ -12,6 +12,10 @@
 可以使用以下 Deepwiki.md 連結來瀏覽此專案介紹，或者詳閱接下來的說明 來使用此專案。
 - [Deepwiki.md](https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/Discord-Bot-YinXi_wiki_20250613.md)
 
+## 閱前提醒
+*   不建議自己 clone 此專案下來用，因為他大概率是啟動不了的，或許拿來學習比較好w<br>
+    畢竟他功能挺雜，有 aiohttp chromadb openai 之類的
+
 ## ✨ 特色
 *   **音樂播放**: 支援播放 YouTube 影片音樂。
 *   **AI 聊天**: 透過 AI 進行對話。
@@ -19,6 +23,7 @@
 *   **SkyBlock 相關**: 提供 SkyBlock 遊戲資訊和追蹤功能。
 *   **翻譯**: 支援 AI 多語言翻譯。
 *   **通知**: YouTube 通知功能。
+*   **多語言支持**: 目前支援使用 `zh-TW`, `zh-CN`, `en-US`。
 
 ## 🚀 使用方法
 - `/help` 快速取得該 Bot 的概略功能。
@@ -32,6 +37,10 @@
 *   `/nasa`：獲取 NASA 每日圖片。
 *   `/gif [關鍵字]`：搜尋並發送 GIF。
 *   `/歌詞搜尋 [歌曲名稱]`：搜尋歌曲歌詞。
+
+## 成就
+*   **[2025/07/08]** 完成 i18n，prefix + slash command i18n
+    *   可在 [core/locales](core/locales) 查看與 Gemini 2.5 pro 的 `對話紀錄` 與 `提示詞`
 
 ## ⚡ Quick Start
 **！建議使用 Python 3.13+ 以上的環境！**
@@ -134,8 +143,7 @@ GENIUS_ACCESS_TOKEN = ... # `/歌詞搜尋` 的 apiKEY
 1. 想不到吧 這裡也是空的w
 
 ## ❓ 常見問題 (FAQ)
-*   有沒有英文版或者其他語言的音汐機器人?
-    *   目前暫時沒有對指令以及指令描述做翻譯，只有中文版，並且很多檔案主要還是用中文編寫的，或許之後哪一天我會突然想翻譯他w
+*   不要問我怎麼啟動這個專案 因為我最一開始沒有設計要讓他開源讓別人用，所以開不起來不要找我w
 
 ## 📞 聯絡與支援
 如果您有任何問題、建議或需要支援，可以透過以下方式聯絡我們：

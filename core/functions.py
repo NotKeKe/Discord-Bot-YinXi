@@ -172,3 +172,4 @@ def is_KeJC(userID: int):
 settings = read_json('setting.json')
 admins: List[int] = read_json('./cmds/data.json/admins.json')['admins']
 testing_guildID: int = settings['testing_guildID']
+DEVICE_IP: str = settings.get('DEVICE_IP')

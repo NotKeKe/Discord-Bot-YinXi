@@ -12,7 +12,7 @@ from fake_useragent import UserAgent
 from typing import Optional
 import sqlite3
 
-from core.functions import read_json, current_time, UnixToReadable
+from core.functions import read_json, current_time, UnixToReadable, DEVICE_IP
 from cmds.AIsTwo.others.func import image_generate, video_generate, image_read
 from cmds.AIsTwo.tools import sql_create
 
@@ -100,7 +100,7 @@ def search(keywords: str, time_range: str = 'year', language: str = 'zh-TW') -> 
     result = []
     time_range = ('day' if time_range.lower().strip() not in ('year', 'monuth', 'week', 'day') else time_range.lower().strip()) if time_range else None
 
-    url = 'http://192.168.31.99:8080'
+    url = f'http://{DEVICE_IP}:8080'
     params = {
         'q': keywords,
         'format': 'json',

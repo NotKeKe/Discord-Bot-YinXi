@@ -9,7 +9,7 @@ import time
 import traceback
 
 from core.functions import math_round, current_time, testing_guildID
-from core.translator import i18n
+from core.translator import i18n, MockInteraction
 
 # get env
 load_dotenv()
@@ -54,6 +54,17 @@ async def setup_hook():
     # await user.send("我上線了")
     global online_time
     online_time = current_time()
+    
+@bot.before_invoke
+async def before_invoke(ctx: commands.Context):
+    """
+    在任何指令執行前被呼叫，用於填充 ctx.interaction。
+    """
+    if ctx.interaction is None:  
+        try:
+            ctx.interaction = MockInteraction(ctx)
+        except:
+            traceback.print_exception()
 
 # 錯誤追蹤
 @bot.event
