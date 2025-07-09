@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 import uuid
 import asyncio
+import aiosqlite
 
 from cmds.AIsTwo.others.func import image_read
 from cmds.AIsTwo.utils import image_url_to_base64
@@ -32,8 +33,7 @@ with open('setting.json', 'r', encoding = 'utf8') as jfile:
 
 class Main(Cog_Extension):
 
-    @commands.Cog.listener()
-    async def on_ready(self):
+    async def cog_load(self):
         print(f'已載入「{__name__}」')
 
     #Owner ID回覆
@@ -260,6 +260,30 @@ class Main(Cog_Extension):
 
             resultStr = ', '.join(map(str, result))
             await ctx.send(resultStr)
+
+    @commands.hybrid_command(name=locale_str('lang'), description=locale_str('lang'))
+    @app_commands.describe(lang=locale_str('lang_lang'))
+    @app_commands.choices(lang=[app_commands.Choice(name=l, value=l) for l in ('en-US', 'zh-TW', 'zh-CN')])
+    async def _lang(self, ctx: commands.Context, lang: str):
+        async with ctx.typing():
+            if lang not in ('en-US', 'zh-TW', 'zh-CN'):
+                return await ctx.send(await ctx.interaction.translate('send_lang_invalid_lang'))
+            
+            async with aiosqlite.connect('./data/user_lang.db') as db:
+                cursor = await db.execute('SELECT lang FROM users WHERE user_id = ?', (ctx.author.id,))
+                result = await cursor.fetchone()
+                if result: pre = result[0]
+                else: pre = None
+                if pre == lang: return await ctx.send((await ctx.interaction.translate('send_lang_same_lang')).format(lang=lang))
+
+                await db.execute('''INSERT INTO users (user_id, lang)
+                                    VALUES (?, ?)
+                                    ON CONFLICT(user_id) DO UPDATE SET
+                                        lang = excluded.lang
+                                ''', (ctx.author.id, lang))
+                await db.commit()
+
+            await ctx.send((await ctx.interaction.translate('send_lang_success')).format(lang=lang), ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Main(bot))

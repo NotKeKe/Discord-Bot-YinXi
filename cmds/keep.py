@@ -192,7 +192,7 @@ class RunKeep:
     @staticmethod
     async def keepMessage(channel, user, event, delay, uuid: str):
         await asyncio.sleep(delay)
-        await channel.send((await channel.guild.get_member(bot.user.id).translate('send_keep_remind')).format(mention=user.mention, event=event))
+        await channel.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
         SaveKeep.deletekeepEvent(str(user.id), uuid)
 
     @classmethod

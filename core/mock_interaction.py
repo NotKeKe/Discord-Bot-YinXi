@@ -99,4 +99,4 @@ class MockInteraction:
         return False
 
     async def translate(self, string: str, lang_code: str = None):
-        return await self.bot.tree.translator.get_translate(string, lang_code)
+        return await self.bot.tree.translator.get_translate(string, lang_code, self._ctx)

@@ -1,10 +1,14 @@
 from discord.app_commands import Translator, locale_str, TranslationContext, TranslationContextLocation  
+from discord.ext import commands
 import discord
 import aiofiles
 import orjson
+import aiosqlite
 import traceback
 
 from core.mock_interaction import MockInteraction
+
+DEFAULT_LANG = 'zh-TW'
 
 class i18n(Translator):
     def __init__(self):
@@ -51,14 +55,23 @@ class i18n(Translator):
             }
         }
 
-    async def get_translate(self, string: str, lang_code: str = None):
+    async def get_translate(self, string: str, lang_code: str = None, ctx: commands.Context = None):
         """這是一個能夠透過 lang code 與指定 key 來獲得翻譯的方法，因為 translate 會被 interaction.translate 呼叫，但不一定每個 ctx 都有 interaction (我不確定，但我的理解是這樣)。
 
         Args:
             string (str): 在此處傳入 key
             lang_code (str): 在此處傳入使用者偏好語言，例如: zh-TW
         """        
-        if not lang_code: lang_code = 'zh-TW'
+        lang_pref = None
+
+        '''Get user prefer lang if exist'''
+        if ctx: 
+            lang_pref = await get_user_lang(ctx.author.id)
+        ''''''
+
+        lang_code = lang_pref or lang_code
+
+        if not lang_code: lang_code = DEFAULT_LANG
         
         locale_item = self.translations.get(lang_code, {})  
 
@@ -73,22 +86,26 @@ class i18n(Translator):
             return string
 
     async def translate(self, string: locale_str, locale: discord.Locale, context: TranslationContext):
-        # locale_translations = self.translations.get(locale.value, {})  
-        # return locale_translations.get(string.message, string.message)
+        lang = None
+
         '''Get user prefer lang if exist'''
         user_id = None
         if hasattr(context.data, 'user'):  
             user_id = context.data.user.id  
         elif hasattr(context.data, 'author'):  
             user_id = context.data.author.id  
-        
-        if user_id: pass
-            # TODO: 在此處連接本地 json / db 去儲存使用者偏好語言
+        elif hasattr(context.data, 'id'):
+            user_id = context.data.id
+        # print(user_id)
+        if user_id: 
+            lang = await get_user_lang(user_id)
         ''''''
+
+        lang = lang or locale.value
 
         locale_item = self.translations.get(locale.value, {})  
         if not locale_item:
-            locale_item = self.translations.get('zh-TW', {})
+            locale_item = self.translations.get(DEFAULT_LANG, {})
 
         if context.location == TranslationContextLocation.command_name:
             # string.message = command_name
@@ -123,6 +140,16 @@ class i18n(Translator):
                 traceback.print_exc()
                 print(f'Failed to load {l} (translator)')
 
+        # load user's lang.db
+        async with aiosqlite.connect('./data/user_lang.db') as db:
+            await db.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY,
+                    user_id INTEGER UNIQUE,
+                    lang TEXT
+                )''')
+            await db.commit()
+
     async def unload(self, lang: str = None):
         if lang:
             del self.translations[lang]
@@ -136,3 +163,13 @@ class i18n(Translator):
 
 def load_translated(item: str):
     return orjson.loads(item.encode('utf-8'))
+
+async def get_user_lang(user_id: int):
+    async with aiosqlite.connect('./data/user_lang.db') as db:
+        cursor = await db.execute('SELECT lang FROM users WHERE user_id = ?', (user_id,))
+        result = await cursor.fetchone()
+        if result:
+            # print(result[0] + (user_id))
+            return result[0]
+        else:
+            return None

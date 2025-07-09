@@ -48,16 +48,17 @@
         "joke": "笑話",
         "news": "新聞",
         "cat_fact": "貓貓冷知識",
-        "nasa": "NASA每日圖片",
+        "nasa": "nasa每日圖片",
         "number_history": "數字歷史",
         "unsplash_image": "看圖",
-        "get_gifs": "GIF",
+        "get_gifs": "gif",
         "tiangou": "舔狗語錄",
-        "minecraft_server_status": "MC伺服器狀態",
+        "minecraft_server_status": "mc伺服器狀態",
         "yiyan": "一言",
         "toxic_jacket_soup": "毒雞湯",
         "lovelive": "lovelive",
-        "yt_downloader": "影片下載"
+        "yt_downloader": "影片下載",
+        "lang": "設定語言"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -117,7 +118,8 @@
         "yiyan": "獲取一句一言",
         "toxic_jacket_soup": "獲取一句毒雞湯",
         "lovelive": "獲取一句 lovelive 語錄",
-        "yt_downloader": "透過 yt-dlp 下載影片或音訊"
+        "yt_downloader": "透過 yt-dlp 下載影片或音訊",
+        "lang": "設定你自己的偏好語言，這將會改變音汐對你輸出的語言。(僅使用 prefix (前綴指令，即 `[`) 時會生效)"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -583,6 +585,9 @@
                 { "name": "來源連結" }, { "name": "時長" }, { "name": "花費時間(秒)" }
             ],
             "footer": "不建議您將其用於商業用途"
-        }]
+        }],
+        "send_lang_invalid_lang": "你輸入的語言不在 (zh-CN, zh-TW, en-US) 當中欸 :thinking:\n重新輸入一次吧w",
+        "send_lang_success": "現在音汐會跟你說 `{lang}` 了窩!",
+        "send_lang_same_lang": "你原本的偏好設定就是 `{lang}` 了."
     }
 }

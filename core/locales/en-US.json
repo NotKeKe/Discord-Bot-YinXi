@@ -57,7 +57,8 @@
         "yiyan": "yiyan",
         "toxic_jacket_soup": "toxic_jacket_soup",
         "lovelive": "lovelive",
-        "yt_downloader": "yt_downloader"
+        "yt_downloader": "yt_downloader",
+        "lang": "lang"
     },
     "description": {
         "translate": "Translate some text",
@@ -117,7 +118,8 @@
         "yiyan": "Get a quote from Yiyan",
         "toxic_jacket_soup": "Get a toxic chicken soup for the soul quote",
         "lovelive": "Get a lovelive quote",
-        "yt_downloader": "Download a video or audio via yt-dlp"
+        "yt_downloader": "Download a video or audio via yt-dlp",
+        "lang": "Set your preferred language. (Only using the prefix (prefix command, i.e., [) will take effect)"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -583,6 +585,9 @@
                 { "name": "Source URL" }, { "name": "Duration" }, { "name": "Time spent (seconds)" }
             ],
             "footer": "It is not recommended to use it for commercial purposes"
-        }]
+        }],
+        "send_lang_invalid_lang": "The language you entered is not among (zh-CN, zh-TW, en-US) :thinking:\nPlease try entering it again.",
+        "send_lang_success": "Now Yin-Xi will talk to you in {lang}!",
+        "send_lang_same_lang": "Your original preference settings are already `{lang}`"
     }
 }

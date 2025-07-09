@@ -431,83 +431,101 @@ class ApiCog(commands.Cog):
     @app_commands.describe(address=locale_str('minecraft_server_status_address'), edition=locale_str('minecraft_server_status_edition'))
     async def minecraft_server_status(self, ctx: commands.Context, address: str, edition: str = 'java'):
         try:
-            if edition not in ('java', 'bedrock'):
-                return await ctx.send(await ctx.interaction.translate('send_mc_status_invalid_edition'), ephemeral=True)
-            
+            if edition not in ('java', 'bedrock'): return await ctx.send(await ctx.interaction.translate('send_mc_status_invalid_edition'))
             async with ctx.typing():
                 async with aiohttp.ClientSession() as sess:
                     url = f'https://api.mcsrvstat.us/3/{address}' if edition == 'java' else f'https://api.mcsrvstat.us/bedrock/3/{address}'
                     async with sess.get(url) as resp:
-                        if resp.status != 200:
-                            return await ctx.send(await ctx.interaction.translate('send_mc_status_api_error'), ephemeral=True)
+                        if resp.status != 200: return await ctx.send(await ctx.interaction.translate('send_mc_status_api_error'), ephemeral=True)
                         data = await resp.json()
                 
-                icon = data.get('icon')
-                file = None
-                if icon:
-                    base64_pattern = r"^data:image\/png;base64,"
-                    clean_base64_data = re.sub(base64_pattern, "", icon)
-                    if clean_base64_data:
-                        image_bytes = base64.b64decode(clean_base64_data)
-                        image = Image.open(io.BytesIO(image_bytes))
-                        image_buffer = io.BytesIO()
-                        image.save(image_buffer, format="PNG")
-                        image_buffer.seek(0)
-                        file = discord.File(image_buffer, filename="icon.png")
-                
+                    ip = data.get('ip', 'None')
+                    port = data.get('port', 'None')
+                    hostname = data.get('hostname', 'None')
+
+                    icon = data.get('icon', 'None')
+                    gamemode = data.get('gamemode', 'None')
+                    players = data.get('players', 'None') # dict
+                    version = data.get('version', 'None')
+                    plugins = data.get('plugins', 'None') # list
+                    mods = data.get('mods', 'None') # list
+                    online = None
+                    max_player = None
+                    file = None
+
+                    if players != 'None':
+                        online = players.get('online')
+                        max_player = players.get('max')
+                    if icon != 'None':
+                        # 使用正則表達式去掉開頭的識別字串
+                        base64_pattern = r"^data:image\/png;base64,"
+                        clean_base64_data = re.sub(base64_pattern, "", icon)
+                        if clean_base64_data:
+                            # 解碼 Base64 並轉換為 PIL 圖像
+                            image_bytes = base64.b64decode(clean_base64_data)
+                            image = Image.open(io.BytesIO(image_bytes))
+
+                            # 轉換為 Discord 可用的文件物件
+                            image_buffer = io.BytesIO()
+                            image.save(image_buffer, format="PNG")
+                            image_buffer.seek(0)
+
+                            # 建立 Discord Embed 並設定圖片
+                            file = discord.File(image_buffer, filename="icon.png")
+
                 '''i18n'''
-                embed_template_str = await ctx.interaction.translate('embed_mc_server_status')
-                embed_template = load_translated(embed_template_str)[0]
+                eb_template = await ctx.interaction.translate('embed_mc_server_status')
+                eb_template = load_translated(eb_template)[0]
+                title_str = eb_template['title']
+                field = eb_template['fields']
+                online_str = field[0]['name']
+                ip_str = field[1]['name']
+                host_name_str = field[2]['name']
+                gamemode_str = field[3]['name']
+                online_player_str = field[4]['name']
+                max_player_str = field[5]['name']
+                version_str = field[6]['name']
+                plugins_str = field[7]['name']
+                mods_str = field[8]['name']
+
+                button_str = await ctx.interaction.translate('button_mc_status_show_details')
                 ''''''
 
-                eb = create_basic_embed(title=embed_template['title'], color=ctx.author.color)
+                eb = create_basic_embed(功能=title_str, color=ctx.author.color)
                 view = discord.ui.View()
 
-                fields = embed_template['fields']
-                values = [
-                    str(data.get('online')), f"{data.get('ip', 'N/A')}:{data.get('port', 'N/A')}", data.get('hostname', 'N/A'),
-                    data.get('gamemode', 'N/A'), data.get('players', {}).get('online', 'N/A'), data.get('players', {}).get('max', 'N/A'),
-                    data.get('version', 'N/A'), data.get('plugins'), data.get('mods')
-                ]
-
+                eb.add_field(name=online_str, value=str(data.get('online')))
+                eb.add_field(name=ip_str, value=f"{ip}:{port}")
+                eb.add_field(name=host_name_str, value=hostname)
+                eb.add_field(name=gamemode_str, value=gamemode)
+                eb.add_field(name=online_player_str, value=online)
+                eb.add_field(name=max_player_str, value=max_player)
+                eb.add_field(name=version_str, value=version)
                 def format_list_field(items, limit=1020):
-                    if isinstance(items, dict) and 'names' in items:
-                        items = items['names']
-                    
                     if isinstance(items, list):
-                        joined = ', '.join(items)
+                        joined = ', '.join(item['name'] for item in items)
                         return (joined[:limit - 3] + '...') if len(joined) > limit else joined
-                    return items or 'None'
-                
-                for i, field in enumerate(fields):
-                    eb.add_field(name=field['name'], value=format_list_field(values[i]))
-
-                eb.set_image(url="attachment://icon.png" if file else None)
+                    return items
+                eb.add_field(name=plugins_str, value=format_list_field(plugins))
+                eb.add_field(name=mods_str, value=format_list_field(mods))
+                eb.set_image(url="attachment://icon.png" if file else file)
                 eb.set_footer(text=url)
-                
-                mods = data.get('mods')
-                plugins = data.get('plugins')
 
-                if isinstance(mods, dict) or isinstance(plugins, dict):
-                    button_type = '模組' if isinstance(mods, dict) else '插件'
-                    
-                    '''i18n'''
-                    button_label_template = await ctx.interaction.translate('button_mc_status_show_details')
-                    ''''''
-                    
-                    button = discord.ui.Button(label=button_label_template.format(type=button_type), style=discord.ButtonStyle.blurple)
-                    
+                if 'None' in (mods, plugins) and ( isinstance(mods, list) or isinstance(plugins, list) ):
+                    button = discord.ui.Button(label=button_str.format(type=mods_str if mods != 'None' else plugins_str), style=discord.ButtonStyle.blurple)
                     async def button_callback(interaction: discord.Interaction, *args):
-                        items_dict = mods if isinstance(mods, dict) else plugins
-                        text = '\n'.join([f"{name} - {version}" for name, version in items_dict.get('raw', {}).items()])
+                        text = '\n'.join([f"{item['name']} - {item['version']}" for item in (mods if mods != 'None' else plugins)])
                         path = './data/temp'
-                        if not os.path.exists(path): os.makedirs(path)
                         new_path = f'{path}/minecraft_server_status_{ctx.author.id}.txt'
+
                         async with aiofiles.open(new_path, mode='w', encoding='utf-8') as f:
                             await f.write(text)
+
                         file = discord.File(new_path, f'minecraft_server_status_{ctx.author.id}.txt')
-                        await interaction.response.send_message(file=file, ephemeral=True)
+
+                        await interaction.response.send_message(file=file)
                         await asyncio.sleep(300)
+                        
                         try: os.remove(new_path)
                         except: ...
                     button.callback = button_callback
@@ -516,7 +534,7 @@ class ApiCog(commands.Cog):
                 await ctx.send(embed=eb, file=file, view=view)
         except Exception as e:
             traceback.print_exc()
-            await ctx.send((await ctx.interaction.translate('send_mc_status_error')).format(reason=str(e)))
+            return await ctx.send((await ctx.interaction.translate('send_mc_status_error')).format(reason=e))
         
     @commands.hybrid_command(name=locale_str('yiyan'), description=locale_str('yiyan'), aliases=['一言'])
     async def yiyan(self, ctx: commands.Context):
