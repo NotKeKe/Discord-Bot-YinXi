@@ -13,7 +13,7 @@ from cmds.AIsTwo.base_chat import *
 from cmds.AIsTwo.others.func import image_generate, video_generate
 from cmds.AIsTwo.others.decide import save_to_knowledge_base, Preference
 from cmds.AIsTwo.info import HistoryData, get_history, create_result_embed, chat_autocomplete
-from cmds.AIsTwo.utils import choice_model, image_url_to_base64, select_moduels_auto_complete
+from cmds.AIsTwo.utils import image_url_to_base64, select_moduels_auto_complete
 from cmds.AIsTwo.vector import chat_human as vt_chat_human
 from vector_data import vector
 
@@ -59,7 +59,6 @@ class AITwo(commands.Cog):
                         await ctx.send('無法讀取文字檔案')
 
                 try:
-                    # func = choice_model(model)
                     think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content, is_enable_tools=工具調用, system_prompt=系統提示詞)
                 except: 
                     traceback.print_exc()

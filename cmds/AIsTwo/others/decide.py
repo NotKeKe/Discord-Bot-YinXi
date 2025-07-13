@@ -3,7 +3,7 @@ import random
 import traceback
 import orjson
 import requests
-from cmds.AIsTwo.base_chat import base_zhipu_chat, base_openrouter_chat, true_zhipu, ollama, base_ollama_chat, base_openai_chat
+from cmds.AIsTwo.base_chat import base_zhipu_chat, true_zhipu, ollama, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
 from core.functions import translate, current_time, read_json, write_json
 # tools

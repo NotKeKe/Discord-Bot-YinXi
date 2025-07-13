@@ -11,6 +11,7 @@ from cmds.AIsTwo.utils import to_assistant_message, to_user_message
 
 HISTORY_DATA_PATH = './cmds/data.json/chat_history.json'
 HISTORY_DATA_FORCHANNEL_PATH = './cmds/data.json/chat_history_forchannel.json'
+channel_system_prompts_PATH = './cmds/data.json/chat_channel_system_prompts.json'
 channel_model_select_PATH = './cmds/data.json/chat_channel_modelSelect.json'
 chat_human_PATH = './cmds/data.json/chat_human.json'
 chat_human_summary_PATH = './cmds/data.json/chat_human_summary.json'
@@ -21,6 +22,7 @@ weather_messages_PATH = './cmds/data.json/weather_messages.json'
 class HistoryData:
     user = None
     channel = None
+    channel_system_prompts = None
     channel_model_select = None
     chat_human = None
     chat_human_summary = None
@@ -31,6 +33,7 @@ class HistoryData:
     if_new_data = {
         "user": False,
         "channel": False,
+        "channel_system_prompts": False,
         "channel_model_select": False,
         "chat_human": False,
         "chat_human_summary": False,
@@ -45,6 +48,8 @@ class HistoryData:
             cls.user = read_json(HISTORY_DATA_PATH)
         if cls.channel is None:
             cls.channel = read_json(HISTORY_DATA_FORCHANNEL_PATH)
+        if cls.channel_system_prompts is None:
+            cls.channel_system_prompts = read_json(channel_system_prompts_PATH)
         if cls.channel_model_select is None:
             cls.channel_model_select = read_json(channel_model_select_PATH)
         if cls.chat_human is None:
@@ -71,6 +76,12 @@ class HistoryData:
             cls.channel = data
         cls.if_new_data["channel"] = True
         # write_json(cls.channel, HISTORY_DATA_FORCHANNEL_PATH)
+
+    @classmethod
+    def writeChannelSystemPrompts(cls, data=None):
+        if data is not None:
+            cls.channel_system_prompts = data
+        cls.if_new_data["channel_system_prompts"] = True
 
     @classmethod
     def writeChannelSelectModel(cls, ctx: commands.Context, model: str = None):

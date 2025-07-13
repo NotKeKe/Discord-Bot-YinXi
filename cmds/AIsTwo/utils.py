@@ -78,14 +78,6 @@ def get_something(text: str, tag: str) -> str:
     if data: return data.group(1).strip()
     else: return ''
 
-def choice_model(model:str):
-    from cmds.AIsTwo.base_chat import zhipu_moduels, openrouter_moduels, ollama_modules, gemini_moduels
-    from cmds.AIsTwo.base_chat import base_openrouter_chat, base_zhipu_chat, base_ollama_chat, base_gemini_chat
-    if model in zhipu_moduels: return base_zhipu_chat
-    elif model in openrouter_moduels: return base_openrouter_chat
-    elif model in ollama_modules: return base_ollama_chat
-    elif model in gemini_moduels: return base_gemini_chat
-
 def halfToFull(content: str) -> str:
     '''將文字中的全形標點符號轉為半形'''
     return content.replace('，', '  ').replace('？', '? ').replace('！', '! ').replace('：', ': ')

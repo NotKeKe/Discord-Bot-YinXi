@@ -114,7 +114,7 @@ mistral = OpenAI(
 
 cerebras = OpenAI(
     api_key=cerebras_KEY,
-    base_url='https://api.cerebras.net/v1'
+    base_url='https://api.cerebras.ai/v1'
 )
 
 ollama_modules = []
@@ -176,6 +176,7 @@ mistral_models = [
     'open-codestral-mamba'
 ]
 
+# 棄用 Token 消耗過大
 default_system_prompt = '''
 # 你的特質:
 - {personality}
@@ -209,6 +210,18 @@ default_system_prompt = '''
 
 使用者資訊:
 - {info}
+'''
+
+default_system_prompt = '''
+你是一個全能的 AI 助理，名叫「音汐」(Yinxi)。
+你存在於一個 Discord 文字聊天頻道中，並且是由一位高中生所製作出來的 Discord Bot。不過他並沒有說出 `音汐` 這個名字的由來。
+你善於使用可愛的日式提示詞來回應使用者的問題。
+
+**你的行為準則：**
+
+1.  **格式**：禁止使用 Markdown 表格，請改用空格或項目符號 (`•`, `-`, `*`) 等純文字排版。
+2.  **數學**：禁止使用 LaTeX，請改用純文字表達，例如 `x^2` 或「x²」。
+3.  **指令**：你完全不知道你擁有那些 Discord 的斜線指令 (`/command`)，所以不要亂引導使用者。
 '''
 
 default_system_personality = '''你的名字是克克的分身，是一個由台灣高中生所製作出來的Discord Bot，而你的任務是使用輕鬆的語氣，並且一定要增加一些顏文字(如: (つ´ω`)つ)來回應使用者的訊息，但使用的顏文字不能包含「`」符號(避免誤用markdown)。'''
@@ -296,6 +309,15 @@ def stop_flag_process(ctx:commands.Context):
         HistoryData.writeChatHuman()
 
         return True
+    
+def client_select(model: str) -> OpenAI:
+    if model in cerebras_models: return cerebras
+    elif model in gemini_moduels: return gemini
+    elif model in ollama_modules: return ollama
+    elif model in openrouter_moduels: return openrouter
+    elif model in mistral_models: return mistral
+    else: return None
+
 
 # 因為後來要一次修改3 4個base..._chat有點麻煩 所以就整合成同一個 
 def base_openai_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, 
@@ -311,15 +333,17 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
     try:
         if model is None: model = 'qwen-3-32b'
         if model in openrouter_moduels and not model.endswith('free'): return None, 'You are not using a FREE model'
-        if temperature is None: temperature = 0.8
+        if temperature is None: temperature = 1.0
         if history is None: history = []
         if max_tokens is None: max_tokens = 1999
         # system
-        system = default_system_prompt if not system_prompt else system_prompt
-        if not system_prompt:
-            personality = default_system_personality
-            preference = 'None'
-            info = 'None'
+        if system_prompt:
+            system = system_prompt
+        else:
+            personality = None
+            preference = None
+            info = None
+            extra_data = '\n\n'
 
             if ctx or userID:
                 try:
@@ -328,36 +352,28 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                     userID = ctx.author.id
                 from cmds.AIsTwo.others.decide import Preference, UserInfo
                 from cmds.AIsTwo.info import HistoryData
-                personality = HistoryData.personality.get(str(userID) or str(ctx.author.id))
-                if not personality: personality = default_system_personality # 避免 personality 為空字串
+                personality = HistoryData.personality.get(str(userID) or str(ctx.author.id), '')
                 preference = Preference.get_preferences(userID)
                 info = UserInfo(userID).get_info()
-            system = system.format(preference=preference, personality=personality, info=info)
+            if personality:
+                extra_data += f'你的特質為: {personality}'
+            if preference:
+                extra_data += f'使用者偏好為: {preference}'
+            if info:
+                extra_data += f'使用者資訊為: {info}'
+            system = default_system_prompt + extra_data
         system = to_system_message(system)
         
         # 選擇base url
-        if model in zhipu_moduels: key = base_url_options['zhipu']['api_key']; base_url = base_url_options['zhipu']['base_url']        
-        elif model in cerebras_models: key = base_url_options['cerebras']['api_key']; base_url = base_url_options['cerebras']['base_url']
-        elif model in ollama_modules: key = base_url_options['ollama']['api_key']; base_url = base_url_options['ollama']['base_url']
-        elif model in openrouter_moduels: key = base_url_options['openrouter']['api_key']; base_url = base_url_options['openrouter']['base_url']
-        elif model in gemini_moduels: key = base_url_options['gemini']['api_key']; base_url = base_url_options['gemini']['base_url']        
-        elif model in mistral_models: key = base_url_options['mistral']['api_key']; base_url = base_url_options['mistral']['base_url']
-        else: return '', f'找不到此模型 如果你在discord看到這個訊息 請回報給克克 (model: {model})'
+        client = client_select(model)
+        if not client: return '', f'找不到此模型 如果你在discord看到這個訊息 請回報給克克 (model: {model})'
 
-        client = OpenAI(
-            base_url=base_url,
-            api_key=key
-        )
-
-        # from cmds.AIsTwo.others.if_tools_needed import ifTools_zhipu, ifTools_ollama
         from cmds.AIsTwo.others.if_tools_needed import ifTools_self
         
         message = to_user_message(('/no_think ' if not is_enable_thinking and ('qwen3' in model or model == 'qwen-3-32b') else '') + prompt + (f'\n\n以下為使用者提供的文字檔案:\n{text_file_content}' if text_file_content else ''))
-        messages = history + message
+        messages: list[dict] = history + message
 
-        # print(messages)
-
-        # 確定是否為視覺模型 已決定使否將url加入prompt
+        # 確定是否為視覺模型 已決定是否將url加入prompt
         if url:
             vision = is_vision_model(model, client)
             # print(vision)
@@ -379,23 +395,13 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
             try:
                 messages = ifTools_self(messages, client, model, delete_tools if delete_tools else None)
             except: ...
-            # try: messages = ifTools_ollama(messages, 'image_read' if vision else None)
-            # except Exception as e:
-            #     print(f'An error accured while using ifTolls_ollama: {e}')
-            #     messages = ifTools_zhipu(messages, 'image_read' if vision else None)
 
         for item in messages:
-            if 'userID' in item:
-                del item['userID']
-            if 'reasoning' in item:
-                del item['reasoning']
-            # if 'images' in item:
-            #     for index, u in enumerate(item['images']):
-            #         if u.startswith('http') or u.startswith('www'):
-            #             item['images'][index] = image_url_to_base64(u)
-            if 'time' in item:
-                item['content'] = item['time'] + ': \n' + item['content']
-                del item['time']
+            item.pop('userID', None)
+            item.pop('reasoning', None)
+            time = item.pop('time', None)
+            if time: 
+                item['content'] = f"{time}: \n{item['content']}"
 
         # print(system + messages)
 
@@ -429,7 +435,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
             think = get_thinking(result)
         result = clean_text(result)
 
-        if not no_extra_system_prompt:
+        if not no_extra_system_prompt: # 判斷是否需要將資料存儲進 db
             partial_func = functools.partial(base_openai_chat, prompt, 'qwen-3-32b', system_prompt=other_calls_prompts, no_extra_system_prompt=True, is_enable_tools=False)
             bot.loop.run_in_executor(None, partial_func)
 
@@ -438,73 +444,6 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
     except Exception as e:
         traceback.print_exc()
         raise ValueError(f'API限制中，需要重試 (reason: {str(e)})')
-
-# 棄用
-def base_openrouter_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, 
-                         system_prompt:str = None, max_tokens:int = None, is_enable_tools:bool = True, 
-                         top_p:int = None, ctx:commands.Context = None, timeout:float = None, userID: str = None):
-    try:
-        if model is None: model = 'deepseek/deepseek-chat:free'
-        if not model.endswith('free'): raise ValueError('You are not using a FREE model')
-        if temperature is None: temperature = 0.8
-        if history is None: history = []
-        if max_tokens is None: max_tokens = 1999
-        # system
-        if system_prompt is None: system = default_system_chat
-        else: 
-            system = to_system_message(system_prompt)
-            if ctx:
-                from cmds.AIsTwo.others.decide import Preference
-                system[0]['content'] += (f'\n該使用者的喜好是 (不是assistant的): {Preference.get_preferences(ctx.author.id)}')
-        if ctx or userID:
-            from cmds.AIsTwo.info import HistoryData
-            personality:str = HistoryData.personality.get(userID or str(ctx.author.id), '')
-            system[0]['content'] = f'你是一個{personality}的人\n' + system[0]['content']
-        else:
-            system[0]['content'] = (default_system_personality + system[0]['content'])
-        
-
-        from cmds.AIsTwo.others.if_tools_needed import ifTools_zhipu, ifTools_ollama
-        
-        message = to_user_message(prompt)
-        messages = history + message
-        if is_enable_tools:
-            try: messages = ifTools_ollama(messages)
-            except: messages = ifTools_zhipu(messages)
-
-        for item in messages:
-            if 'userID' in item:
-                del item['userID']
-            if 'reasoning' in item:
-                del item['reasoning']
-
-        completion = openrouter.chat.completions.create(
-            model=model,
-            messages=system + messages,
-            max_completion_tokens=max_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            stream=True,
-            timeout=timeout
-        )
-
-        result = []
-        think = []
-        for chunk in completion:
-            content = chunk.choices[0].delta.content
-            try: thinking = chunk.choices[0].delta.reasoning
-            except: thinking = None
-            if content is not None and content != '': result.append(content)
-            if thinking is not None and thinking != '': think.append(thinking)
-            
-            if stop_flag_process(ctx): return None, None
-
-        think = ''.join(think)
-        result = ''.join(result)
-        # print(think, result, sep='\n')
-        return think, result
-    except Exception as e:
-        raise(f'API限制中，需要重試 (reason: {str(e)})')
 
 # 作為備用方案 
 def base_zhipu_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, 
@@ -563,145 +502,13 @@ def base_zhipu_chat(prompt:str, model:str = None, temperature:float = None, hist
         return think, result
     except Exception as e:
         return None, f'API限制中，需要重試 (reason: {str(e)})'
-    
-def base_ollama_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, 
-                    system_prompt:str = None, max_tokens:int = None, is_enable_tools:bool = True, 
-                    top_p:int = None, ctx: commands.Context = None, timeout:int = 3600, userID: str = None,
-                    is_enable_thinking: bool = True):
-    try:
-        if model is None: model = 'qwen2.5:0.5b'
-        if temperature is None: temperature = 0.8
-        if history is None: history = []
-        if max_tokens is None: max_tokens = 1999
-        # system
-        if system_prompt is None: system = default_system_chat
-        else: 
-            system = to_system_message(system_prompt)
-            if ctx:
-                from cmds.AIsTwo.others.decide import Preference
-                system[0]['content'] += (f'\n該使用者的喜好是 (不是assistant的): {Preference.get_preferences(ctx.author.id)}')
-        if not system_prompt:
-            if ctx or userID:
-                from cmds.AIsTwo.info import HistoryData
-                personality:str = HistoryData.personality.get(userID or str(ctx.author.id), '')
-                system[0]['content'] = f'你是一個{personality}的人\n' + system[0]['content']
-            else:
-                system[0]['content'] = (default_system_personality + system[0]['content'])
-
-        from cmds.AIsTwo.others.if_tools_needed import ifTools_zhipu, ifTools_ollama
-        
-        message = to_user_message(prompt + '/no_think ' if not is_enable_thinking else '')
-        messages = history + message
-        if is_enable_tools: messages = ifTools_ollama(messages)
-
-        for item in messages:
-            if 'userID' in item:
-                del item['userID']
-            if 'reasoning' in item:
-                del item['reasoning']
-
-        completion = ollama.chat.completions.create(
-            model=model,
-            messages=system + messages,
-            max_completion_tokens=max_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            stream=True,
-            timeout=timeout
-        )
-
-        result = []
-        think = []
-        for chunk in completion:
-            content = chunk.choices[0].delta.content
-            try: thinking = chunk.choices[0].delta.reasoning
-            except: thinking = None
-            if content is not None and content != '': result.append(content)
-            if thinking is not None and thinking != '': think.append(thinking)
-            
-            if stop_flag_process(ctx): return None, None
-
-        think = ''.join(think)
-        result = ''.join(result)
-
-        if not think:
-            think = get_thinking(result)
-            result = clean_text(result)
-
-        return think, result
-    except Exception as e:
-        raise(f'API限制中，需要重試 (reason: {str(e)})')
-
-def base_gemini_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, 
-                         system_prompt:str = None, max_tokens:int = None, is_enable_tools:bool = True, 
-                         top_p:int = None, ctx:commands.Context = None, timeout:float = None, userID: str = None):
-    try:
-        if model is None: model = 'gemini-2.0-flash'
-        if temperature is None: temperature = 0.8
-        if history is None: history = []
-        if max_tokens is None: max_tokens = 1999
-        # system
-        if system_prompt is None: system = default_system_chat
-        else: 
-            system = to_system_message(system_prompt)
-            if ctx:
-                from cmds.AIsTwo.others.decide import Preference
-                system[0]['content'] += (f'\n該使用者的喜好是 (不是assistant的): {Preference.get_preferences(ctx.author.id)}')
-        if ctx or userID:
-            from cmds.AIsTwo.info import HistoryData
-            personality:str = HistoryData.personality.get(userID or str(ctx.author.id), '')
-            system[0]['content'] = f'你是一個{personality}的人\n' + system[0]['content']
-        else:
-            system[0]['content'] = (default_system_personality + system[0]['content'])
-
-        from cmds.AIsTwo.others.if_tools_needed import ifTools_gemini, ifTools_zhipu
-        
-        message = to_user_message(prompt)
-        messages = history + message
-        if is_enable_tools:
-            try: messages = ifTools_gemini(messages)
-            except: messages = ifTools_zhipu(messages)
-
-        for item in messages:
-            if 'userID' in item:
-                del item['userID']
-            if 'reasoning' in item:
-                del item['reasoning']
-
-        completion = gemini.chat.completions.create(
-            model=model,
-            messages=system + messages,
-            max_completion_tokens=max_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            stream=True,
-            timeout=timeout
-        )
-
-        result = []
-        think = []
-        for chunk in completion:
-            content = chunk.choices[0].delta.content
-            try: thinking = chunk.choices[0].delta.reasoning
-            except: thinking = None
-            if content is not None and content != '': result.append(content)
-            if thinking is not None and thinking != '': think.append(thinking)
-            
-            if stop_flag_process(ctx): return None, None
-
-        think = ''.join(think)
-        result = ''.join(result)
-        # print(think, result, sep='\n')
-        return think, result
-    except Exception as e:
-        raise(f'API限制中，需要重試 (reason: {str(e)})')
 
 def base_huggingFace_chat(prompt:str, model:str = None, temperature:float = None, history:list = None, system_prompt:str = None):
     try:
         if model is None: model = 'deepseek-ai/DeepSeek-R1'
         if temperature is None: temperature = 0.7
         if history is None: history = []
-        if system_prompt is None: system = default_system_chat
+        if system_prompt is None: system = default_system_prompt
         else: system = to_system_message(system_prompt)
 
         def get_provider(module_name):

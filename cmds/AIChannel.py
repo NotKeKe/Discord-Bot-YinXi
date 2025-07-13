@@ -452,6 +452,18 @@ class AIChannel(commands.Cog):
             if userID in data: del data[userID]
             await ctx.send('已刪除AI的個性' + (f'原本為: ({original})' if original else ''))
 
+    @commands.hybrid_command(name='提示詞修改', description='修改你在該AIchannel，跟AI對話的提示詞')
+    async def modify_system_prompt(self, ctx: commands.Context, *, prompt: str):
+        HistoryData.initdata()
+        data = HistoryData.channel
+        channelID = str(ctx.channel.id)
+        if channelID not in data: return await ctx.send('該頻道不是AI channel', ephemeral=True)
+
+        data = HistoryData.channel_system_prompts
+        pre_prompt = data.get(channelID, 'None')
+        data[channelID] = prompt
+        HistoryData.writeChannelSystemPrompts(data)
+        await ctx.send(f'你的提示詞已從\n```{pre_prompt}```\n改為\n```{prompt}```')
 
     @tasks.loop(minutes=5)
     async def overTenHistoryTask(self):

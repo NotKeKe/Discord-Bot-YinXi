@@ -1,5 +1,5 @@
 from discord.ext import commands
-from cmds.AIsTwo.base_chat import base_openrouter_chat, base_zhipu_chat, base_ollama_chat, base_openai_chat
+from cmds.AIsTwo.base_chat import base_zhipu_chat, base_openai_chat
 from cmds.AIsTwo.others.decide import Preference, UserInfo
 from cmds.AIsTwo.info import HistoryData
 from cmds.AIsTwo.vector import chat_human as v_chat
