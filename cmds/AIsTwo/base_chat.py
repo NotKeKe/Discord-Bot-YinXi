@@ -130,7 +130,7 @@ async def safe_get_ollama_models() -> list:
         print('successfully load ollama models.')
         return ollama_modules
     except Exception as e:
-        print("Failed to get Ollama models; ", e)
+        print("Failed to get Ollama models: ", e)
 
 
 def run_safe_get_ollama_models():

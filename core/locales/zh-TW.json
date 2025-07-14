@@ -58,7 +58,8 @@
         "toxic_jacket_soup": "毒雞湯",
         "lovelive": "lovelive",
         "yt_downloader": "影片下載",
-        "lang": "設定語言"
+        "lang": "設定語言",
+        "del_keep": "刪除記事"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -119,7 +120,8 @@
         "toxic_jacket_soup": "獲取一句毒雞湯",
         "lovelive": "獲取一句 lovelive 語錄",
         "yt_downloader": "透過 yt-dlp 下載影片或音訊",
-        "lang": "設定你自己的偏好語言，這將會改變音汐對你輸出的語言。(僅使用 prefix (前綴指令，即 `[`) 時會生效)"
+        "lang": "設定你自己的偏好語言，這將會改變音汐對你輸出的語言。(僅使用 prefix (前綴指令，即 `[`) 時會生效)",
+        "del_keep": "刪除你先前使用 /記事 所創建的事件"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -588,6 +590,8 @@
         }],
         "send_lang_invalid_lang": "你輸入的語言不在 (zh-CN, zh-TW, en-US) 當中欸 :thinking:\n重新輸入一次吧w",
         "send_lang_success": "現在音汐會跟你說 `{lang}` 了窩!",
-        "send_lang_same_lang": "你原本的偏好設定就是 `{lang}` 了."
+        "send_lang_same_lang": "你原本的偏好設定就是 `{lang}` 了.",
+        "send_del_keep_please_use_slash_command": "請使用斜線指令進行選擇",
+        "send_del_keep_cancel_success": "已取消提醒\n事件: ```{event}```\n時間:```{time}```"
     }
 }

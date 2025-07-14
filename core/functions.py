@@ -170,6 +170,15 @@ def is_KeJC(userID: int):
     return str(userID) == KeJCID
 
 settings = read_json('setting.json')
-admins: List[int] = read_json('./cmds/data.json/admins.json')['admins']
-testing_guildID: int = settings['testing_guildID']
-DEVICE_IP: str = settings.get('DEVICE_IP')
+if not settings: print('Please add `setting.json` to current path.')
+
+try: admins: List[int] = read_json('./cmds/data.json/admins.json')['admins']
+except TypeError: print('Cannot fetch ./cmds/data.json/admins.json')
+except: traceback.print_exc()
+
+if settings:
+    testing_guildID: int = settings['testing_guildID']
+    DEVICE_IP: str = settings.get('DEVICE_IP')
+else:
+    testing_guildID: int = 123456789
+    DEVICE_IP: str = '127.0.0.1'

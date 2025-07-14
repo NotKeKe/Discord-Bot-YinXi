@@ -1,12 +1,15 @@
 from discord.ext import commands, tasks
-from discord import app_commands
+from discord import app_commands, Interaction
+from discord.app_commands import Choice
 import asyncio
 import orjson
 import uuid
 from datetime import datetime
+from typing import List
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
 import traceback
+from collections import defaultdict
 
 from core.classes import Cog_Extension, bot
 from core.functions import read_json, write_json, create_basic_embed, current_time, KeJCID
@@ -26,6 +29,8 @@ ex_keepData = {
 }
 
 keepPATH = './cmds/data.json/keep.json'
+
+reminder_tasks = {}
 
 class SaveKeep:
     keepData = None
@@ -48,15 +53,17 @@ class SaveKeep:
         cls.update = False
 
     @classmethod
-    def deletekeepEvent(cls, userID: str, uuid: str):
+    def deletekeepEvent(cls, userID: str, uuid: str) -> dict | None:
         if cls.keepData is not None:
-            for item in cls.keepData[userID]:
+            for i, item in enumerate(cls.keepData[userID]):
                 if item['uuid'] == uuid:
-                    cls.keepData[userID].remove(item)
+                    popped_item = cls.keepData[userID].pop(i)
                     break
 
             if not cls.keepData[userID]: del cls.keepData[userID]
             cls.save(cls.keepData)
+            return popped_item
+        return None
 
 class RunKeep:
     def __init__(self, time: str, event: str, ctx: commands.Context):
@@ -187,12 +194,14 @@ class RunKeep:
         await ctx.send(embed=embed)
 
         SaveKeep.save(data)
-        bot.loop.create_task(self.keepMessage(ctx.channel, ctx.author, event, delay, u))
+        task = bot.loop.create_task(self.keepMessage(ctx.channel, ctx.author, event, delay, u))
+        reminder_tasks[u] = task
 
     @staticmethod
     async def keepMessage(channel, user, event, delay, uuid: str):
         await asyncio.sleep(delay)
         await channel.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
+        reminder_tasks.pop(uuid)
         SaveKeep.deletekeepEvent(str(user.id), uuid)
 
     @classmethod
@@ -215,18 +224,37 @@ class RunKeep:
                     user = await bot.fetch_user(int(userID))
                     channel = await bot.fetch_channel(int(channelID))
 
-                    bot.loop.create_task(cls.keepMessage(channel, user, event, delaySecond, u)) 
+                    task = bot.loop.create_task(cls.keepMessage(channel, user, event, delaySecond, u)) 
+                    reminder_tasks[u] = task
                     count += 1
             print(f'已新增 {count} 個 keep 任務')
         except: traceback.print_exc()
 
+
+async def keep_event_autocomplete(interaction: Interaction, current: str) -> List[Choice[str]]:
+    SaveKeep.initData()
+
+    events: list = SaveKeep.keepData.get(str(interaction.user.id), [])
+    if not events: return []
+
+    result = [
+        (
+            f"{item['event']} | {item['When_to_send_str']} | at { ( bot.get_channel(item['ChannelID']) ).name }",
+            str(index)
+        ) 
+        for index, item in enumerate(events)
+    ]
+    
+    if current:
+        result = [item for item in result if current.lower().strip() in (item[0].lower(), item[1].lower())]
+    
+    return [Choice(name=item[0], value=item[1]) for item in result[:25]]
 
 class Keep(Cog_Extension):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
         self.write_keep_data.start()
-        await self.bot.wait_until_ready()
         await RunKeep.create_KeepTask()
 
     # Create a Keep
@@ -237,10 +265,28 @@ class Keep(Cog_Extension):
         async with ctx.typing():
             await RunKeep(time, event, ctx).run()
 
+    @commands.hybrid_command(name=locale_str('del_keep'), description=locale_str('del_keep'))
+    @app_commands.autocomplete(keep_event=keep_event_autocomplete)
+    async def del_keep(self, ctx: commands.Context, keep_event: str):
+        try: keep_event = int(keep_event)
+        except: return await ctx.send(await ctx.interaction.translate('send_del_keep_please_use_slash_command'))
+
+        SaveKeep.initData()
+        data = SaveKeep.keepData
+        events: list = data.get(str(ctx.author.id), [])
+        
+        item = SaveKeep.deletekeepEvent(str(ctx.author.id), events[keep_event]['uuid'])
+
+        task = reminder_tasks.pop(item['uuid'])
+        task.cancel()
+
+        SaveKeep.save(data)
+        await ctx.send( (await ctx.interaction.translate('send_del_keep_cancel_success') ).format(event=item['event'], time=item['When_to_send_str']), ephemeral=True)    
+
     @commands.command(name='check_keepdata')
     async def check_keepdata(self, ctx: commands.Context):
         if str(ctx.author.id) != KeJCID: return
-        await ctx.send(f'{SaveKeep.keepData=}\n{SaveKeep.update=}')
+        await ctx.send(f'{SaveKeep.keepData=}\n\n{SaveKeep.update=}\n\n{reminder_tasks=}')
 
     @tasks.loop(minutes=1)
     async def write_keep_data(self):
