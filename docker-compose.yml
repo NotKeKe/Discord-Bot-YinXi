@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  bot:
+    build: .
+    container_name: discord_bot
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/yinxi_bot/logs
+      - ./setting.json:/app/yinxi_bot/setting.json
+    env_file:
+      - .env
