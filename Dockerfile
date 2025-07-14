@@ -1,10 +1,12 @@
 FROM python:3.13.5-slim
 
+RUN pip install uv
+
 WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv pip install --system --no-cache -r requirements.txt
 
 EXPOSE 3000
 

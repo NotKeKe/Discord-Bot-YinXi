@@ -1,0 +1,19 @@
+{
+    "join_leave_channel": ".",
+
+    "pic1": "",
+
+    "skyblock_events": ".",
+
+    "suggest_channel": ".",
+    "report_channel": ".",
+
+    "status_channel": {
+        "channel_ID": ".",
+        "message_ID": "."
+    },
+
+    "testing_guildID": .,
+
+    "DEVICE_IP": "."
+}
