@@ -17,7 +17,7 @@ from cmds.AIsTwo.utils import image_url_to_base64, select_moduels_auto_complete
 from cmds.AIsTwo.vector import chat_human as vt_chat_human
 from vector_data import vector
 
-from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate
+from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate, testing_guildID
 
 save_to_preferences = Preference.save_to_preferences
 
@@ -161,6 +161,7 @@ class AITwo(commands.Cog):
             await ctx.send(f'轉換失敗, reason: {e}', ephemeral=True)
 
     @commands.hybrid_command(name='文字轉語音', description='利用ChatTTS來把文字轉成語音')
+    @app_commands.guilds(discord.Object(id=testing_guildID))
     @app_commands.describe(text='在此輸入你要轉換的文字 (建議使用中文)', 
                            情感波動性='temperature，範圍在0~1，數字越大 波動性越高',
                            情感相關性='top_P，範圍在0.1~0.9，數字越大 相關性越高',

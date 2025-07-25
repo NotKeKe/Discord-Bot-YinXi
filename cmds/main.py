@@ -15,7 +15,7 @@ from cmds.AIsTwo.others.func import image_read
 from cmds.AIsTwo.utils import image_url_to_base64
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow
+from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow, testing_guildID
 from core.translator import locale_str, load_translated
 
 # get env
@@ -194,6 +194,7 @@ class Main(Cog_Extension):
             await ctx.send(readable)
 
     @commands.hybrid_command(name=locale_str('tw_high_school_score_calculator'), description=locale_str('tw_high_school_score_calculator'))
+    @app_commands.guilds(discord.Object(testing_guildID))
     @app_commands.describe(image=locale_str('tw_high_school_score_calculator_image'), prompt=locale_str('tw_high_school_score_calculator_prompt'))
     async def high_school_totalScore_calculate(self, ctx: commands.Context, 國文: float = 0.0, 英文: float = 0.0, 數學: float = 0.0, 化學: float = 0.0, 生物: float = 0.0, 物理: float = 0.0, 歷史: float = 0.0, 地理: float = 0.0, 公民: float = 0.0, 體育: float = 0.0, image: discord.Attachment = None, prompt: str = None):
         async with ctx.typing():

@@ -43,30 +43,61 @@
     *   可在 [core/locales](core/locales) 查看與 Gemini 2.5 pro 的 `對話紀錄` 與 `提示詞`
 
 ## ⚡ Quick Start
-**！建議使用 Python 3.13+ 以上的環境！**
+**❗建議使用 Python 3.13+ 以上的環境❗**
 
-1.  **安裝依賴**:
+**請先設定 `.env` 檔案**:
+* 請參考以下「配置設定 - 環境變數」部分，建立並填寫您的 `.env` 檔案。 <br>
+**！務必在 .env 內填上 `DISCORD_TOKEN`！**<br><br>
+
+**選項一** 使用 **[Docker](https://www.docker.com/)** (使用 docker 才會包括 fastapi 的部分):
+```bash
+# 將專案克隆至本地目錄
+git clone https://github.com/NotKeKe/Discord-Bot-YinXi.git
+
+# 進入專案目錄
+cd Discord-Bot-YinXi
+
+# 使用 docker compose 執行
+docker-compose up -d
+```
+
+**選項二** 使用 **[uv](https://github.com/astral-sh/uv)**:
+1. **與專案環境同步**:
+    ```bash
+    uv sync
+    ```
+2. **啟動機器人**:
+    ```bash
+    uv run newbot2.py
+    ```
+
+**選項三** 使用 **[pm2](https://pm2.keymetrics.io/)**:
+1. **確保你的設備環境內有 `node.js` 與 `npm`**
+2. **安裝 pm2**:
+    ```bash
+    npm install -g pm2
+    ```
+3. **安裝依賴與啟動Bot**:
+    ```bash
+    pip install -r requirements.txt
+    ./start_run_in_docker_pm2.sh
+    ```
+
+    - 如果**無法使用**的話 建議先使用以下指令 
+        ```bash
+        cd ENTER_YINXI_BOT_PATH
+        chmod +x start_run_in_docker_pm2.sh
+        ```
+
+**選項四** 使用 **[newbot2.bat](newbot2.bat)** (僅 windows)
+1. **安裝依賴**:
     ```bash
     pip install -r requirements.txt
     ```
-2.  **設定 `.env` 檔案**:
-    請參考以下「配置設定 - 環境變數」部分，建立並填寫您的 `.env` 檔案。 <br>
-    **！務必在 .env 內填上 `DISCORD_TOKEN`！**
-3.  **啟動機器人**: <br>
-    - **選項1: 使用 終端 執行**
-        ```bash
-        python newbot2.py
-        ```
-    - **選項2: 使用 pm2 執行**
-        ```bash
-        npm install pm2 -g
-        ./start_run_in_docker_pm2.sh
-        ```
-        - 如果**無法使用**的話 建議先使用以下指令 
-            ```bash
-            cd YOUR_PATH_HERE
-            chmod +x start_run_in_docker_pm2.sh
-            ```
+2. **啟動機器人**:
+    ```bash
+    newbot2.bat
+    ```
 
 ## ⚙️ 配置設定
 

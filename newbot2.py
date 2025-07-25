@@ -7,9 +7,12 @@ from dotenv import load_dotenv
 import asyncio
 import time
 import traceback
+import logging
+import sys
 
 from core.functions import math_round, current_time, testing_guildID
 from core.translator import i18n, MockInteraction
+from core.setup_log import setup_logging, StreamToLogger
 
 # get env
 load_dotenv()
@@ -18,6 +21,13 @@ KeJC_ID = int(os.getenv('KeJC_ID'))
 embed_link = os.getenv('embed_default_link')
 online_time = None
 start_time = time.time()
+
+# log setup
+setup_logging()
+root_logger = logging.getLogger()
+sys.stdout = StreamToLogger(root_logger, logging.INFO)
+sys.stderr = StreamToLogger(root_logger, logging.ERROR)
+root_logger.info('輸出已被重導向至 `/logs`')
 
 #setting.json
 with open('setting.json', 'r', encoding = 'utf8') as jfile:
@@ -183,4 +193,5 @@ async def main():
         print(f'開啟共花費了: {math_round(time.time() - start_time, 2)}')
         await bot.start(TOKEN)
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())

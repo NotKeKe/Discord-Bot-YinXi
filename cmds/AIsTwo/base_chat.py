@@ -312,6 +312,7 @@ def stop_flag_process(ctx:commands.Context):
     
 def client_select(model: str) -> OpenAI:
     if model in cerebras_models: return cerebras
+    elif model in zhipu_moduels: return zhipu
     elif model in gemini_moduels: return gemini
     elif model in ollama_modules: return ollama
     elif model in openrouter_moduels: return openrouter

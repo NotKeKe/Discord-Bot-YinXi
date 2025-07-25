@@ -8,11 +8,12 @@ from discord.app_commands import Choice
 import traceback
 import typing
 import os
+import sys
 from dotenv import load_dotenv
 import asyncio
 
 from core.classes import Cog_Extension
-from core.functions import testing_guildID
+from core.functions import testing_guildID, is_testing_guild
 
 # get env
 load_dotenv()
@@ -167,18 +168,20 @@ class Load(Cog_Extension):
         await message.edit(embed=embed)
 
     @commands.command(name='restart')
-    @app_commands.guilds(discord.Object(id=testing_guildID))
-    async def restart(self, ctx):
+    @is_testing_guild()
+    async def restart(self, ctx, type: str = 'os'):
         if str(ctx.author.id) != KeJCID: return
 
         message = await ctx.send('嘗試重啟bot...')
-        os.system('pm2 restart DiscordBot')
-        await asyncio.sleep(10)
-        try: await message.delete()
-        except:...
+
+        if type == 'pm2':
+            os.system('pm2 restart DiscordBot')
+        else:
+            python = sys.executable
+            os.execv(python, [python] + sys.argv)
 
     @commands.command(name='清除日誌')
-    @app_commands.guilds(discord.Object(id=testing_guildID))
+    @is_testing_guild()
     async def clear(self, ctx):
         if str(ctx.author.id) != KeJCID: return
 
@@ -186,7 +189,7 @@ class Load(Cog_Extension):
         os.system('pm2 flush')
 
     @commands.command(name='系統指令')
-    @app_commands.guilds(discord.Object(id=testing_guildID))
+    @is_testing_guild()
     async def system_command(self, ctx, * , command):
         if str(ctx.author.id) != KeJCID: return
         

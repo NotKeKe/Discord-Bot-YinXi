@@ -1,9 +1,3 @@
-from fastapi import FastAPI, Request, Form, HTTPException, Query
-from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-import uvicorn
-
 import discord
 from discord import app_commands
 from discord.app_commands import Choice
@@ -16,9 +10,7 @@ from datetime import datetime
 from deep_translator import GoogleTranslator
 import typing
 import os
-import xml.etree.ElementTree as ET
 import asyncio
-import sqlite3
 import time
 import base64
 from PIL import Image
@@ -26,104 +18,11 @@ import io
 import re
 import aiofiles
 
-from core.classes import Cog_Extension
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable, strToDatetime, BASE_DIR, current_time, DEVICE_IP
+from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable
 from core.translator import locale_str, load_translated
-from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY
+from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY, testing_guildID
 
-app = FastAPI()
-templates = Jinja2Templates(directory="templates")
-alive = time.time()
-youtube_download_base_url = 'https://opfqetniurlt.ap-northeast-1.clawcloudrun.com'
-app.mount("/assests", StaticFiles(directory="assests"), name="assests")
-
-# Create SQLite database and table
-def init_snoymous_messages_db():
-    conn = sqlite3.connect('./data/anonymous_messages.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            message TEXT NOT NULL,
-            timestamp DATETIME DEFAULT (datetime('now', 'localtime'))
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {'request': request})
-
-@app.get('/api/llm/tools')
-async def get_tools():
-    data = read_json('./cmds/AIsTwo/data/tools_descrip.json')
-    return data
-
-@app.get('/api/image/')
-async def get_image_from_path(path: str = Query(..., min_length=5)):
-    if os.path.isfile(path) and path.startswith(BASE_DIR):
-        return FileResponse(path)
-    else:
-        raise HTTPException(404, f'檔案不存在 ({path=}) (使用絕對路徑試試看)')
-
-@app.get('/discord', response_class=RedirectResponse)
-async def direct_to_discord_server():
-    return RedirectResponse('https://discord.gg/MhtxWJu')
-
-@app.get('/github', response_class=RedirectResponse)
-async def direct_to_yinxi_github():
-    return RedirectResponse('https://github.com/NotKeKe/Discord-Bot-YinXi')
-
-@app.get('/s_url', response_class=RedirectResponse)
-async def short_url():
-    return RedirectResponse('https://ke.rf.gd')
-
-@app.get('/test', response_class=FileResponse)
-async def test_file_return():
-    return FileResponse('./image/discord_embed_author.png')
-
-@app.get('/anonymous', response_class=HTMLResponse)
-async def anonymous_messages(request: Request):
-    # Retrieve all messages from the database
-    conn = sqlite3.connect('./data/anonymous_messages.db')
-    c = conn.cursor()
-    c.execute('SELECT * FROM messages')
-    messages = c.fetchall()
-    conn.close()
-
-    # Convert messages to a list of dictionaries
-    message_list = []
-    for message in messages:
-        message_list.append({
-            "id": message[0],
-            "name": message[1],
-            "message": message[2],
-            "timestamp": message[3]
-        })
-
-    return templates.TemplateResponse("anonymous.html", {"request": request, "messages": message_list})
-
-@app.post('/anonymous', response_class=HTMLResponse)
-async def submit_message(request: Request, name: str = Form(...), message: str = Form(...)):
-    # Insert the new message into the database
-    conn = sqlite3.connect('./data/anonymous_messages.db')
-    c = conn.cursor()
-    c.execute('INSERT INTO messages (name, message) VALUES (?, ?)', (name, message))
-    conn.commit()
-    conn.close()
-
-    # Redirect back to the anonymous message board
-    return RedirectResponse(url='/anonymous', status_code=303)
-
-@app.get('/ping')
-async def check_alive():
-    '''Check My bot is alive'''
-    if time.time() - alive > 90:
-        raise HTTPException(404, 'Discord Bot is offline')
-    else:
-        return {'status': 'online', 'check_time': current_time()}
+youtube_download_base_url = None
 
 class select_autocomplete:
     countries = read_json('./cmds/data.json/country.json')
@@ -176,12 +75,7 @@ class ApiCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        init_snoymous_messages_db()
         print(f'已載入「{__name__}」')
-        try:
-            await thread_pool(uvicorn.run, app, host="0.0.0.0", port=3000, log_level="warning")
-        except Exception as e:
-            print(f'An error accur while bind address 0.0.0.0:3000 reason: {e}')
     
     @commands.hybrid_command(name=locale_str('joke'), description=locale_str('joke'), aliases=['jokes'])
     async def joke(self, ctx: commands.Context):
@@ -571,6 +465,7 @@ class ApiCog(commands.Cog):
             await ctx.send(text)
 
     @commands.hybrid_command(name=locale_str('yt_downloader'), description=locale_str('yt_downloader'), aliases=['yt_download', 'ytdownload', '影片下載'])
+    @app_commands.guilds(discord.Object(testing_guildID))
     @app_commands.choices(
         type = [Choice(name=s, value=s) for s in ('mp4', 'mp3')],
         quality = [Choice(name=s, value=s) for s in ('high', 'medium', 'low')]

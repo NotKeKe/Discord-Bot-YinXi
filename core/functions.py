@@ -1,5 +1,6 @@
 import json, orjson
 import discord
+from discord.ext import commands
 from datetime import datetime, timedelta, timezone
 import asyncio
 import functools
@@ -182,3 +183,9 @@ if settings:
 else:
     testing_guildID: int = 123456789
     DEVICE_IP: str = '127.0.0.1'
+
+def is_testing_guild():
+    '''A guild checking function for commands.command'''
+    def preficate(ctx: commands.Context):
+        return ctx.guild.id == testing_guildID
+    return commands.check(preficate)

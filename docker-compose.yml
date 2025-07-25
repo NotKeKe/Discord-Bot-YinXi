@@ -1,9 +1,23 @@
 version: '3.8'
 services:
   bot:
-    build: .
-    container_name: discord_bot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uv run newbot2.py
+    container_name: yinxi-dc-bot
     volumes:
-      - ./setting.json:/app/yinxi_bot/setting.json
-    env_file:
-      - .env
+      - ./cmds/data.json:/app/cmds/data.json
+      - ./data:/app/data
+      - ./logs/bot.log:/app/logs/bot.log
+      - ./setting.json:/app/setting.json
+    restart: unless-stopped
+  api_server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    command: uv run api_server/server.py
+    container_name: yinxi-dc-api-server
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
