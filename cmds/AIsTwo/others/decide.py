@@ -3,6 +3,7 @@ import random
 import traceback
 import orjson
 import requests
+import sqlite3
 from cmds.AIsTwo.base_chat import base_zhipu_chat, true_zhipu, ollama, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
 from core.functions import translate, current_time, read_json, write_json
@@ -11,6 +12,19 @@ from cmds.AIsTwo.others.if_tools_needed import get_tool_results
 from cmds.AIsTwo.tool_map import tools_descrip
 from cmds.AIsTwo.others.func import summarize
 from cmds.AIsTwo.tools.sql_create import user_preferences, user_info
+
+# lovelive data
+path = './data/lovelive.db'
+conn = sqlite3.connect(path)
+cursor = conn.cursor()
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS data (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        txt TEXT
+    )
+''')
+conn.commit()
+conn.close()
 
 
 def is_talking_with_me(prompt:str, history:list) -> bool:
@@ -73,15 +87,16 @@ class ActivitySelector:
                 activity = discord.Game(name=result)
 
                 try:
-                    path = './cmds/data.json/lovelive_data.json'
-                    d = read_json(path)
-                    if 'data' in d:
-                        if resp.text not in d['data']:
-                            d['data'].append(resp.text)
-                            write_json(d, path)
-                    else:
-                        d['data'] = [resp.text]
-                        write_json(d, path)
+                    conn = sqlite3.connect(path)
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT EXISTS(SELECT 1 FROM data WHERE txt = ?)", (resp.text,))
+                    exists = cursor.fetchone()[0]
+                    
+                    if not exists:
+                        cursor.execute("INSERT INTO data (txt) VALUES (?)", (resp.text,))
+                        conn.commit()
+                    
+                    conn.close()
                 except: traceback.print_exc()
             else:
                 system_prompt += '''

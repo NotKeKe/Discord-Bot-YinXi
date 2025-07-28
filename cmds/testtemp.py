@@ -188,6 +188,15 @@ class TestTemp(Cog_Extension):
         channels = [channel.name for channel in guild.channels if str(channel.type) == 'text']
         await ctx.send(', '.join(channels))
 
+    @commands.command()
+    async def test(self, ctx: commands.Context):
+        cogs = self.bot.cogs
+        cog = self.bot.get_cog('AIChannel')
+        d = cog.get_commands()
+        await ctx.send(type(d))
+        await ctx.send(str([c.name for c in d]))
+        await ctx.send(cog.__cog_name__)
+
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()
 

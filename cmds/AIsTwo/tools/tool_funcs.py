@@ -13,6 +13,7 @@ from typing import Optional
 import sqlite3
 
 from core.functions import read_json, current_time, UnixToReadable, DEVICE_IP
+from core.classes import bot
 from cmds.AIsTwo.others.func import image_generate, video_generate, image_read
 from cmds.AIsTwo.tools import sql_create
 
@@ -182,6 +183,16 @@ def wiki_searh(query: str):
 
     # print(len(pages)) # 1
     return '\n\n\n'.join([pages[page_id]["extract"] for page_id in pages])
+
+def list_available_commands() -> str:
+    """Return all of bot's commands
+    """ 
+    result = []
+    cogs = bot.cogs
+    for cog in list(cogs.values()):
+        cmds = cog.get_commands()
+        result.append(str({cog.__cog_name__: [c.name for c in cmds]}))
+    return '\n'.join(result)
 
 if __name__ == '__main__':
     print(current_time())

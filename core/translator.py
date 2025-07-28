@@ -144,7 +144,7 @@ class i18n(Translator):
         async with aiosqlite.connect('./data/user_lang.db') as db:
             await db.execute('''
                 CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER UNIQUE,
                     lang TEXT
                 )''')

@@ -12,7 +12,8 @@ func_map = {
     'image_read': image_read,
     # 'knowledge_search': knowledge_base_search,
     # 'knowledge_save': knowledge_base_save,
-    'wiki_search': wiki_searh
+    'wiki_search': wiki_searh,
+    'list_available_commands': list_available_commands
 }
 
 tools_description_json_PATH = './cmds/AIsTwo/data/tools_descrip.json'

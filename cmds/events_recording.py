@@ -31,12 +31,13 @@ class Events_Recording(Cog_Extension):
     data = None
 
     @classmethod
-    async def initdata(cls):
+    def initdata(cls):
         cls.data = read_json(PATH)
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
+        self.__class__.initdata()
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
@@ -44,6 +45,7 @@ class Events_Recording(Cog_Extension):
         guildID = str(guild.id)
         data = self.__class__.data
 
+        if data is not None and data == {}: return
         if guildID not in data: return
         if 'messageChannel' not in data[guildID]: return
 
@@ -61,9 +63,11 @@ class Events_Recording(Cog_Extension):
     @commands.Cog.listener()
     async def on_message_delete(self, message:discord.Message):
         guild = message.guild
+        if not guild: return
         guildID = str(guild.id)
         data = self.__class__.data
 
+        if data is not None and data == {}: return
         if guildID not in data: return
         if 'messageChannel' not in data[guildID]: return
 
