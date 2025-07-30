@@ -344,6 +344,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
             personality = None
             preference = None
             info = None
+            name = ctx.author.name if ctx else '使用者'
             extra_data = '\n\n'
 
             if ctx or userID:
@@ -356,12 +357,13 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                 personality = HistoryData.personality.get(str(userID) or str(ctx.author.id), '')
                 preference = Preference.get_preferences(userID)
                 info = UserInfo(userID).get_info()
+
             if personality:
-                extra_data += f'你的特質為: {personality}'
+                extra_data += f'你(音汐)的特質為: {personality}'
             if preference:
-                extra_data += f'使用者偏好為: {preference}'
+                extra_data += f'{name} 偏好為: {preference}'
             if info:
-                extra_data += f'使用者資訊為: {info}'
+                extra_data += f'{name} 資訊為: {info}'
             system = default_system_prompt + extra_data
         system = to_system_message(system)
         
