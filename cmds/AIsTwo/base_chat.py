@@ -22,7 +22,9 @@ cerebras_KEY = os.getenv('cerebras_KEY')
 
 zhipu_moduels = [
     'glm-4-flash',
-    'glm-4-plus'
+    'glm-4.5-flash',
+    'glm-z1-flash',
+    'glm-4-flash-250414'
 ]
 
 gemini_moduels = [

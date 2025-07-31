@@ -59,7 +59,10 @@
         "lovelive": "lovelive",
         "yt_downloader": "影片下載",
         "lang": "設定語言",
-        "del_keep": "刪除記事"
+        "del_keep": "刪除記事",
+        "sub_yt": "訂閱youtube頻道",
+        "sub_yt_cancel": "取消訂閱youtube頻道",
+        "sub_yt_list": "列出訂閱的youtube頻道"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -121,7 +124,10 @@
         "lovelive": "獲取一句 lovelive 語錄",
         "yt_downloader": "透過 yt-dlp 下載影片或音訊",
         "lang": "設定你自己的偏好語言，這將會改變音汐對你輸出的語言。(僅使用 prefix (前綴指令，即 `[`) 時會生效)",
-        "del_keep": "刪除你先前使用 /記事 所創建的事件"
+        "del_keep": "刪除你先前使用 /記事 所創建的事件",
+        "sub_yt": "在當前 Discord 頻道訂閱某個 YouTuber，會在此發送通知",
+        "sub_yt_cancel": "取消當前 Discord 頻道所訂閱的某個 YouTuber",
+        "sub_yt_list": "列出當前 Discord 頻道所訂閱的所有 YouTuber"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -184,7 +190,8 @@
         "minecraft_server_status_edition": "選擇伺服器版本 (Java/Bedrock)",
         "yt_downloader_url": "輸入影片/音訊的網址",
         "yt_downloader_type": "選擇要下載的格式 (mp4/mp3)",
-        "yt_downloader_quality": "選擇影片品質 (僅在選擇 mp4 時有效)"
+        "yt_downloader_quality": "選擇影片品質 (僅在選擇 mp4 時有效)",
+        "sub_yt_url": "在此輸入要訂閱的 YouTuber 連結 (例如: https://www.youtube.com/@KeJC130)"
     },
     "components": {
         "yin_xi": "音汐",
@@ -592,6 +599,23 @@
         "send_lang_success": "現在音汐會跟你說 `{lang}` 了窩!",
         "send_lang_same_lang": "你原本的偏好設定就是 `{lang}` 了.",
         "send_del_keep_please_use_slash_command": "請使用斜線指令進行選擇",
-        "send_del_keep_cancel_success": "已取消提醒\n事件: ```{event}```\n時間:```{time}```"
+        "send_del_keep_cancel_success": "已取消提醒\n事件: ```{event}```\n時間:```{time}```",
+        "send_sub_yt_invalid_url": "你輸入了錯誤的連結欸:thinking: 要不重新試試看?",
+        "send_sub_yt_cannot_found_ytb": "音汐用你給的連結後，獲得不到這個人的頻道名稱欸:thinking: 要不換個ytb試試?",
+        "send_sub_yt_successfully_save": "已成功開啟對 `{ytb}` 的影片通知 !",
+        "send_sub_yt_cancel_no_url": "我在這個頻道裡面沒有找到任何訂閱的 YouTuber 欸，先使用 `/訂閱youtube頻道` 試試開啟通知吧~",
+        "embed_sub_yt_cancel": [{
+            "title": "使用 `[! URL_HERE` 來取消訂閱該 YouTuber",
+            "author": "取消某 YouTuber 的通知",
+            "fields": [
+                { "name": "已開啟通知的 YouTuber: " }
+            ]
+        }],
+        "send_sub_yt_successfully_delete": "已刪除對 `{ytb}` 的影片通知",
+        "send_sub_yt_new_video": "{name} 發布了新影片! \n{url}",
+        "send_sub_yt_cannot_delete": "無法刪除 {url}，請使用 `/錯誤回報` 或者是於 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi) 上提出此問題。",
+        "embed_sub_yt_list": [{
+            "author": "頻道: {channelName} 所訂閱的 YouTuber"
+        }]
     }
 }

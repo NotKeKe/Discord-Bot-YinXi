@@ -19,7 +19,7 @@
         "repeat": "重复你说的话",
         "where_am_i": "我在哪里",
         "avatar": "头像",
-        "get_system_channel": "取得服务器预设频道",
+        "get_system_channel": "得得服务器预设频道",
         "server_info": "服务器信息",
         "convert_timestamp": "转换时间戳",
         "tw_high_school_score_calculator": "高中生总分计算机",
@@ -28,7 +28,7 @@
         "report": "错误回报",
         "tictactoe": "圈圈叉叉",
         "world_chat": "世界频道",
-        "report_bad_image": "不良图片检举",
+        "report_bad_image": "不良图片检检",
         "youtube_notification": "youtube通知设定",
         "play": "播放音乐",
         "add": "新增歌曲至播放清单",
@@ -59,7 +59,10 @@
         "lovelive": "lovelive",
         "yt_downloader": "影片下载",
         "lang": "设定语言",
-        "del_keep": "删除记事"
+        "del_keep": "删除记事",
+        "sub_yt": "订阅youtube频道",
+        "sub_yt_cancel": "取消订阅youtube频道",
+        "sub_yt_list": "列出订阅的youtube频道"
     },
     "description": {
         "translate": "翻译一些文字",
@@ -121,7 +124,10 @@
         "lovelive": "获取一句 lovelive 语录",
         "yt_downloader": "透过 yt-dlp 下载影片或音讯",
         "lang": "设定你自己的偏好语言，这将会改变音汐对你输出的语言。(仅使用 prefix (前缀指令，即 `[`) 时会生效)",
-        "del_keep": "删除你先前使用 /记事 所创建的事件"
+        "del_keep": "删除你先前使用 /记事 所创建的事件",
+        "sub_yt": "在当前 Discord 频道订阅某个 YouTuber，会在此发送通知",
+        "sub_yt_cancel": "取消当前 Discord 频道所订阅的某个 YouTuber",
+        "sub_yt_list": "列出当前 Discord 频道所订阅的所有 YouTuber"
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
@@ -184,7 +190,8 @@
         "minecraft_server_status_edition": "选择服务器版本 (Java/Bedrock)",
         "yt_downloader_url": "输入影片/音讯的网址",
         "yt_downloader_type": "选择要下载的格式 (mp4/mp3)",
-        "yt_downloader_quality": "选择影片品质 (仅在选择 mp4 时有效)"
+        "yt_downloader_quality": "选择影片品质 (仅在选择 mp4 时有效)",
+        "sub_yt_url": "在此输入要订阅的 YouTuber 连结 (例如: https://www.youtube.com/@KeJC130)"
     },
     "components": {
         "yin_xi": "音汐",
@@ -592,6 +599,23 @@
         "send_lang_success": "现在音汐会跟你说 `{lang}` 了窝!",
         "send_lang_same_lang": "你原本的偏好设定就是 `{lang}` 了.",
         "send_del_keep_please_use_slash_command": "请使用斜线指令进行选择",
-        "send_del_keep_cancel_success": "已取消提醒\n事件: ```{event}```\n时间:```{time}```"
+        "send_del_keep_cancel_success": "已取消提醒\n事件: ```{event}```\n时间:```{time}```",
+        "send_sub_yt_invalid_url": "你输入了错误的连结欸:thinking: 要不重新试试看?",
+        "send_sub_yt_cannot_found_ytb": "音汐用你给的连结后，获取不到这个人的频道名称欸:thinking: 要不换个ytb试试?",
+        "send_sub_yt_successfully_save": "已成功开启对 `{ytb}` 的影片通知 !",
+        "send_sub_yt_cancel_no_url": "我在这个频道里面没有找到任何订阅的 YouTuber 欸，先使用 `/订阅youtube频道` 试试开启通知吧~",
+        "embed_sub_yt_cancel": [{
+            "title": "使用 `[! URL_HERE` 来取消订阅该 YouTuber",
+            "author": "取消某个 YouTuber 的通知",
+            "fields": [
+                { "name": "已开启通知的 YouTuber: " }
+            ]
+        }],
+        "send_sub_yt_successfully_delete": "已删除对 `{ytb}` 的影片通知",
+        "send_sub_yt_new_video": "{name} 发布了新影片! \n{url}",
+        "send_sub_yt_cannot_delete": "无法删除 {url}，请使用 `/错误回报` 或者是于 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi) 上提出此问题。",
+        "embed_sub_yt_list": [{
+            "author": "频道: {channelName} 所订阅的 YouTuber"
+        }]
     }
 }

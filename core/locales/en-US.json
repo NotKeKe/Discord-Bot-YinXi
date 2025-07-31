@@ -59,7 +59,10 @@
         "lovelive": "lovelive",
         "yt_downloader": "yt_downloader",
         "lang": "lang",
-        "del_keep": "del_keep"
+        "del_keep": "del_keep",
+        "sub_yt": "subscribe_youtube",
+        "sub_yt_cancel": "cancel_subscribe_youtube",
+        "sub_yt_list": "list_subscribed_youtube"
     },
     "description": {
         "translate": "Translate some text",
@@ -121,7 +124,10 @@
         "lovelive": "Get a lovelive quote",
         "yt_downloader": "Download a video or audio via yt-dlp",
         "lang": "Set your preferred language. (Only using the prefix (prefix command, i.e., [) will take effect)",
-        "del_keep": "Delete an event you previously created with /keep"
+        "del_keep": "Delete an event you previously created with /keep",
+        "sub_yt": "Subscribe to a YouTuber in the current Discord channel, notifications will be sent here",
+        "sub_yt_cancel": "Cancel a YouTuber subscription in the current Discord channel",
+        "sub_yt_list": "List all YouTubers subscribed to in the current Discord channel"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -184,7 +190,8 @@
         "minecraft_server_status_edition": "Select server edition (Java/Bedrock)",
         "yt_downloader_url": "Enter the URL of the video/audio",
         "yt_downloader_type": "Select the format to download (mp4/mp3)",
-        "yt_downloader_quality": "Select the video quality (only effective when mp4 is selected)"
+        "yt_downloader_quality": "Select the video quality (only effective when mp4 is selected)",
+        "sub_yt_url": "Enter the YouTuber link to subscribe to here (e.g., https://www.youtube.com/@KeJC130)"
     },
     "components": {
         "yin_xi": "YinXi",
@@ -471,7 +478,7 @@
             ]
         }],
         "send_player_not_found_song": "Could not find song #{index}",
-        "send_player_play_error": "Playback failed, possibly because you've been playing for too long, causing the audio link to expire, or for other reasons. It is recommended to use `/remove` to delete the song and then add it again.\n(Reason: {e})\n(If you are unsure of the reason, you can use `/report_bug` to report it.)",
+        "send_player_play_error": "Playback failed, possibly because you've been playing for too long, causing the audio link to expire, or for other reasons. It is recommended to use `/remove` to delete the song and then add it again.\n(Reason: {e})\n(If you are unsure of the reason, you can use `/report` to report it.)",
         "send_player_already_paused": "The music is already paused :thinking:",
         "send_player_not_playing": "There is no music playing right now",
         "send_player_paused_success": "I've paused the music for you",
@@ -592,6 +599,23 @@
         "send_lang_success": "YinXi will now speak `{lang}` to you!",
         "send_lang_same_lang": "Your preferred language is already set to `{lang}`.",
         "send_del_keep_please_use_slash_command": "Please use slash command to select",
-        "send_del_keep_cancel_success": "Reminder cancelled\nEvent: ```{event}```\nTime:```{time}```"
+        "send_del_keep_cancel_success": "Reminder cancelled\nEvent: ```{event}```\nTime:```{time}```",
+        "send_sub_yt_invalid_url": "You entered an invalid link :thinking: Why not try again?",
+        "send_sub_yt_cannot_found_ytb": "After using the link you provided, YinXi couldn't find this person's channel name :thinking: Why not try a different YouTuber?",
+        "send_sub_yt_successfully_save": "Successfully enabled notifications for `{ytb}`!",
+        "send_sub_yt_cancel_no_url": "I couldn't find any subscribed YouTubers in this channel, try using `/subscribe_youtube` to enable notifications~",
+        "embed_sub_yt_cancel": [{
+            "title": "Use `[! URL_HERE` to unsubscribe from that YouTuber",
+            "author": "Cancel notifications for a YouTuber",
+            "fields": [
+                { "name": "YouTubers with notifications enabled: " }
+            ]
+        }],
+        "send_sub_yt_successfully_delete": "Successfully deleted notifications for `{ytb}`",
+        "send_sub_yt_new_video": "{name} has published a new video!\n{url}",
+        "send_sub_yt_cannot_delete": "Cannot delete {url}, please use `/report` or raise this issue on [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi).",
+        "embed_sub_yt_list": [{
+            "author": "YouTubers subscribed to in channel: {channelName}"
+        }]
     }
 }

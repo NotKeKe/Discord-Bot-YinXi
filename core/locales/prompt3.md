@@ -1,1 +1,1 @@
-接下來你將進行翻譯任務，你要將 `core/locales/zh-TW.json` 分別翻譯為簡體中文以及英文，並寫入相同資料夾內的 `zh-CN.json` 與 `en-US.json`
+接下來你將進行翻譯任務，你要將 `core/locales/zh-TW.json` 分別翻譯為簡體中文以及英文，並寫入相同資料夾內的 `zh-CN.json` 與 `en-US.json`，並且你不能更改 `zh-TW.json` 中的任何內容。
