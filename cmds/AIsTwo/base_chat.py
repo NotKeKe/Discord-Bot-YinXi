@@ -9,6 +9,7 @@ import traceback
 import asyncio
 from discord.ext import commands
 import functools
+from typing import Union, Tuple
 
 from cmds.AIsTwo.utils import to_assistant_message, to_system_message, to_user_message, get_thinking, clean_text, image_url_to_base64, is_vision_model, get_pref, get_user_data
 from core.functions import BASE_OLLAMA_URL
@@ -327,14 +328,14 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
                          top_p:int = None, delete_tools: str | list = None,
                          ctx:commands.Context = None, timeout:float = None, userID: str = None, 
                          url: list = None, is_enable_thinking: bool = True, text_file_content: discord.Attachment = None,
-                         no_extra_system_prompt: bool = False):
+                         no_extra_system_prompt: bool = False) -> Tuple[str, str]:
     '''
     url: for vision model, or add it into prompt
     no_extra_system_prompt: True代表不會加extra system prompt
     '''
     try:
         if model is None: model = 'qwen-3-32b'
-        if model in openrouter_moduels and not model.endswith('free'): return None, 'You are not using a FREE model'
+        if model in openrouter_moduels and not model.endswith('free'): return '', 'You are not using a FREE model'
         if temperature is None: temperature = 1.0
         if history is None: history = []
         if max_tokens is None: max_tokens = 1999
@@ -428,7 +429,7 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
             if content is not None and content != '': result.append(content)
             if thinking is not None and thinking != '': think.append(thinking)
             
-            if stop_flag_process(ctx): return None, None
+            if stop_flag_process(ctx): return '', ''
 
         think = ''.join(think)
         result = ''.join(result)

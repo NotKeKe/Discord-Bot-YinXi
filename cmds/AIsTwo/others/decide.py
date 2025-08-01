@@ -109,7 +109,6 @@ class ActivitySelector:
                     temperature=1, 
                     system_prompt=system_prompt.strip(), 
                     is_enable_tools=False, 
-                    max_tokens=60, 
                     top_p=0.9
                 )[1]
                 result = translate(result)
@@ -125,8 +124,7 @@ class ActivitySelector:
                 model=model, 
                 temperature=0.8,
                 system_prompt=system_prompt, 
-                is_enable_tools=True, 
-                max_tokens=60, 
+                is_enable_tools=True,
                 top_p=0.9
             )[1]
             result = translate(result)
@@ -140,8 +138,7 @@ class ActivitySelector:
                 model=model, 
                 temperature=0.8,
                 system_prompt=system_prompt, 
-                is_enable_tools=True, 
-                max_tokens=60, 
+                is_enable_tools=True,
                 top_p=0.9
             )[1]
             result = translate(result)
