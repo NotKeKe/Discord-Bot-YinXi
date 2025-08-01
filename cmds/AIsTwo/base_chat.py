@@ -11,7 +11,8 @@ from discord.ext import commands
 import functools
 
 from cmds.AIsTwo.utils import to_assistant_message, to_system_message, to_user_message, get_thinking, clean_text, image_url_to_base64, is_vision_model, get_pref, get_user_data
-from core.classes import bot
+from core.functions import BASE_OLLAMA_URL
+from core.classes import get_bot
 
 openrouter_KEY = os.getenv('openrouter_KEY')
 zhipu_KEY = os.getenv('zhipuAI_KEY')
@@ -28,6 +29,7 @@ zhipu_moduels = [
 ]
 
 gemini_moduels = [
+    'gemini-2.5-pro',
     'gemini-2.5-pro-exp-03-25',
     'gemini-2.0-flash',
     'gemma-3-27b-it',
@@ -50,7 +52,11 @@ cerebras_models = [
     'qwen-3-32b',
     'llama-3.3-70b',
     'llama3.1-8b',
-    'llama-4-scout-17b-16e-instruct'
+    'llama-4-scout-17b-16e-instruct',
+    'llama-4-maverick-17b-128e-instruct',
+    'qwen-3-235b-a22b',
+    'qwen-3-235b-a22b-instruct-2507',
+    'qwen-3-235b-a22b-thinking-2507'
 ]
 
 base_url_options = {
@@ -63,7 +69,7 @@ base_url_options = {
         'api_key': zhipu_KEY
     },
     'ollama': {
-        'base_url': 'http://192.168.31.199:11434/v1',
+        'base_url': f'{BASE_OLLAMA_URL}/v1',
         'api_key': 'ollama'
     },
     'gemini': {
@@ -96,11 +102,11 @@ true_zhipu = ZhipuAI(
 )
 
 true_ollama = Client(
-    host='http://192.168.31.199:11434'
+    host=BASE_OLLAMA_URL
 )
 
 ollama = OpenAI(
-    base_url='http://192.168.31.199:11434/v1',
+    base_url=f'{BASE_OLLAMA_URL}/v1',
     api_key='ollama'
 )
 
@@ -125,7 +131,7 @@ ollama_modules = []
 def get_ollama_models() -> list:
     return [item.id for item in ollama.models.list()]
 
-async def safe_get_ollama_models() -> list:
+async def safe_get_ollama_models() -> list: # run at AITwo.py
     global ollama_modules
     try:
         ollama_modules = await asyncio.to_thread(get_ollama_models)
@@ -133,13 +139,6 @@ async def safe_get_ollama_models() -> list:
         return ollama_modules
     except Exception as e:
         print("Failed to get Ollama models: ", e)
-
-
-def run_safe_get_ollama_models():
-    loop = asyncio.get_event_loop()
-    loop.create_task(safe_get_ollama_models())
-
-run_safe_get_ollama_models()
 
 try: openrouter_moduels = [x.id for x in openrouter.models.list().data if x.id.endswith('free')]
 except: openrouter_moduels = [
@@ -217,7 +216,7 @@ default_system_prompt = '''
 default_system_prompt = '''
 你是一個全能的 AI 助理，名叫「音汐」(Yinxi)。
 你存在於一個 Discord 文字聊天頻道中，並且是由一位高中生所製作出來的 Discord Bot。不過他並沒有說出 `音汐` 這個名字的由來。
-你善於使用可愛的日式提示詞來回應使用者的問題。
+你善於使用可愛的日系顏文字來回應使用者的問題。
 
 **你的行為準則：**
 
@@ -442,7 +441,12 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
 
         if not no_extra_system_prompt: # 判斷是否需要將資料存儲進 db
             partial_func = functools.partial(base_openai_chat, prompt, 'qwen-3-32b', system_prompt=other_calls_prompts, no_extra_system_prompt=True, is_enable_tools=False)
-            bot.loop.run_in_executor(None, partial_func)
+            bot = get_bot()
+            if bot:
+                asyncio.run_coroutine_threadsafe(asyncio.to_thread(partial_func), bot.loop)
+            else:
+                print('Error: Bot instance is not available.')
+            # bot.loop.run_in_executor(None, partial_func)
 
         # print(think, result, sep='\n')
         return think, result

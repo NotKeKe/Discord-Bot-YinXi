@@ -1,3 +1,5 @@
+raise ImportError('twitter_notification not ready yet')
+
 import discord
 from discord.ext import commands
 import tweepy

@@ -44,7 +44,8 @@ def is_talking_with_me(prompt:str, history:list) -> bool:
 
     Consider your past conversations and the user's personality when deciding whether to respond.
     """
-    think, result, *_ = base_zhipu_chat(prompt, 'glm-4-flash', history=history, system_prompt=system_prompt, is_enable_tools=False)
+    try: think, result, *_ = base_openai_chat(prompt, 'qwen-3-32b', history=history, system_prompt=system_prompt, is_enable_tools=False)
+    except: think, result, *_ = base_zhipu_chat(prompt, 'glm-4-flash', history=history, system_prompt=system_prompt, is_enable_tools=False)
     # print(f'{think=}\n{result=}')
     if 'false' in (result.lower(), think.lower()): return False
     else: return True
@@ -72,12 +73,7 @@ class ActivitySelector:
             你今天已經用過的status: {status}
         '''.format(status = cls.past_status)
 
-        characterSettings = '''
-        人物設定:
-            高中生 期望著校園戀愛
-            講話很呆(或堂堂的)
-            很喜歡說emo文案
-        '''
+        model = 'qwen-3-32b'
 
         # Setting `Playing ` status
         if status == 1:
@@ -107,8 +103,15 @@ class ActivitySelector:
                     - 或者在上某節課的時候你完全聽不懂 所以覺得不開心
                 '''.format(time = cur_time)
                 
-                result = base_openai_chat(f'根據現在的時間，幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，要像Instagram (IG)那種中二文青語氣，最好有比喻，句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力', 'glm-4-flash', temperature=1,
-                                        system_prompt=system_prompt.strip(), is_enable_tools=False, max_tokens=60, top_p=0.9)[1]
+                result = base_openai_chat(
+                    prompt=f'根據現在的時間，幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，要像Instagram (IG)那種中二文青語氣，最好有比喻，句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力', 
+                    model=model, 
+                    temperature=1, 
+                    system_prompt=system_prompt.strip(), 
+                    is_enable_tools=False, 
+                    max_tokens=60, 
+                    top_p=0.9
+                )[1]
                 result = translate(result)
                 result = halfToFull(result).replace('。', '\n')
                 cls.past_status.append((f'{cur_time} 正在玩 ' + result))
@@ -117,16 +120,30 @@ class ActivitySelector:
         elif status == 2:
             random_num = random.randint(0, 1) 
             song_type = 'emo' if random_num == 0 else '世界計畫'
-            result = base_openai_chat(f'基於搜尋，找`一首`有關`{song_type}`的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', 'glm-4-flash', temperature=0.8,
-                                    system_prompt=system_prompt, is_enable_tools=True, max_tokens=60, top_p=0.9)[1]
+            result = base_openai_chat(
+                prompt=f'基於搜尋，找`一首`有關`{song_type}`的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', 
+                model=model, 
+                temperature=0.8,
+                system_prompt=system_prompt, 
+                is_enable_tools=True, 
+                max_tokens=60, 
+                top_p=0.9
+            )[1]
             result = translate(result)
             result = halfToFull(result).replace('。', '\n')
             cls.past_status.append((f'{cur_time} 正在聽 ' + result))
             activity = discord.Activity(type=discord.ActivityType.listening, name=result)
         # Setting `Watching ` status
         elif status == 3:
-            result = base_openai_chat(f'基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字', 'glm-4-flash', temperature=0.8,
-                                    system_prompt=system_prompt, is_enable_tools=True, max_tokens=60, top_p=0.9)[1]
+            result = base_openai_chat(
+                prompt=f'基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字', 
+                model=model, 
+                temperature=0.8,
+                system_prompt=system_prompt, 
+                is_enable_tools=True, 
+                max_tokens=60, 
+                top_p=0.9
+            )[1]
             result = translate(result)
             result = halfToFull(result).replace('。', '\n')
             cls.past_status.append((f'{cur_time} 正在看 ' + result))

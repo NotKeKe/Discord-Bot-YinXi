@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # embed_link = os.getenv('embed_default_link')
-yinxi_base_url = os.getenv('yinxi_base_url') # 這是我網域的基礎連結 https://yinxi.keketw.dpdns.org
+yinxi_base_url = os.getenv('yinxi_base_url') # 這是我網域的基礎連結 https://yinxi.wales.com.tw
 def get_embed_link() -> str:
     # 取得自己的圖片，並使用連結獲得
     path = f'./image/self.png'
@@ -27,7 +27,6 @@ def get_embed_link() -> str:
     return base_url
 
 BASE_DIR = os.path.abspath(os.path.dirname(__name__))
-BASE_OLLAMA_URL: str = 'http://192.168.31.199:11434'
 
 embed_link = get_embed_link()
 KeJCID = os.getenv('KeJC_ID')
@@ -100,7 +99,7 @@ def strToDatetime(time_str: str) -> datetime:
     return dt
 
 def FormatTime(time: datetime) -> str:
-    return time.strftime('%Y/%m/%d %H:%M:%S')
+    return time.strftime('%Y/%m/%d %H:%M:%S %A')
 
 def current_time(UTC: int = 8) -> str:
     '''回傳現在時間(str)，arg: UTC: 使用者所提供的時區'''
@@ -180,9 +179,13 @@ except: traceback.print_exc()
 if settings:
     testing_guildID: int = settings['testing_guildID']
     DEVICE_IP: str = settings.get('DEVICE_IP')
+    OLLAMA_IP: str = settings.get('OLLAMA_IP')
+    BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 else:
     testing_guildID: int = 123456789
     DEVICE_IP: str = '127.0.0.1'
+    OLLAMA_IP: str = '127.0.0.1'
+    BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 
 def is_testing_guild():
     '''A guild checking function for commands.command'''

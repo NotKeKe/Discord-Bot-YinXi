@@ -17,7 +17,7 @@ from cmds.AIsTwo.utils import image_url_to_base64, select_moduels_auto_complete
 from cmds.AIsTwo.vector import chat_human as vt_chat_human
 from vector_data import vector
 
-from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate, testing_guildID
+from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate, testing_guildID, OLLAMA_IP
 
 save_to_preferences = Preference.save_to_preferences
 
@@ -41,6 +41,7 @@ class AITwo(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
+        await safe_get_ollama_models()
 
     @commands.hybrid_command(name='chat', description='Chat with AI model')
     @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
@@ -186,7 +187,7 @@ class AITwo(commands.Cog):
             }
 
             async with aiohttp.ClientSession() as session:
-                async with session.post("http://192.168.31.199:9966/tts", data=data) as resp:
+                async with session.post(f"http://{OLLAMA_IP}:9966/tts", data=data) as resp:
                     if resp.status == 200:
                         j = await resp.json()
                     else: return await ctx.send('克克可能忘記開電腦了 這功能現在用不了:<')

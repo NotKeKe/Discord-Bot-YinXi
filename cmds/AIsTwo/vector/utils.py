@@ -4,16 +4,17 @@
 import chromadb  # ChromaDB 向量数据库
 from openai import OpenAI, AsyncOpenAI  # OpenAI 客户端
 
+from core.functions import BASE_OLLAMA_URL
 
 # 初始化 OpenAI 客户端 (替换成自己的 API 信息)
 client = OpenAI(
     api_key="ollama",  # 替换为你的 OpenAI API Key , 这里我把自己的 API-KEY 隐藏了
-    base_url="http://192.168.31.199:11434/v1"  # 替换为你的 API 服务端点
+    base_url=f"{BASE_OLLAMA_URL}/v1"  # 替换为你的 API 服务端点
 )
 
 async_client = AsyncOpenAI(
     api_key="ollama",  # 替换为你的 OpenAI API Key , 这里我把自己的 API-KEY 隐藏了
-    base_url="http://192.168.31.199:11434/v1"  # 替换为你的 API 服务端点
+    base_url=f"{BASE_OLLAMA_URL}/v1"  # 替换为你的 API 服务端点
 )
 
 def get_embeddings(texts, model="nomic-embed-text") -> list[float]:

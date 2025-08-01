@@ -10,9 +10,11 @@ import traceback
 import logging
 import sys
 
-from core.functions import math_round, current_time, testing_guildID
+from core.functions import math_round, current_time, testing_guildID, create_basic_embed, thread_pool
 from core.translator import i18n, MockInteraction
 from core.setup_log import setup_logging, StreamToLogger
+from cmds.AIsTwo.others.decide import ActivitySelector
+from core.classes import set_bot
 
 # get env
 load_dotenv()
@@ -42,6 +44,7 @@ intents.presences = True
 
 
 bot = commands.Bot(command_prefix='[', intents=intents)
+set_bot(bot)
 # tree = app_bot.CommandTree(bot)
 
 # Bot's help default command
@@ -117,8 +120,7 @@ class UpdateStatus(commands.Cog):
             try:
                 if ctx.author.id != KeJC_ID: return
                 # activity changing
-                from cmds.AIsTwo.others.decide import ActivitySelector
-                from core.functions import thread_pool
+                # from cmds.AIsTwo.others.decide import ActivitySelector
                 activity = await thread_pool(ActivitySelector.activity_select, activity_code)
                 await self.bot.change_presence(activity=activity)
 
@@ -139,7 +141,6 @@ class UpdateStatus(commands.Cog):
             
     @tasks.loop(minutes=1)
     async def update_status(self):
-        from core.functions import create_basic_embed
         channel = self.bot.get_channel(int(jdata['status_channel']['channel_ID']))
         message = await channel.fetch_message(int(jdata['status_channel']['message_ID']))       
         embed = create_basic_embed(title='Bot狀態', description=':green_circle:')
@@ -150,8 +151,7 @@ class UpdateStatus(commands.Cog):
     @tasks.loop(hours=1)
     async def change_activity(self):
         try:
-            from cmds.AIsTwo.others.decide import ActivitySelector
-            from core.functions import thread_pool
+            # from cmds.AIsTwo.others.decide import ActivitySelector
             activity = await thread_pool(ActivitySelector.activity_select)
             await self.bot.change_presence(activity=activity)
         except Exception as e:

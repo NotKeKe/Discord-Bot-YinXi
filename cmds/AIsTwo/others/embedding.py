@@ -1,8 +1,10 @@
 from openai import AsyncOpenAI
 
+from core.functions import BASE_OLLAMA_URL
+
 client = AsyncOpenAI(
     api_key="ollama",
-    base_url='http://192.168.31.199:11434/v1'
+    base_url=f'{BASE_OLLAMA_URL}/v1'
 )
 
 async def get_embeddings(texts, model="nomic-embed-text") -> list[float]:
