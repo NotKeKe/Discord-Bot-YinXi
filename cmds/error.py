@@ -10,10 +10,7 @@ import traceback, logging
 load_dotenv()
 my_id = int(os.getenv('KeJC_ID'))
 
-# 設置 logging 模塊
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('./nas_log/error.log', 'a', 'utf-8')])
+logging.getLogger(__name__)
 
 class ErrorHandler(Cog_Extension):
     @commands.command(hidden=True)
@@ -23,8 +20,7 @@ class ErrorHandler(Cog_Extension):
             error = traceback.format_exc()
         else: error = exception
         string = f'有個在「{檔案名稱} {指令名稱}」的錯誤: 「{error}」'
-        logging.error(string)
-        print(string)
+        logging.error(string, exc_info=True)
         await ctx.send(content=await ctx.interaction.translate('send_error_occurred'), ephemeral=ephemeral)
         if user_send:
             await user.send(string)

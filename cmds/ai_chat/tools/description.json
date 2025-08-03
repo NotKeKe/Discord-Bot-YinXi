@@ -1,0 +1,135 @@
+{
+    "tools": [{
+            "type": "function",
+            "function": {
+                "name": "current_time",
+                "description": "此工具用來取得當前的正確時間",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "UTC": { "type": "integer", "description": "該地區時區，如對話中未提供則為8" }
+                    },
+                    "required": ["UTC"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "calculate",
+                "description": "這個工具用來進行四則運算",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "expression": { "type": "string", "description": "對話中需要進行四則運算的算式，每個數字與運算符號間須相隔一個空格。除號要用/，乘號要用*" }
+                    },
+                    "required": ["expression"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search",
+                "description": "這個工具用來在使用者需要網頁搜尋 或是你不確定答案時，進行網頁搜索並取得結果",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "keywords": { "type": "string", "description": "在此輸入你要搜尋的關鍵字， 每個關鍵字以空格區分。" },
+                        "time_range": { "type": "string", "description": "在此輸入year or month or day，以分別搜尋在1 year 1 month 1 day內的資訊" },
+                        "language": { "type": "string", "description": "在此輸入使用者輸入時的語言，預設為zh-TW" }
+                    },
+                    "required": ["keywords", "language"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "image_generate",
+                "description": "這個工具用來生成圖片",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": { "type": "string", "description": "在此輸入使用者生成圖片的需求" }
+                    },
+                    "required": ["prompt"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "video_generate",
+                "description": "這個工具用來生成影片(10秒內)",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": { "type": "string", "description": "在此輸入使用者生成影片的需求" },
+                        "image_url": { "type": "string", "description": "如果使用者給予了圖片連結，希望用圖片生影片，則在此輸入使用者的給予的圖片連結" },
+                        "size": { "type": "string", "description": "在此輸入使用者希望使用的圖片大小(解析度)" },
+                        "fps": { "type": "integer", "description": "在此輸入使用者希望生成多少fps的影片，只有30或60兩個選項" },
+                        "with_audio": { "type": "boolean", "description": "使用者是否希望跟著音訊一起生成，預設為True" },
+                        "duration": { "type": "integer", "description": "使用者所希望的影片時長，只能在10秒以內，否則為10秒" }
+                    },
+                    "required": ["prompt"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "UnixToReadable",
+                "description": "這個工具用來將timestamp(unix)轉換為適合人們讀的文字",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "timestamp": { "type": "integer", "description": "在此輸入使用者提供的timestamp" }
+                    },
+                    "required": ["timestamp"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "image_read",
+                "description": "這個工具讀取圖片，並取得圖片描述",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": { "type": "string", "description": "在此輸入使用者提供的需求，如果使用者只是單純傳送了圖片，則在此輸入`描述此圖片`" },
+                        "image_url": { "type": "string", "description": "在此輸入使用者給予的圖片連結" }
+                    },
+                    "required": ["prompt", "image_url"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "wiki_search",
+                "description": "This tool is used to search some datas from Wikipedia. Every args should in Chinese.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": { "type": "string", "description": "Enter the query here." }
+                    },
+                    "required": ["query"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "list_available_commands",
+                "description": "這個工具會回傳身為 discord bot 的你，本身擁有那些指令(但你不能調用它們)",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            }
+        }
+    ]
+}

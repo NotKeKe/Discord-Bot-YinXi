@@ -6,6 +6,9 @@ import orjson
 import traceback
 from typing import Union
 from openai import OpenAI
+import logging
+
+logger = logging.getLogger(__name__)
 
 system_prompt = '''
 You should decide according to the context if you need to use the following tools.
@@ -38,7 +41,7 @@ def get_tool_results(tool_calls: list) -> str:
             # print(f'{tool_call=}\n{tool_call.function.arguments=}')
             arguments = tool_call.function.arguments
             args = orjson.loads(arguments) if type(arguments) != dict else arguments
-            print(f'{tool_name}: {args}')
+            # print(f'{tool_name}: {args}')
             try: result.append(f'{tool_name}: {func_map[tool_name](**args)}')
             except: traceback.print_exc()
 
@@ -158,6 +161,7 @@ def ifTools_self(messages: list, client: OpenAI, model: str, delete_func_name: U
 
     if response.choices[0] is None: raise '沒有回應'
     if response.choices[0].message.tool_calls is None: return messages
+    logger.info(f'{model} called the following tools: {'\n'.join(response.choices[0].message.tool_calls)}')
     func_results = get_tool_results(response.choices[0].message.tool_calls)
     messages += to_user_message(f'tool輸出為: {func_results}')
     return messages

@@ -9,6 +9,7 @@ from deep_translator import GoogleTranslator
 import aiohttp
 import os
 import traceback
+import inspect
 
 import os
 from dotenv import load_dotenv
@@ -192,3 +193,6 @@ def is_testing_guild():
     def preficate(ctx: commands.Context):
         return ctx.guild.id == testing_guildID
     return commands.check(preficate)
+
+def is_async(func) -> bool:
+    return inspect.iscoroutinefunction(func)

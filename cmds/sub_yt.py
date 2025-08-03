@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 import io
 import time
+from collections import deque
 
 from cmds.music_bot.play4.utils import is_url
 
@@ -112,6 +113,8 @@ class SubYT(Cog_Extension):
     def __init__(self, bot: commands.Bot):
         super().__init__(bot)
         self.videos = {}
+        self.processed = {}
+        self.processed.setdefault(str, deque(maxlen=20)) # channelID, deque[videoIDs]
 
     async def cog_load(self):
         logger.info(f'已載入「{__name__}」')
@@ -297,7 +300,7 @@ class SubYT(Cog_Extension):
                 await asyncio.sleep(1)
 
         # 第一次不用執行，避免重複傳送 (因為會取得 5 個 videos)
-        if self.update_sub_yt.current_loop == 0:
+        if self.update_sub_yt.current_loop == 0 or not self.videos:
             self.videos = current_video_ids
             return
 
@@ -310,14 +313,25 @@ class SubYT(Cog_Extension):
 
             for url in data.get(cnlID, []):
                 if ( self.videos.get(url, None) ) is None: continue # 避免新增頻道後 連續舊的影片   
-
-                old_video_ids = set(self.videos.get(url, []))
-                new_video_ids = set(current_video_ids.get(url, []))
+                
+                try:
+                    old_video_ids = set(self.videos[url])
+                    new_video_ids = set(current_video_ids[url])
+                except:
+                    continue
+                
+                if old_video_ids != new_video_ids:
+                    print(old_video_ids, new_video_ids, sep='\n')
+                    print(new_video_ids - old_video_ids)
 
                 for video_id in new_video_ids - old_video_ids:
+                    if video_id in self.processed.get(cnlID, []): continue
+
                     sent_url = f"https://youtu.be/{video_id}"
                     sent_message = await self.bot.tree.translator.get_translate('send_sub_yt_new_video', lang_code=preferred_lang)
                     await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url)))          
+
+                    self.processed[cnlID].append(video_id)
 
         self.videos = current_video_ids
 

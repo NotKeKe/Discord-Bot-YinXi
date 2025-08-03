@@ -183,7 +183,7 @@ async def load():
                 print(f'嘗試載入cmds.{filename} (cost: {math_round(time.time()-now, 2)})')
         except Exception as e:
             # traceback.print_exc()
-            print(f'出錯 When loading extension: {e} (cost: {math_round(time.time()-now, 2)})')
+            root_logger.warning(f'出錯 When loading extension: {e} (cost: {math_round(time.time()-now, 2)})', exc_info=True)
     
         
 async def main():
