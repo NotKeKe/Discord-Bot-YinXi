@@ -21,3 +21,38 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
+  mongodb:
+    image: mongo:8.0.12
+    container_name: yinxi-dc-mongodb
+    restart: unless-stopped
+    ports:
+      - "27020:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - mongodb:/data/db
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+  mongo-backup:
+    image: alpine
+    container_name: yinxi-dc-mongodb-backup
+    restart: unless-stopped
+    volumes:
+      - ./backup.sh:/backup.sh
+      - ./data/mongodb:/backup
+    depends_on:
+      - mongodb
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache mongodb-tools && crond -f"]
+
+    command: >
+      sh -c "
+        echo '0 3 * * * /backup.sh' | crontab - &&
+        crond -f
+      "
+    
+volumes:
+  mongodb:
+    driver: local

@@ -1,13 +1,15 @@
 import logging
 import aiofiles
 import orjson
+from motor.motor_asyncio import AsyncIOMotorClient
 
 from .client import AsyncClient
-from .config import MODEL_TEMP_PATH
+from .config import MONGO_URL
 
 logger = logging.getLogger(__name__)
 
 async def fetch_models():
+    from cmds.ai_three import availble_models
     try:
         openrouter_models = [model.id for model in (await AsyncClient.openrouter.models.list()).data 
                              if model.id.endswith('free') or model.id == 'openrouter/horizon-beta']
@@ -31,7 +33,12 @@ async def fetch_models():
         ollama_models = []
 
     try:
-        gemini_models = [model.id for model in (await AsyncClient.gemini.models.list()).data]
+        # gemini_models = [model.id for model in (await AsyncClient.gemini.models.list()).data]
+        gemini_models = [
+            'gemini-2.5-pro',
+            'gemini-2.5-flash',
+            'gemma-3-27b-it',
+        ]
         # logger.info(f'gemini: {gemini_models}')
     except Exception as e:
         logger.error(f'Cannot fetch gemini models: {e}')
@@ -51,7 +58,6 @@ async def fetch_models():
         logger.error(f'Cannot fetch lmstudio models: {e}')
         lmstudio_models = []
 
-
     data = {
         'openrouter': openrouter_models,
         'zhipu': zhipu_models,
@@ -60,7 +66,22 @@ async def fetch_models():
         'cerebras': cerebras_models,
         'lmstudio': lmstudio_models
     }
+    try:
+        db_client = AsyncIOMotorClient(MONGO_URL)
+        db = db_client['aichat_available_models']
+        collection = db['models']
 
-    async with aiofiles.open(MODEL_TEMP_PATH, 'wb') as f:
-        await f.write(orjson.dumps(data, option=orjson.OPT_INDENT_2))
-        logger.info('successfully write models')
+        _id = 'model_setting'
+
+        await collection.find_one_and_replace(
+            {'_id': _id},
+            data,
+            upsert=True
+        )
+    finally:
+        if db_client:
+            db_client.close()
+
+        # async with aiofiles.open(MODEL_TEMP_PATH, 'wb') as f:
+        #     await f.write(orjson.dumps(data, option=orjson.OPT_INDENT_2))
+        #     logger.info('successfully write models')

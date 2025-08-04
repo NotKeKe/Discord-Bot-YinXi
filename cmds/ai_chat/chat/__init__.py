@@ -1,0 +1,1 @@
+from .gener_title import gener_title

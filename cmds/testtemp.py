@@ -15,8 +15,9 @@ import asyncio
 import traceback
 from dotenv import load_dotenv
 import aiohttp
+import motor.motor_asyncio
 
-from core.functions import read_json, thread_pool, embed_link, KeJCID, create_basic_embed
+from core.functions import read_json, thread_pool, embed_link, KeJCID, create_basic_embed, MONGO_URL
 
 # get env
 load_dotenv()
@@ -192,6 +193,47 @@ class TestTemp(Cog_Extension):
     async def test(self, ctx: commands.Context):
         eb = create_basic_embed(description='hi', 功能='hi')
         await ctx.send(embed=eb)
+
+    @commands.command()
+    async def mongo_test(self, ctx: commands.Context):
+        try:
+            async with ctx.typing():
+                client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL)
+                db = client['test']
+                collection = db[str(ctx.author.id)]
+
+                await collection.insert_one({
+                    'title': 'abcdefg',
+                    'user': ctx.author.id,
+                    'messages': [
+                        {'role': 'user', 'content': 'prompt'},
+                        {'role': 'assistant', 'content': 'wdym'}
+                    ],
+                    'createAt': datetime.now().timestamp()
+                })
+
+                await ctx.send(f"現在伺服器上的資料庫: {await client.list_database_names()}")
+                await ctx.send(f"在 'test' 中的 collections: {await db.list_collection_names()}")
+                await ctx.send(f'找到 {await collection.find_one({'user': ctx.author.id})}')
+                async for d in collection.find({'user': ctx.author.id}):
+                    await ctx.send(f'找到一項數據: {d}')
+                await collection.update_one({
+                    'title': 'abcdefg'
+                },
+                {
+                    '$set': {
+                        'messages': [
+                            {'role': 'user', 'content': 'prompt2'},
+                            {'role': 'assistant', 'content': 'wdym2'}
+                        ]
+                    }
+                }
+                )
+        finally:
+            if client:
+                # client.drop_database('test')
+                client.close()
+
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()
 

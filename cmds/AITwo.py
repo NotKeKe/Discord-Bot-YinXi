@@ -43,7 +43,7 @@ class AITwo(commands.Cog):
         print(f'已載入「{__name__}」')
         await safe_get_ollama_models()
 
-    @commands.hybrid_command(name='chat', description='Chat with AI model')
+    @commands.hybrid_command(name='chat_two', description='Chat with AI model')
     @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
     @app_commands.describe(model='預設為`qwen-3-32b`', 想法顯示='預設為`False`', 工具調用='預設為`True`')
     async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'qwen-3-32b', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True, 系統提示詞: str = None):

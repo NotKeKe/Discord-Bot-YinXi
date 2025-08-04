@@ -10,6 +10,8 @@ import aiohttp
 import os
 import traceback
 import inspect
+import base64
+import aiohttp
 
 import os
 from dotenv import load_dotenv
@@ -37,6 +39,10 @@ nasaApiKEY = os.getenv("nasa_api_KEY")
 unsplashKEY = os.getenv('unsplash_api_access_KEY')
 GIPHYKEY = os.getenv('GIPHY_KEY')
 GENIUS_ACCESS_TOKEN = os.getenv('GENIUS_ACCESS_TOKEN')
+
+# mongo db
+MONGO_USER = os.getenv('MONGO_USER')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 
 def read_json(path: str) -> Optional[Any]:
     """將path讀取成物件並回傳"""
@@ -188,6 +194,8 @@ else:
     OLLAMA_IP: str = '127.0.0.1'
     BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 
+MONGO_URL = f'mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{DEVICE_IP}:27020/'
+
 def is_testing_guild():
     '''A guild checking function for commands.command'''
     def preficate(ctx: commands.Context):
@@ -196,3 +204,14 @@ def is_testing_guild():
 
 def is_async(func) -> bool:
     return inspect.iscoroutinefunction(func)
+
+async def image_to_base64(image_url: str) -> str:
+    async with aiohttp.ClientSession() as sess:
+        async with sess.get(image_url) as resp:
+            if resp.status != 200: return ''
+            image_data = await resp.read()
+            return base64.b64encode(image_data).decode('utf-8')
+    return ''
+
+def split_str_by_len(text: str, chunk_size: int) -> list[str]:
+    return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]

@@ -11,10 +11,11 @@ from ..utils.config import base_system_prompt
 # tool
 from ..tools import tool_description, tool_map
 
-from core.functions import is_async
+from core.functions import is_async, image_to_base64
 
 class Chat:
-    def __init__(self, model: str = 'qwen-3-32b', system_prompt: str = '', ctx: commands.Context = None):
+    def __init__(self, model: str = None, system_prompt: str = '', ctx: commands.Context = None):
+        if not model: model = 'qwen-3-32b'
         self.model = model
         self.ctx = ctx
         self.userID: int = ctx.author.id if ctx else None
@@ -48,7 +49,7 @@ class Chat:
         return True
     
     def get_extra_user_info(self) -> str:
-        if not self.userID: return
+        if not self.userID: return ''
         return ''
         #TODO
 
@@ -193,6 +194,23 @@ class Chat:
                 }
             )
 
+    async def process_user_prompt(self, user_prompt: str, image: discord.Attachment = None, text_file: discord.Attachment = None, url: str = None) -> list:
+        image_content = None
+        text_file_content = None
+        if text_file:
+            text_file_content = await text_file.read()
+        if image:
+            image_content = await image_to_base64(image.url)
+        
+        prompt = (
+            user_prompt,
+            f'The following is the `image` provided by the user: ```{image_content}```' if image_content else '',
+            f'The following is the `url` provided by the user: `{url}`' if url else ''
+            f'The following is the `file` provided by the user: ```{text_file_content}```' if text_file_content else ''
+        )
+
+        return to_user_message(('\n\n'.join(prompt)).strip())
+
     async def chat(
                 self,
                 prompt: str,
@@ -206,8 +224,9 @@ class Chat:
                 delete_tools: Union[str, list] = None,
                 timeout: float = None,
                 url: list = None,
-                text_file_content: discord.Attachment = None,
-            ) -> Tuple[str, str]:
+                image: discord.Attachment = None,
+                text_file: discord.Attachment = None,
+            ) -> Tuple[str, str, list]:
         if model:
             await self.re_model(model)
         else:
@@ -220,12 +239,7 @@ class Chat:
 
         system = to_system_message(system_prompt)
 
-        prompt = (
-            prompt, 
-            f'The following is the `text file` provided by the user: ```{text_file_content}```' if text_file_content else '',
-            f'The following is the `urls` provided by the user: {url}' if url and not is_vision_model else ''
-        )
-        history += to_user_message('\n\n'.join(prompt))
+        history += await self.process_user_prompt(prompt, image, text_file, url)
 
         async def call():
             resp = await self.client.chat.completions.create(
@@ -254,5 +268,10 @@ class Chat:
             else:
                 break
 
-        return think, result
+        history.append({
+            "role": "assistant",
+            "content": result.strip()
+        })
+
+        return think, result, history
             

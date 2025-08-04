@@ -3,9 +3,12 @@ from typing import Union
 import logging
 import aiofiles
 import orjson
+from motor.motor_asyncio import AsyncIOMotorClient
+
+# from cmds.ai_three import availble_models
 
 from .client import AsyncClient
-from .config import MODEL_TEMP_PATH
+from .config import MODEL_TEMP_PATH, MONGO_URL
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +23,20 @@ PROVIDERS = {
 }
 
 async def model_select(model: str) -> Union[AsyncOpenAI, None]:
-    async with aiofiles.open(MODEL_TEMP_PATH, 'r', encoding='utf-8') as f:
-        data = orjson.loads(await f.read())
+    try:
+        db_client = AsyncIOMotorClient(MONGO_URL)
+        db = db_client['aichat_available_models']
+        collection = db['models']
 
-        for key in data:
-            if model in set(data[key]):
-                return PROVIDERS[key]
+        _id = 'model_setting'
+
+        result = await collection.find_one({'_id': _id})
+    finally:
+        if db_client:
+            db_client.close()
+
+    for key in result:
+        if model in set(result[key]):
+            return PROVIDERS[key]
         
     return None

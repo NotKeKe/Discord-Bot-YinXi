@@ -1,6 +1,6 @@
 import os
 
-from core.functions import BASE_OLLAMA_URL, OLLAMA_IP
+from core.functions import BASE_OLLAMA_URL, OLLAMA_IP, MONGO_URL
 
 openrouter_KEY = os.getenv('openrouter_KEY')
 zhipu_KEY = os.getenv('zhipuAI_KEY')
