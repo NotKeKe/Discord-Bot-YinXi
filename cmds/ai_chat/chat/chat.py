@@ -12,6 +12,7 @@ from ..utils.config import base_system_prompt
 from ..tools import tool_description, tool_map
 
 from core.functions import is_async, image_to_base64
+from core.classes import get_bot
 
 class Chat:
     def __init__(self, model: str = None, system_prompt: str = '', ctx: commands.Context = None):
@@ -50,7 +51,19 @@ class Chat:
     
     def get_extra_user_info(self) -> str:
         if not self.userID: return ''
-        return ''
+
+        bot = get_bot()
+        name = (bot.get_user(self.userID)).global_name
+        preference = None
+        info = None
+
+        return (
+'''
+## 關於 {name} 的資訊
+- 偏好: {preference}
+- 其他資訊: {info}
+'''.format(name=name, preference=preference, info=info)
+)
         #TODO
 
     def process_tool_decrip(self, delete_func_name: Union[str, list, None] = None):

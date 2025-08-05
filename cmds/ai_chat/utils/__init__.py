@@ -1,8 +1,9 @@
 from .model_select import model_select
 from .process_tag import get_think, clean_text
 from .auto_complete import chat_history_autocomplete, model_autocomplete
+from .button import add_think_button
 
-__all__ = ['model_select', 'get_think', 'clean_text', 'chat_history_autocomplete', 'model_autocomplete']
+__all__ = ['model_select', 'get_think', 'clean_text', 'chat_history_autocomplete', 'model_autocomplete', 'add_think_button']
 
 def to_system_message(prompt: str) -> list:
     return [{'role': 'system', 'content': prompt}]

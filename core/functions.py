@@ -12,6 +12,7 @@ import traceback
 import inspect
 import base64
 import aiohttp
+from urllib.parse import quote_plus
 
 import os
 from dotenv import load_dotenv
@@ -41,8 +42,8 @@ GIPHYKEY = os.getenv('GIPHY_KEY')
 GENIUS_ACCESS_TOKEN = os.getenv('GENIUS_ACCESS_TOKEN')
 
 # mongo db
-MONGO_USER = os.getenv('MONGO_USER')
-MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+MONGO_USER = quote_plus(os.getenv('MONGO_USER'))
+MONGO_PASSWORD = quote_plus(os.getenv('MONGO_PASSWORD'))
 
 def read_json(path: str) -> Optional[Any]:
     """將path讀取成物件並回傳"""
@@ -194,7 +195,8 @@ else:
     OLLAMA_IP: str = '127.0.0.1'
     BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 
-MONGO_URL = f'mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{DEVICE_IP}:27020/'
+MONGO_URL = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{DEVICE_IP}:27020/"
+print(MONGO_URL)
 
 def is_testing_guild():
     '''A guild checking function for commands.command'''

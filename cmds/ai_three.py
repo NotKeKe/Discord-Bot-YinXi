@@ -16,10 +16,20 @@ from cmds.ai_chat.utils import model, chat_history_autocomplete, model_autocompl
 
 logger = logging.getLogger(__name__)
 
-# db = db_client['ai_chat_chat_history']
+# db = db_client['aichat_chat_history']
 # 命名方式: 'ClassName_FunctionName_功能'
+db_key = 'aichat_chat_history'
 
 class AIChat(Cog_Extension):
+    def __init__(self, bot):
+        super().__init__(bot)
+        self.db_client = AsyncIOMotorClient(MONGO_URL)
+        self.db = self.db_client[db_key]
+
+    async def cog_unload(self):
+        if self.db_client:
+            self.db_client.close()
+
     @commands.Cog.listener()
     async def on_ready(self):
         await model.fetch_models()
@@ -42,8 +52,7 @@ class AIChat(Cog_Extension):
             is_vision_model: bool = False
         ):
         try:
-            db_client = AsyncIOMotorClient(MONGO_URL)
-            db = db_client['aichat_chat_history']
+            db = self.db
             collection = db[str(ctx.author.id)]
 
             ls_history = None
@@ -102,11 +111,8 @@ class AIChat(Cog_Extension):
 
                 await msg.edit(view=view)
         except:
-            logger.error('Error accured at agent command', exc_info=True)
-        finally:
-            if db_client:
-                db_client.close()
-    
+            logger.error('Error accured at chat command', exc_info=True)
+
     @commands.hybrid_command(name=locale_str('image_generate'), description=locale_str('image_generate'))
     @app_commands.choices(
         model=[

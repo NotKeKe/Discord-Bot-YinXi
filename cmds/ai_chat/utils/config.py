@@ -1,4 +1,5 @@
 import os
+from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.functions import BASE_OLLAMA_URL, OLLAMA_IP, MONGO_URL
 
@@ -39,3 +40,8 @@ MODEL_TEMP_PATH = './cmds/ai_chat/temp/models.json'
 
 with open('./cmds/ai_chat/data/prompts/base_system_prompt.md', 'r', encoding='utf-8') as f:
     base_system_prompt = f.read()
+
+with open('./cmds/ai_chat/data/prompts/chat_human_prompt_1.md', 'r', encoding='utf-8') as f:
+    chat_human_system_prompt = f.read()
+
+db_client = AsyncIOMotorClient(MONGO_URL)

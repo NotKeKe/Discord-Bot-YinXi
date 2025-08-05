@@ -1,15 +1,11 @@
 import logging
-import aiofiles
-import orjson
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from .client import AsyncClient
-from .config import MONGO_URL
+from .config import db_client
 
 logger = logging.getLogger(__name__)
 
 async def fetch_models():
-    from cmds.ai_three import availble_models
     try:
         openrouter_models = [model.id for model in (await AsyncClient.openrouter.models.list()).data 
                              if model.id.endswith('free') or model.id == 'openrouter/horizon-beta']
@@ -19,7 +15,13 @@ async def fetch_models():
         openrouter_models = []
 
     try:
-        zhipu_models = [model.id for model in (await AsyncClient.zhipu.models.list()).data]
+        # zhipu_models = [model.id for model in (await AsyncClient.zhipu.models.list()).data]
+        zhipu_models = [
+            'glm-4-flash',
+            'glm-4.5-flash',
+            'glm-z1-flash',
+            'glm-4-flash-250414'
+        ]
         # logger.info(f'zhipu: {zhipu_models}')
     except Exception as e:
         logger.error(f'Cannot fetch zhipu models: {e}')
@@ -66,21 +68,17 @@ async def fetch_models():
         'cerebras': cerebras_models,
         'lmstudio': lmstudio_models
     }
-    try:
-        db_client = AsyncIOMotorClient(MONGO_URL)
-        db = db_client['aichat_available_models']
-        collection = db['models']
+    
+    db = db_client['aichat_available_models']
+    collection = db['models']
 
-        _id = 'model_setting'
+    _id = 'model_setting'
 
-        await collection.find_one_and_replace(
-            {'_id': _id},
-            data,
-            upsert=True
-        )
-    finally:
-        if db_client:
-            db_client.close()
+    await collection.find_one_and_replace(
+        {'_id': _id},
+        data,
+        upsert=True
+    )
 
         # async with aiofiles.open(MODEL_TEMP_PATH, 'wb') as f:
         #     await f.write(orjson.dumps(data, option=orjson.OPT_INDENT_2))

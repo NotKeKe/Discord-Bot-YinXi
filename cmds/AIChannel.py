@@ -78,9 +78,9 @@ class AIChannel(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        await self.on_AIChannelSend(message)
+        # await self.on_AIChannelSend(message)
         # await self.on_ReplyOrTag(message)
-        await self.chatWithHuman(message)
+        # await self.chatWithHuman(message)
         await self.trainStyle(message)
 
     @commands.Cog.listener()
