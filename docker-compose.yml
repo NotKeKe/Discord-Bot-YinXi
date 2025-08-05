@@ -6,6 +6,10 @@ services:
       dockerfile: Dockerfile
     command: uv run newbot2.py
     container_name: yinxi-dc-bot
+    depends_on:
+      - lrcapi
+    environment:
+      - LRCAPI_URL=http://lrcapi:28883
     volumes:
       - ./cmds/data.json:/app/cmds/data.json
       - ./data:/app/data
@@ -52,6 +56,11 @@ services:
         echo '0 3 * * * /backup.sh' | crontab - &&
         crond -f
       "
+  lrcapi:
+    image: hisatri/lrcapi:latest
+    container_name: yinxi-dc-lrcapi
+    expose:
+      - "28883"
     
 volumes:
   mongodb:
