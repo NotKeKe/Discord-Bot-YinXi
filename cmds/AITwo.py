@@ -43,107 +43,107 @@ class AITwo(commands.Cog):
         print(f'已載入「{__name__}」')
         await safe_get_ollama_models()
 
-    @commands.hybrid_command(name='chat_two', description='Chat with AI model')
-    @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
-    @app_commands.describe(model='預設為`qwen-3-32b`', 想法顯示='預設為`False`', 工具調用='預設為`True`')
-    async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'qwen-3-32b', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True, 系統提示詞: str = None):
-        async with ctx.typing():
-            try:
-                HistoryData.initdata()
-                history = get_history(ctx, 歷史紀錄)
+    # @commands.hybrid_command(name='chat_two', description='Chat with AI model')
+    # @app_commands.autocomplete(model=select_moduels_auto_complete, 歷史紀錄=chat_autocomplete)
+    # @app_commands.describe(model='預設為`qwen-3-32b`', 想法顯示='預設為`False`', 工具調用='預設為`True`')
+    # async def _chat(self, ctx: commands.Context, * , 輸入文字: str, model:str = 'qwen-3-32b', 歷史紀錄:str = None, 想法顯示:bool = False, 文字檔案: discord.Attachment = None, 工具調用: bool = True, 系統提示詞: str = None):
+    #     async with ctx.typing():
+    #         try:
+    #             HistoryData.initdata()
+    #             history = get_history(ctx, 歷史紀錄)
 
-                f_content = None
-                if 文字檔案:
-                    try:
-                        f_content = (await 文字檔案.read()).decode('utf-8')
-                    except:
-                        await ctx.send('無法讀取文字檔案')
+    #             f_content = None
+    #             if 文字檔案:
+    #                 try:
+    #                     f_content = (await 文字檔案.read()).decode('utf-8')
+    #                 except:
+    #                     await ctx.send('無法讀取文字檔案')
 
-                try:
-                    think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content, is_enable_tools=工具調用, system_prompt=系統提示詞)
-                except: 
-                    traceback.print_exc()
-                    await ctx.send(f'您使用的model({model})出錯，因此此次用glm-4-flash代替，並且無法閱讀檔案')
-                    model = 'glm-4-flash'
-                    think, result, *_ = await thread_pool(base_zhipu_chat, 輸入文字, model, history=history)
+    #             try:
+    #                 think, result, *_ = await thread_pool(base_openai_chat, 輸入文字, model, history=history, text_file_content=f_content, is_enable_tools=工具調用, system_prompt=系統提示詞)
+    #             except: 
+    #                 traceback.print_exc()
+    #                 await ctx.send(f'您使用的model({model})出錯，因此此次用glm-4-flash代替，並且無法閱讀檔案')
+    #                 model = 'glm-4-flash'
+    #                 think, result, *_ = await thread_pool(base_zhipu_chat, 輸入文字, model, history=history)
 
-                embed = create_result_embed(ctx, result, model)
-                await ctx.send(embed=embed)
+    #             embed = create_result_embed(ctx, result, model)
+    #             await ctx.send(embed=embed)
 
-                if 想法顯示 and think:
-                    await ctx.send(content=think, ephemeral=True)
+    #             if 想法顯示 and think:
+    #                 await ctx.send(content=think, ephemeral=True)
             
-                if result:
-                    try: HistoryData.appendHistory(ctx.author.id, 輸入文字, result, 歷史紀錄, think)
-                    except: traceback.print_exc()
+    #             if result:
+    #                 try: HistoryData.appendHistory(ctx.author.id, 輸入文字, result, 歷史紀錄, think)
+    #                 except: traceback.print_exc()
 
-                # await thread_pool(save_to_knowledge_base, ctx.message.content, result if result else think)
-                # await thread_pool(save_to_preferences, ctx.author.id, (to_user_message(輸入文字) + to_assistant_message(result if result else think)))
-            except:
-                traceback.print_exc()
-                await ctx.send('目前無法生成，請稍後再試')
+    #             # await thread_pool(save_to_knowledge_base, ctx.message.content, result if result else think)
+    #             # await thread_pool(save_to_preferences, ctx.author.id, (to_user_message(輸入文字) + to_assistant_message(result if result else think)))
+    #         except:
+    #             traceback.print_exc()
+    #             await ctx.send('目前無法生成，請稍後再試')
     
-    @commands.hybrid_command(name='圖片生成', description='Generate a image')
-    @app_commands.choices(
-        model=[
-            Choice(name='cogview-3-flash', value='cogview-3-flash')
-        ]
-    )
-    async def _image_generate(self, ctx: commands.Context, * , 輸入文字: str, model:str ='cogview-3-flash'):
-        try:
-            async with ctx.typing():
-                url, time = await thread_pool(image_generate, 輸入文字)
-                embed = create_basic_embed(title='AI圖片生成', color=ctx.author.color)
-                embed.set_image(url=url)
-                embed.add_field(name='花費時間(秒)', value=int(time))
-                embed.set_footer(text=f'Powered by {model}')
-                await ctx.send(embed=embed)
-        except:
-            await ctx.send('生成失敗', ephemeral=True)
+    # @commands.hybrid_command(name='_圖片生成', description='Generate a image')
+    # @app_commands.choices(
+    #     model=[
+    #         Choice(name='cogview-3-flash', value='cogview-3-flash')
+    #     ]
+    # )
+    # async def _image_generate(self, ctx: commands.Context, * , 輸入文字: str, model:str ='cogview-3-flash'):
+    #     try:
+    #         async with ctx.typing():
+    #             url, time = await thread_pool(image_generate, 輸入文字)
+    #             embed = create_basic_embed(title='AI圖片生成', color=ctx.author.color)
+    #             embed.set_image(url=url)
+    #             embed.add_field(name='花費時間(秒)', value=int(time))
+    #             embed.set_footer(text=f'Powered by {model}')
+    #             await ctx.send(embed=embed)
+    #     except:
+    #         await ctx.send('生成失敗', ephemeral=True)
 
-    @commands.hybrid_command(name='影片生成', description='Generate a video')
-    @app_commands.choices(
-        model=[app_commands.Choice(name='cogvideox-flash', value='cogvideox-flash')],
-        size = [
-            Choice(name='720x480', value='720x480'),
-            Choice(name='1024x1024', value='1024x1024'),
-            Choice(name='1280x960', value='1280x960'),
-            Choice(name='960x1280', value='960x1280'),
-            Choice(name='1920x1080', value='1920x1080'),
-            Choice(name='1080x1920', value='1080x1920'),
-            Choice(name='2048x1080', value='2048x1080'),
-            Choice(name='3840x2160', value='3840x2160')
-        ],
-        fps = [
-            Choice(name=30, value=30),
-            Choice(name=60, value=60)
-        ],
-        是否要聲音 = [
-            Choice(name='要', value='要'),
-            Choice(name='不要', value='不要')
-        ]
-    )
-    @app_commands.describe(fps='預設為60，可選30 or 60', 影片時長='單位為秒, 預設為5, 最高為10')
-    async def _video_generate(self, ctx: commands.Context, * , 輸入文字: str, 圖片連結: str = None, size: str = None, fps: int = 60, 是否要聲音 = '要', 影片時長:int = 5, model:str = 'cogvideox-flash'):
-        try:
-            async with ctx.typing():
-                if 影片時長 > 10:
-                    await ctx.send(f'最高只能幫你生成10秒的圖片 要怪就怪{model}...', ephemeral=True) 
-                    影片時長 = 10
+    # @commands.hybrid_command(name='_影片生成', description='Generate a video')
+    # @app_commands.choices(
+    #     model=[app_commands.Choice(name='cogvideox-flash', value='cogvideox-flash')],
+    #     size = [
+    #         Choice(name='720x480', value='720x480'),
+    #         Choice(name='1024x1024', value='1024x1024'),
+    #         Choice(name='1280x960', value='1280x960'),
+    #         Choice(name='960x1280', value='960x1280'),
+    #         Choice(name='1920x1080', value='1920x1080'),
+    #         Choice(name='1080x1920', value='1080x1920'),
+    #         Choice(name='2048x1080', value='2048x1080'),
+    #         Choice(name='3840x2160', value='3840x2160')
+    #     ],
+    #     fps = [
+    #         Choice(name=30, value=30),
+    #         Choice(name=60, value=60)
+    #     ],
+    #     是否要聲音 = [
+    #         Choice(name='要', value='要'),
+    #         Choice(name='不要', value='不要')
+    #     ]
+    # )
+    # @app_commands.describe(fps='預設為60，可選30 or 60', 影片時長='單位為秒, 預設為5, 最高為10')
+    # async def _video_generate(self, ctx: commands.Context, * , 輸入文字: str, 圖片連結: str = None, size: str = None, fps: int = 60, 是否要聲音 = '要', 影片時長:int = 5, model:str = 'cogvideox-flash'):
+    #     try:
+    #         async with ctx.typing():
+    #             if 影片時長 > 10:
+    #                 await ctx.send(f'最高只能幫你生成10秒的圖片 要怪就怪{model}...', ephemeral=True) 
+    #                 影片時長 = 10
 
-                if fps not in (30, 60):
-                    fps = 60
+    #             if fps not in (30, 60):
+    #                 fps = 60
 
-                if 是否要聲音 == '要':
-                    是否要聲音 = True
-                else:
-                    是否要聲音 = False
-                url = await thread_pool(video_generate, 輸入文字, 圖片連結, size, fps, 是否要聲音, 影片時長)
-                string = f'影片生成 (Power by {model}) \n {url}'
-                await ctx.send(string)
-        except Exception as e:
-            await ctx.send(f'生成失敗, reason: {e}', ephemeral=True)
-            traceback.print_exc()
+    #             if 是否要聲音 == '要':
+    #                 是否要聲音 = True
+    #             else:
+    #                 是否要聲音 = False
+    #             url = await thread_pool(video_generate, 輸入文字, 圖片連結, size, fps, 是否要聲音, 影片時長)
+    #             string = f'影片生成 (Power by {model}) \n {url}'
+    #             await ctx.send(string)
+    #     except Exception as e:
+    #         await ctx.send(f'生成失敗, reason: {e}', ephemeral=True)
+    #         traceback.print_exc()
 
     @commands.hybrid_command(name='image_to_base64', description='將圖片轉成base64')
     async def to_base64(self, ctx:commands.Context, *, url: str):

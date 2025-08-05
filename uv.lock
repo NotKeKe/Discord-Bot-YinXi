@@ -2118,6 +2118,7 @@ dependencies = [
     { name = "tweepy" },
     { name = "uvicorn" },
     { name = "yt-dlp" },
+    { name = "zai-sdk" },
     { name = "zhipuai" },
 ]
 
@@ -2154,6 +2155,7 @@ requires-dist = [
     { name = "tweepy", specifier = "==4.15.0" },
     { name = "uvicorn", specifier = "==0.34.2" },
     { name = "yt-dlp" },
+    { name = "zai-sdk", specifier = ">=0.0.2" },
     { name = "zhipuai", specifier = "==2.1.5.20250421" },
 ]
 
@@ -2164,6 +2166,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/7e/3a/343f7a0024ddd4c30f150e8d8f57fd7b924846f97d99fc0dcd75ea8d2773/yt_dlp-2025.7.21.tar.gz", hash = "sha256:46fbb53eab1afbe184c45b4c17e9a6eba614be680e4c09de58b782629d0d7f43", size = 3050219, upload-time = "2025-07-21T23:59:03.826Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e8/2f/abe59a3204c749fed494849ea29176bcefa186ec8898def9e43f649ddbcf/yt_dlp-2025.7.21-py3-none-any.whl", hash = "sha256:d7aa2b53f9b2f35453346360f41811a0dad1e956e70b35a4ae95039d4d815d15", size = 3288681, upload-time = "2025-07-21T23:59:01.788Z" },
+]
+
+[[package]]
+name = "zai-sdk"
+version = "0.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cachetools" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pydantic-core" },
+    { name = "pyjwt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d4/0c/aa418ea59cad589abfcef04f7a8dbe9931bcb23d004abf8a7ae82929b38e/zai_sdk-0.0.2.tar.gz", hash = "sha256:15dbb3170d83c5987ec77fb9f4e91ca67e66334ee1aa3e7d57c5c38d8917d746", size = 68646, upload-time = "2025-08-04T04:16:30.34Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0c/ed/16f3cba48994df53e3ca9560e6cf94722b72e01be7bad1faf3bc5a77fa73/zai_sdk-0.0.2-py3-none-any.whl", hash = "sha256:6cd671688f62687eb603964c106ae9d06ec4b861d49f628550e7d8b60f2410ec", size = 108652, upload-time = "2025-08-04T04:16:29.139Z" },
 ]
 
 [[package]]

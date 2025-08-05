@@ -35,5 +35,6 @@ dependencies = [
     "tweepy==4.15.0",
     "uvicorn==0.34.2",
     "yt_dlp",
+    "zai-sdk>=0.0.2",
     "zhipuai==2.1.5.20250421",
 ]

@@ -206,6 +206,7 @@ def is_async(func) -> bool:
     return inspect.iscoroutinefunction(func)
 
 async def image_to_base64(image_url: str) -> str:
+    '''Conver image url to base64'''
     async with aiohttp.ClientSession() as sess:
         async with sess.get(image_url) as resp:
             if resp.status != 200: return ''

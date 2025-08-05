@@ -30,7 +30,7 @@
         {
             "type": "function",
             "function": {
-                "name": "search",
+                "name": "web_search",
                 "description": "這個工具用來在使用者需要網頁搜尋 或是你不確定答案時，進行網頁搜索並取得結果",
                 "parameters": {
                     "type": "object",

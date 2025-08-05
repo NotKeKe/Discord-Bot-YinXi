@@ -4,7 +4,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.functions import MONGO_URL, UnixToReadable
 
-async def history_autocomplete(interaction: Interaction, current: str) -> List[app_commands.Choice[str]]:
+async def chat_history_autocomplete(interaction: Interaction, current: str) -> List[app_commands.Choice[str]]:
     try:
         db_client = AsyncIOMotorClient(MONGO_URL)
         db = db_client['aichat_chat_history']
