@@ -27,6 +27,7 @@ dependencies = [
     "python-dotenv==1.1.0",
     "python-multipart==0.0.20",
     "pytubefix==8.12.0",
+    "pyzbar>=0.1.9",
     "qrcode==8.2",
     "Requests==2.32.3",
     "scrapetube==2.5.1",

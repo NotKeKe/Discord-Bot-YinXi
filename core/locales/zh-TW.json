@@ -62,7 +62,8 @@
         "del_keep": "刪除記事",
         "sub_yt": "訂閱youtube頻道",
         "sub_yt_cancel": "取消訂閱youtube頻道",
-        "sub_yt_list": "列出訂閱的youtube頻道"
+        "sub_yt_list": "列出訂閱的youtube頻道",
+        "qrcode_scanner": "qrcode掃描器"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -127,7 +128,8 @@
         "del_keep": "刪除你先前使用 /記事 所創建的事件",
         "sub_yt": "在當前 Discord 頻道訂閱某個 YouTuber，會在此發送通知",
         "sub_yt_cancel": "取消當前 Discord 頻道所訂閱的某個 YouTuber",
-        "sub_yt_list": "列出當前 Discord 頻道所訂閱的所有 YouTuber"
+        "sub_yt_list": "列出當前 Discord 頻道所訂閱的所有 YouTuber",
+        "qrcode_scanner": "掃描一個QRcode"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -191,7 +193,8 @@
         "yt_downloader_url": "輸入影片/音訊的網址",
         "yt_downloader_type": "選擇要下載的格式 (mp4/mp3)",
         "yt_downloader_quality": "選擇影片品質 (僅在選擇 mp4 時有效)",
-        "sub_yt_url": "在此輸入要訂閱的 YouTuber 連結 (例如: https://www.youtube.com/@KeJC130)"
+        "sub_yt_url": "在此輸入要訂閱的 YouTuber 連結 (例如: https://www.youtube.com/@KeJC130)",
+        "qrcode_scanner_image": "在此上傳一個QRcode圖片"
     },
     "components": {
         "yin_xi": "音汐",
@@ -616,6 +619,13 @@
         "send_sub_yt_cannot_delete": "無法刪除 {url}，請使用 `/錯誤回報` 或者是於 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi) 上提出此問題。",
         "embed_sub_yt_list": [{
             "author": "頻道: {channelName} 所訂閱的 YouTuber"
-        }]
+        }],
+        "embed_qrcode_scanner": [{
+            "title": "QRcode 掃描文字: ",
+            "author": "QRcode 掃描器"
+        }],
+        "send_qrcode_scanner_no_qrcode_found": "找不到任何 QR Code 欸，換張圖片試試吧w",
+        "send_qrcode_scanner_error": "QR Code 掃描錯誤 (reason: {error})",
+        "send_qrcode_scanner_invalid_image": "你上傳的東西不是圖片欸，我只接收圖片窩~"
     }
 }

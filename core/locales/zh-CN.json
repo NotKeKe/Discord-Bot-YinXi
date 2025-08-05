@@ -62,7 +62,8 @@
         "del_keep": "删除记事",
         "sub_yt": "订阅youtube频道",
         "sub_yt_cancel": "取消订阅youtube频道",
-        "sub_yt_list": "列出订阅的youtube频道"
+        "sub_yt_list": "列出订阅的youtube频道",
+        "qrcode_scanner": "qrcode扫描器"
     },
     "description": {
         "translate": "翻译一些文字",
@@ -127,7 +128,8 @@
         "del_keep": "删除你先前使用 /记事 所创建的事件",
         "sub_yt": "在当前 Discord 频道订阅某个 YouTuber，会在此发送通知",
         "sub_yt_cancel": "取消当前 Discord 频道所订阅的某个 YouTuber",
-        "sub_yt_list": "列出当前 Discord 频道所订阅的所有 YouTuber"
+        "sub_yt_list": "列出当前 Discord 频道所订阅的所有 YouTuber",
+        "qrcode_scanner": "扫描一个QRcode"
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
@@ -191,7 +193,8 @@
         "yt_downloader_url": "输入影片/音讯的网址",
         "yt_downloader_type": "选择要下载的格式 (mp4/mp3)",
         "yt_downloader_quality": "选择影片品质 (仅在选择 mp4 时有效)",
-        "sub_yt_url": "在此输入要订阅的 YouTuber 连结 (例如: https://www.youtube.com/@KeJC130)"
+        "sub_yt_url": "在此输入要订阅的 YouTuber 连结 (例如: https://www.youtube.com/@KeJC130)",
+        "qrcode_scanner_image": "在此上传一个QRcode图片"
     },
     "components": {
         "yin_xi": "音汐",
@@ -616,6 +619,13 @@
         "send_sub_yt_cannot_delete": "无法删除 {url}，请使用 `/错误回报` 或者是于 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi) 上提出此问题。",
         "embed_sub_yt_list": [{
             "author": "频道: {channelName} 所订阅的 YouTuber"
-        }]
+        }],
+        "embed_qrcode_scanner": [{
+            "title": "QRcode 扫描文字: ",
+            "author": "QRcode 扫描器"
+        }],
+        "send_qrcode_scanner_no_qrcode_found": "找不到任何 QR Code 欸，换张图片试试吧w",
+        "send_qrcode_scanner_error": "QR Code 扫描错误 (reason: {error})",
+        "send_qrcode_scanner_invalid_image": "你上传的东西不是图片欸，我只接收图片窝~"
     }
 }

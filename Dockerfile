@@ -7,9 +7,9 @@ RUN ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime \
 # 安裝 uv
 RUN pip install uv --no-cache-dir
 
-# 安裝 ffmpeg
+# 安裝 ffmpeg, pyzbar 依賴
 RUN apt update && \
-    apt install -y ffmpeg --no-install-recommends && \
+    apt install -y ffmpeg libzbar0 --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

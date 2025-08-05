@@ -62,7 +62,8 @@
         "del_keep": "del_keep",
         "sub_yt": "subscribe_youtube",
         "sub_yt_cancel": "cancel_subscribe_youtube",
-        "sub_yt_list": "list_subscribed_youtube"
+        "sub_yt_list": "list_subscribed_youtube",
+        "qrcode_scanner": "qrcode_scanner"
     },
     "description": {
         "translate": "Translate some text",
@@ -127,7 +128,8 @@
         "del_keep": "Delete an event you previously created with /keep",
         "sub_yt": "Subscribe to a YouTuber in the current Discord channel, notifications will be sent here",
         "sub_yt_cancel": "Cancel a YouTuber subscription in the current Discord channel",
-        "sub_yt_list": "List all YouTubers subscribed to in the current Discord channel"
+        "sub_yt_list": "List all YouTubers subscribed to in the current Discord channel",
+        "qrcode_scanner": "Scan a QRcode"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -191,7 +193,8 @@
         "yt_downloader_url": "Enter the URL of the video/audio",
         "yt_downloader_type": "Select the format to download (mp4/mp3)",
         "yt_downloader_quality": "Select the video quality (only effective when mp4 is selected)",
-        "sub_yt_url": "Enter the YouTuber link to subscribe to here (e.g., https://www.youtube.com/@KeJC130)"
+        "sub_yt_url": "Enter the YouTuber link to subscribe to here (e.g., https://www.youtube.com/@KeJC130)",
+        "qrcode_scanner_image": "Upload a QR code image here"
     },
     "components": {
         "yin_xi": "YinXi",
@@ -616,6 +619,13 @@
         "send_sub_yt_cannot_delete": "Cannot delete {url}, please use `/report` or raise this issue on [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi).",
         "embed_sub_yt_list": [{
             "author": "YouTubers subscribed to in channel: {channelName}"
-        }]
+        }],
+        "embed_qrcode_scanner": [{
+            "title": "QR Code Scanned Text: ",
+            "author": "QR Code Scanner"
+        }],
+        "send_qrcode_scanner_no_qrcode_found": "No QR Code found. Please try a different image.",
+        "send_qrcode_scanner_error": "QR Code scanning error (reason: {error})",
+        "send_qrcode_scanner_invalid_image": "The file you uploaded is not an image. I only accept images..."
     }
 }
