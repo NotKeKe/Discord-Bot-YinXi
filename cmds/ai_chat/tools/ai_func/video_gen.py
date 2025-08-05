@@ -5,16 +5,13 @@ from io import BytesIO
 from PIL import Image
 from zai import ZhipuAiClient
 import asyncio
-import httpx
 
 from core.functions import image_to_base64
 
 from ...utils.config import zhipu_KEY
-from ...utils.client import SyncClient
 
 client = ZhipuAiClient(
-    api_key=zhipu_KEY,
-    http_client=httpx.AsyncClient()
+    api_key=zhipu_KEY
 )
 
 def image_size(image_base64) -> str:
@@ -28,14 +25,16 @@ def image_size(image_base64) -> str:
 async def video_generate(prompt: str, image_url = None, size=None, fps=60, with_audio: bool=True, duration: int=5) -> Tuple[str, float]:
     imageBase64 = None
     if image_url is not None:
-        imageBase64 = image_to_base64(image_url)
+        imageBase64 = await image_to_base64(image_url)
         if size is None:
             size = image_size(imageBase64)
 
     if size is None:
         size = '1920x1080'
 
-    response = await client.videos.generations(
+
+    response = await asyncio.to_thread(
+        client.videos.generations,
         model="cogvideox-flash",
         image_url=imageBase64,
         prompt=prompt,  
@@ -43,7 +42,7 @@ async def video_generate(prompt: str, image_url = None, size=None, fps=60, with_
         with_audio=with_audio,
         size=size,
         duration=duration,
-        fps=fps,
+        fps=fps
     )
 
     id = response.id
@@ -57,13 +56,18 @@ async def video_generate(prompt: str, image_url = None, size=None, fps=60, with_
         await asyncio.sleep(10)
 
         try:
-            response2 = await client.videos.retrieve_videos_result(id=id)
+            response2 = await asyncio.to_thread(
+                client.videos.retrieve_videos_result,
+                id=id
+            )
             
+            passed = (datetime.now() - rn).total_seconds()
+
             if response2.task_status == 'SUCCESS':
-                return response2.video_result[0].url, (datetime.now() - rn).total_seconds()
+                return response2.video_result[0].url, passed
             elif response2.task_status == 'FAIL':
-                return '生成失敗'
+                return '生成失敗', passed
             
             if on_timeout(rn):
-                return 'Timeout (時間超過20分鐘)'
-        except: return 'API發送失敗'
+                return 'Timeout (時間超過20分鐘)', passed
+        except: return 'API發送失敗', passed

@@ -63,7 +63,17 @@
         "sub_yt": "subscribe_youtube",
         "sub_yt_cancel": "cancel_subscribe_youtube",
         "sub_yt_list": "list_subscribed_youtube",
-        "qrcode_scanner": "qrcode_scanner"
+        "qrcode_scanner": "qrcode_scanner",
+        "set_ai_channel": "set_ai_channel",
+        "cancel_ai_channel": "cancel_ai_channel",
+        "change_ai_channel_model": "change_ai_channel_model",
+        "change_ai_channel_system_prompt": "change_ai_channel_system_prompt",
+        "show_ai_channel_model": "show_ai_channel_model",
+        "set_chat_human": "set_chat_human",
+        "cancel_chat_human": "cancel_chat_human",
+        "chat": "chat",
+        "image_generate": "image_generate",
+        "video_generate": "video_generate"
     },
     "description": {
         "translate": "Translate some text",
@@ -129,7 +139,17 @@
         "sub_yt": "Subscribe to a YouTuber in the current Discord channel, notifications will be sent here",
         "sub_yt_cancel": "Cancel a YouTuber subscription in the current Discord channel",
         "sub_yt_list": "List all YouTubers subscribed to in the current Discord channel",
-        "qrcode_scanner": "Scan a QRcode"
+        "qrcode_scanner": "Scan a QRcode",
+        "set_ai_channel": "Set this channel as an AI channel to have the AI automatically reply to messages",
+        "cancel_ai_channel": "Cancel the AI channel setting for this channel",
+        "change_ai_channel_model": "Change the model for this AI channel",
+        "change_ai_channel_system_prompt": "Change the system prompt for this AI channel",
+        "show_ai_channel_model": "Show the currently used model for this AI channel",
+        "chat": "Have a conversation with the AI",
+        "image_generate": "Generate an image using AI",
+        "video_generate": "Generate a video using AI",
+        "set_chat_human": "Set this channel as a chat_human conversation channel",
+        "cancel_chat_human": "Cancel the chat_human conversation setting for this channel"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -194,7 +214,19 @@
         "yt_downloader_type": "Select the format to download (mp4/mp3)",
         "yt_downloader_quality": "Select the video quality (only effective when mp4 is selected)",
         "sub_yt_url": "Enter the YouTuber link to subscribe to here (e.g., https://www.youtube.com/@KeJC130)",
-        "qrcode_scanner_image": "Upload a QR code image here"
+        "qrcode_scanner_image": "Upload a QR code image here",
+        "chat_is_vision_model": "Is this an image model (if you have uploaded an image, please set this to True)",
+        "video_generate_prompt": "Description of the video",
+        "video_generate_image_url": "Image URL to reference (optional)",
+        "video_generate_size": "Video size (default 720x480)",
+        "video_generate_fps": "Video frame rate (default 60)",
+        "video_generate_has_audio": "Whether audio is needed (default Yes)",
+        "video_generate_duration": "Video duration (seconds, default 5)",
+        "video_generate_model": "Model used (currently only supports cogvideox-flash)",
+        "set_ai_channel_model": "AI model to set, default is qwen-3-32b",
+        "set_ai_channel_system_prompt": "System prompt to set (optional)",
+        "change_ai_channel_model_model": "AI model to change to",
+        "change_ai_channel_system_prompt_system_prompt": "System prompt to change to"
     },
     "components": {
         "yin_xi": "YinXi",
@@ -615,7 +647,7 @@
             ]
         }],
         "send_sub_yt_successfully_delete": "Successfully deleted notifications for `{ytb}`",
-        "send_sub_yt_new_video": "{name} has published a new video!\n{url}",
+        "send_sub_yt_new_video": "**{name}** has published a new video!\n{url}",
         "send_sub_yt_cannot_delete": "Cannot delete {url}, please use `/report` or raise this issue on [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi).",
         "embed_sub_yt_list": [{
             "author": "YouTubers subscribed to in channel: {channelName}"
@@ -626,6 +658,48 @@
         }],
         "send_qrcode_scanner_no_qrcode_found": "No QR Code found. Please try a different image.",
         "send_qrcode_scanner_error": "QR Code scanning error (reason: {error})",
-        "send_qrcode_scanner_invalid_image": "The file you uploaded is not an image. I only accept images..."
+        "send_qrcode_scanner_invalid_image": "The file you uploaded is not an image. I only accept images...",
+        "send_on_msg_chat_human_error": "An error occurred while processing chat_human conversation.",
+        "send_on_msg_ai_channel_error": "An error occurred while processing AI channel message.",
+        "send_set_ai_channel_channel_exist": "This channel is already an AI channel.",
+        "cancel_ai_channel_channel_not_found": "AI channel setting not found.",
+        "button_cancel_ai_channel_check": "Confirm",
+        "button_cancel_ai_channel_refuse": "Cancel",
+        "send_cancel_ai_channel_button_check_success": "Successfully cancelled AI channel.",
+        "send_cancel_ai_channel_button_check_cancel": "Operation cancelled.",
+        "embed_cancel_ai_channel_whether_cancel": [{
+            "title": "Are you sure you want to cancel the chat_human conversation channel?"
+        }],
+        "send_change_ai_channel_model_not_available_model": "Model `{model}` is not available.",
+        "send_change_ai_channel_model_channel_not_found": "AI channel setting not found.",
+        "send_change_ai_channel_model_successfully_change_model": "Successfully changed model to `{model}`.",
+        "send_change_ai_channel_system_prompt_channel_not_found": "AI channel setting not found.",
+        "send_change_ai_channel_system_prompt_successfully_change_system_prompt": "Successfully changed system prompt to ```{system_prompt}```.",
+        "send_show_ai_channel_model_channel_not_found": "AI channel setting not found.",
+        "send_show_ai_channel_model_model": "The currently used model is: `{model}`.",
+        "send_set_chat_human_channel_exist": "This channel is already a chat human channel.",
+        "cancel_chat_human_channel_not_found": "chat_human conversation channel setting not found.",
+        "button_cancel_chat_human_check": "Confirm",
+        "button_cancel_chat_human_refuse": "Cancel",
+        "send_cancel_chat_human_button_check_success": "Successfully cancelled chat_human channel",
+        "send_cancel_chat_human_button_check_cancel": "Operation cancelled",
+        "embed_cancel_chat_human_whether_cancel": [{
+            "title": "Are you sure you want to cancel the chat_human conversation channel?"
+        }],
+        "embed_chat": [{
+            "title": "AI Text Generation"
+        }],
+        "button_chat_think": "Thinking Process",
+        "embed_image_generate": [{
+            "title": "AI Image Generation",
+            "fields": [
+                { "name": "Time spent (seconds)" }
+            ]
+        }],
+        "send_image_generate_fail": "Generation failed",
+        "send_video_generate_duration_too_long": "Can only generate up to 10 seconds of video. Blame {model}...",
+        "send_video_generate_wrong_type": "Incorrect type for 'whether to have sound', please reconfirm",
+        "send_video_generate_success": "Video generated (Powered by `{model}`; Time spent: `{time}`) \n {url}",
+        "send_video_generate_fail": "Generation failed, reason: {e}"
     }
 }

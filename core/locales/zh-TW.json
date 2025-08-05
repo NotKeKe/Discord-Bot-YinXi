@@ -63,7 +63,17 @@
         "sub_yt": "訂閱youtube頻道",
         "sub_yt_cancel": "取消訂閱youtube頻道",
         "sub_yt_list": "列出訂閱的youtube頻道",
-        "qrcode_scanner": "qrcode掃描器"
+        "qrcode_scanner": "qrcode掃描器",
+        "set_ai_channel": "開啟ai頻道",
+        "cancel_ai_channel": "取消ai頻道",
+        "change_ai_channel_model": "更換ai頻道模型",
+        "change_ai_channel_system_prompt": "更換ai頻道系統提示詞",
+        "show_ai_channel_model": "顯示ai頻道模型",
+        "set_chat_human": "設定chat_human對話",
+        "cancel_chat_human": "取消chat_human對話",
+        "chat": "chat",
+        "image_generate": "圖片生成",
+        "video_generate": "影片生成"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -129,7 +139,17 @@
         "sub_yt": "在當前 Discord 頻道訂閱某個 YouTuber，會在此發送通知",
         "sub_yt_cancel": "取消當前 Discord 頻道所訂閱的某個 YouTuber",
         "sub_yt_list": "列出當前 Discord 頻道所訂閱的所有 YouTuber",
-        "qrcode_scanner": "掃描一個QRcode"
+        "qrcode_scanner": "掃描一個QRcode",
+        "set_ai_channel": "設定此頻道為 AI 頻道，讓 AI 自動回覆訊息",
+        "cancel_ai_channel": "取消此頻道的 AI 頻道設定",
+        "change_ai_channel_model": "更換此 AI 頻道的模型",
+        "change_ai_channel_system_prompt": "更換此 AI 頻道的系統提示詞",
+        "show_ai_channel_model": "顯示此 AI 頻道目前使用的模型",
+        "chat": "與 AI 進行一段對話",
+        "image_generate": "使用 AI 生成圖片",
+        "video_generate": "使用 AI 生成影片",
+        "set_chat_human": "設定此頻道為 chat_human 對話頻道",
+        "cancel_chat_human": "取消此頻道的 chat_human 對話設定"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -189,12 +209,24 @@
         "get_gifs_num": "要獲取的 GIF 數量 (僅在輸入關鍵字時有效)",
         "get_gifs_lang": "GIF 的語言 (僅在輸入關鍵字時有效)",
         "minecraft_server_status_address": "伺服器位址 (例如: play.hypixel.net)",
+        "chat_is_vision_model": "這是一個圖片模型嗎 (如果你有上傳圖片的話，請將此設定為True)",
+        "video_generate_prompt": "影片的描述",
+        "video_generate_image_url": "要參考的圖片連結 (選填)",
+        "video_generate_size": "影片尺寸 (預設 720x480)",
+        "video_generate_fps": "影片幀率 (預設 60)",
+        "video_generate_has_audio": "是否需要聲音 (預設 是)",
+        "video_generate_duration": "影片時長 (秒, 預設 5)",
+        "video_generate_model": "使用的模型 (目前僅支援 cogvideox-flash)",
         "minecraft_server_status_edition": "選擇伺服器版本 (Java/Bedrock)",
         "yt_downloader_url": "輸入影片/音訊的網址",
         "yt_downloader_type": "選擇要下載的格式 (mp4/mp3)",
         "yt_downloader_quality": "選擇影片品質 (僅在選擇 mp4 時有效)",
         "sub_yt_url": "在此輸入要訂閱的 YouTuber 連結 (例如: https://www.youtube.com/@KeJC130)",
-        "qrcode_scanner_image": "在此上傳一個QRcode圖片"
+        "qrcode_scanner_image": "在此上傳一個QRcode圖片",
+        "set_ai_channel_model": "要設定的 AI 模型，預設為 qwen-3-32b",
+        "set_ai_channel_system_prompt": "要設定的系統提示詞 (可選)",
+        "change_ai_channel_model_model": "要更換成的 AI 模型",
+        "change_ai_channel_system_prompt_system_prompt": "要更換成的系統提示詞"
     },
     "components": {
         "yin_xi": "音汐",
@@ -615,7 +647,7 @@
             ]
         }],
         "send_sub_yt_successfully_delete": "已刪除對 `{ytb}` 的影片通知",
-        "send_sub_yt_new_video": "{name} 發布了新影片! \n{url}",
+        "send_sub_yt_new_video": "**{name}** 發布了新影片! \n{url}",
         "send_sub_yt_cannot_delete": "無法刪除 {url}，請使用 `/錯誤回報` 或者是於 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi) 上提出此問題。",
         "embed_sub_yt_list": [{
             "author": "頻道: {channelName} 所訂閱的 YouTuber"
@@ -626,6 +658,48 @@
         }],
         "send_qrcode_scanner_no_qrcode_found": "找不到任何 QR Code 欸，換張圖片試試吧w",
         "send_qrcode_scanner_error": "QR Code 掃描錯誤 (reason: {error})",
-        "send_qrcode_scanner_invalid_image": "你上傳的東西不是圖片欸，我只接收圖片窩~"
+        "send_qrcode_scanner_invalid_image": "你上傳的東西不是圖片欸，我只接收圖片窩~",
+        "send_on_msg_chat_human_error": "在處理 chat_human 對話時發生錯誤。",
+        "send_on_msg_ai_channel_error": "在處理 AI 頻道訊息時發生錯誤。",
+        "send_set_ai_channel_channel_exist": "此頻道已經是 AI 頻道。",
+        "cancel_ai_channel_channel_not_found": "找不到 AI 頻道設定。",
+        "button_cancel_ai_channel_check": "確認",
+        "button_cancel_ai_channel_refuse": "取消",
+        "send_cancel_ai_channel_button_check_success": "已成功取消 AI 頻道。",
+        "send_cancel_ai_channel_button_check_cancel": "已取消操作。",
+        "embed_cancel_ai_channel_whether_cancel": [{
+            "title": "您確定要取消 chat_human 對話頻道嗎？"
+        }],
+        "send_change_ai_channel_model_not_available_model": "模型 `{model}` 不可用。",
+        "send_change_ai_channel_model_channel_not_found": "找不到 AI 頻道設定。",
+        "send_change_ai_channel_model_successfully_change_model": "已成功將模型更換為 `{model}`。",
+        "send_change_ai_channel_system_prompt_channel_not_found": "找不到 AI 頻道設定。",
+        "send_change_ai_channel_system_prompt_successfully_change_system_prompt": "已成功將系統提示詞更換為 ```{system_prompt}```。",
+        "send_show_ai_channel_model_channel_not_found": "找不到 AI 頻道設定。",
+        "send_show_ai_channel_model_model": "目前使用的模型是: `{model}`。",
+        "send_set_chat_human_channel_exist": "此頻道已經是 chat human 頻道。",
+        "cancel_chat_human_channel_not_found": "找不到 chat_human 對話頻道設定。",
+        "button_cancel_chat_human_check": "確認",
+        "button_cancel_chat_human_refuse": "取消",
+        "send_cancel_chat_human_button_check_success": "已成功取消 chat_human 頻道",
+        "send_cancel_chat_human_button_check_cancel": "已取消操作",
+        "embed_cancel_chat_human_whether_cancel": [{
+            "title": "您確定要取消 chat_human 對話頻道嗎？"
+        }],
+        "embed_chat": [{
+            "title": "AI文字生成"
+        }],
+        "button_chat_think": "思考過程",
+        "embed_image_generate": [{
+            "title": "AI圖片生成",
+            "fields": [
+                { "name": "花費時間(秒)" }
+            ]
+        }],
+        "send_image_generate_fail": "生成失敗",
+        "send_video_generate_duration_too_long": "最高只能幫你生成10秒的圖片 要怪就怪{model}...",
+        "send_video_generate_wrong_type": "「是否要聲音」的類型錯誤，請重新確認",
+        "send_video_generate_success": "影片生成 (Powered by `{model}`; 花費時間: `{time}`) \n {url}",
+        "send_video_generate_fail": "生成失敗, reason: {e}"
     }
 }

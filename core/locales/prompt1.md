@@ -17,7 +17,7 @@
     *   閱讀 `i18n` class 中的 `translate` function 和 `example` 內容及註解，理解翻譯鍵 (key) 的命名規則以及架構。
     *   閱讀 `load_translated` 函數，理解它如何將字串轉為list或者是dict。
 
-2.  **`cmds/qrcode_generator.py` 和 `cmds/translator.py`**:
+2.  **`cmds/qrcode.py` 和 `cmds/translator.py`**:
     *   觀察如何使用 `locale_str("key_name")` 來替換原本寫死的字串（如指令名稱、描述）。
     *   觀察指令內部（例如 Embed）如何透過 `interaction.translate(KEY)` 的方式使用翻譯。(**注意：在此次任務中，你主要負責處理指令定義，而非指令內部邏輯。**)
     *   觀察`@commands.hybrid_command`中的name與description，以及`@app_commands.describe`的變數描述 做法。

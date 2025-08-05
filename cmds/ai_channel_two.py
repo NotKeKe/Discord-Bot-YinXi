@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.functions import MONGO_URL, create_basic_embed, current_time, get_attachment, is_testing_guild, split_str_by_len, UnixNow
 from core.classes import Cog_Extension, get_bot
-from core.translator import locale_str
+from core.translator import locale_str, load_translated
 from cmds.ai_chat.on_msg import ai_channel_chat, chat_human_chat
 from cmds.ai_chat.utils import model_autocomplete, to_user_message, to_assistant_message, add_think_button
 
@@ -180,6 +180,8 @@ class AIChannelTwo(Cog_Extension):
                 '''i18n'''
                 button_check_text = await ctx.interaction.translate('button_cancel_ai_channel_check')
                 button_refuse_text = await ctx.interaction.translate('button_cancel_ai_channel_refuse')
+                eb = load_translated(await ctx.interaction.translate('embed_cancel_ai_channel_whether_cancel'))[0]
+                eb_title = eb.get('title')
                 ''''''
 
                 view = discord.ui.View()
@@ -202,7 +204,7 @@ class AIChannelTwo(Cog_Extension):
                 view.add_item(button_check)
                 view.add_item(button_refuse)
 
-                eb = create_basic_embed('❓' + await ctx.interaction.translate('embed_cancel_ai_channel_whether_cancel'))
+                eb = create_basic_embed('❓' + eb_title)
 
                 await ctx.send(embed=eb, view=view)
         except:
@@ -311,6 +313,8 @@ class AIChannelTwo(Cog_Extension):
                 '''i18n'''
                 button_check_text = await ctx.interaction.translate('button_cancel_chat_human_check')
                 button_refuse_text = await ctx.interaction.translate('button_cancel_chat_human_refuse')
+                eb = load_translated(await ctx.interaction.translate('embed_cancel_chat_human_whether_cancel'))[0]
+                eb_title = eb.get('title')
                 ''''''
 
                 view = discord.ui.View()
@@ -333,7 +337,7 @@ class AIChannelTwo(Cog_Extension):
                 view.add_item(button_check)
                 view.add_item(button_refuse)
 
-                eb = create_basic_embed('❓' + await ctx.interaction.translate('embed_cancel_chat_human_whether_cancel'))
+                eb = create_basic_embed('❓' + eb_title)
 
                 await ctx.send(embed=eb, view=view)
         except:

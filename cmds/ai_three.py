@@ -8,7 +8,7 @@ import io
 
 from core.functions import MONGO_URL, create_basic_embed, UnixNow
 from core.classes import Cog_Extension
-from core.translator import locale_str
+from core.translator import locale_str, load_translated
 from cmds.ai_chat.chat.chat import Chat
 from cmds.ai_chat.chat import gener_title
 from cmds.ai_chat.tools.map import image_generate, video_generate
@@ -78,7 +78,12 @@ class AIChat(Cog_Extension):
                     text_file=text_file
                 )
 
-                embed = create_basic_embed(title='AI文字生成', description=result, color=ctx.author.color)
+                '''i18n'''
+                eb = load_translated(await ctx.interaction.translate('embed_chat'))[0]
+                eb_title = eb.get('title')
+                ''''''
+
+                embed = create_basic_embed(title=eb_title, description=result, color=ctx.author.color)
                 embed.set_footer(text=f'Powered by {model}')
 
                 msg = await ctx.send(embed=embed)
@@ -94,7 +99,8 @@ class AIChat(Cog_Extension):
                 })
 
             if think:
-                button = discord.ui.Button(label='思考過程', style=discord.ButtonStyle.blurple)  
+                button_label = await ctx.interaction.translate('button_chat_think')
+                button = discord.ui.Button(label=button_label, style=discord.ButtonStyle.blurple)
                 async def button_callback(interaction: discord.Interaction, button):
                     if think >= 1999:
                         bytes_io = io.BytesIO(think.encode())
@@ -123,15 +129,23 @@ class AIChat(Cog_Extension):
         async with ctx.typing():
             try:
                 url, time = await image_generate(prompt, model)
-                embed = create_basic_embed(title='AI圖片生成', color=ctx.author.color)
+
+                '''i18n'''
+                eb = load_translated(await ctx.interaction.translate('embed_image_generate'))[0]
+                eb_title = eb.get('title')
+                eb_field_1 = (eb.get('fields'))[0]
+                field_name = eb_field_1.get('name')
+                ''''''
+
+                embed = create_basic_embed(title=eb_title, color=ctx.author.color)
                 embed.set_image(url=url)
-                embed.add_field(name='花費時間(秒)', value=int(time))
+                embed.add_field(name=field_name, value=int(time))
                 embed.set_footer(text=f'Powered by {model}')
                 await ctx.send(embed=embed)
             except:
-                await ctx.send('生成失敗', ephemeral=True)
+                await ctx.send(await ctx.interaction.translate('send_image_generate_fail'), ephemeral=True)
 
-    @commands.hybrid_command(name='影片生成', description='Generate a video')
+    @commands.hybrid_command(name=locale_str('video_generate'), description=locale_str('video_generate'))
     @app_commands.choices(
         model=[Choice(name='cogvideox-flash', value='cogvideox-flash')],
         size = [
@@ -141,40 +155,46 @@ class AIChat(Cog_Extension):
         fps = [
             Choice(name=30, value=30),
             Choice(name=60, value=60)
-        ],
-        是否要聲音 = [
-            Choice(name='要', value=1),
-            Choice(name='不要', value=0)
         ]
     )
-    @app_commands.describe(fps='預設為60，可選30 or 60', 影片時長='單位為秒, 預設為5, 最高為10')
+    @app_commands.describe(
+        prompt=locale_str('video_generate_prompt'),
+        image_url=locale_str('video_generate_image_url'),
+        size=locale_str('video_generate_size'),
+        fps=locale_str('video_generate_fps'),
+        has_audio=locale_str('video_generate_has_audio'),
+        duration=locale_str('video_generate_duration'),
+        model=locale_str('video_generate_model')
+    )
     async def _video_generate(
-            self, ctx: commands.Context, * , 
-            輸入文字: str, 
-            圖片連結: str = None, 
-            size: str = None, 
-            fps: int = 60, 
-            是否要聲音: int = True, 
-            影片時長: int = 5, 
+            self, ctx: commands.Context, *,
+            prompt: str,
+            image_url: str = None,
+            size: str = None,
+            fps: int = 60,
+            has_audio: bool = True,
+            duration: int = 5,
             model: str = 'cogvideox-flash'
         ):
         try:
             async with ctx.typing():
-                if 影片時長 > 10:
-                    await ctx.send(f'最高只能幫你生成10秒的圖片 要怪就怪{model}...', ephemeral=True) 
-                    影片時長 = 10
+                if duration > 10:
+                    await ctx.send(await ctx.interaction.translate('send_video_generate_duration_too_long').format(model=model), ephemeral=True)
+                    duration = 10
 
                 if fps not in (30, 60):
                     fps = 60
 
-                try: 是否要聲音 = bool(是否要聲音)
-                except: return await ctx.send(locale_str('send_video_generate_wrong_type'))
+                try:
+                    has_audio = bool(has_audio)
+                except:
+                    return await ctx.send(await ctx.interaction.translate('send_video_generate_wrong_type'))
 
-                url = await video_generate(輸入文字, 圖片連結, size, fps, 是否要聲音, 影片時長)
-                string = f'影片生成 (Power by {model}) \n {url}'
+                url, time = await video_generate(prompt, image_url, size, fps, has_audio, duration)
+                string = (await ctx.interaction.translate('send_video_generate_success')).format(model=model, url=url, time=int(time))
                 await ctx.send(string)
         except Exception as e:
-            await ctx.send(f'生成失敗, reason: {e}', ephemeral=True)
+            await ctx.send((await ctx.interaction.translate('send_video_generate_fail')).format(e=e), ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(AIChat(bot))
