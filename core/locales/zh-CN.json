@@ -700,6 +700,7 @@
         "send_video_generate_duration_too_long": "最高只能帮你生成10秒的图片 要怪就怪{model}...",
         "send_video_generate_wrong_type": "「是否要声音」的类型错误，请重新确认",
         "send_video_generate_success": "影片生成 (Powered by `{model}`; 花费时间: `{time}`) \n {url}",
-        "send_video_generate_fail": "生成失败, reason: {e}"
+        "send_video_generate_fail": "生成失败, reason: {e}",
+        "send_gif_no_results": "找不到结果欸 :<"
     }
 }

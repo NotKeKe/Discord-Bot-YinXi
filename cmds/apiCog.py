@@ -306,6 +306,9 @@ class ApiCog(commands.Cog):
                     async with session.get(random_url, params={'api_key': GIPHYKEY}) as resp:
                         data = await resp.json()
                         results.append((data['data']['title'], data['data']['images']['original']['url']))
+            
+            if not results:
+                return await ctx.send(await ctx.interaction.translate('send_gif_no_results'))
 
             def strip_title(title: str) -> str:
                 if isinstance(title, str): return title.strip()

@@ -700,6 +700,7 @@
         "send_video_generate_duration_too_long": "Can only generate up to 10 seconds of video. Blame {model}...",
         "send_video_generate_wrong_type": "Incorrect type for 'whether to have sound', please reconfirm",
         "send_video_generate_success": "Video generated (Powered by `{model}`; Time spent: `{time}`) \n {url}",
-        "send_video_generate_fail": "Generation failed, reason: {e}"
+        "send_video_generate_fail": "Generation failed, reason: {e}",
+        "send_gif_no_results": "Cannot find any result :<"
     }
 }
