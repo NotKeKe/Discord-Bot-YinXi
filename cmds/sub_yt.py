@@ -114,7 +114,6 @@ class SubYT(Cog_Extension):
         super().__init__(bot)
         self.videos = {}
         self.processed = {}
-        self.processed.setdefault(str, deque(maxlen=20)) # channelID, deque[videoIDs]
 
     async def cog_load(self):
         logger.info(f'已載入「{__name__}」')
@@ -331,6 +330,7 @@ class SubYT(Cog_Extension):
                     sent_message = await self.bot.tree.translator.get_translate('send_sub_yt_new_video', lang_code=preferred_lang)
                     await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url)))          
 
+                    self.processed.setdefault(cnlID, deque(maxlen=20))
                     self.processed[cnlID].append(video_id)
 
         self.videos = current_video_ids

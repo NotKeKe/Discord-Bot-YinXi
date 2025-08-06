@@ -5,13 +5,13 @@ from typing import AsyncGenerator
 from openai.types.chat import ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
 import orjson
 
-from ..utils import model_select, to_system_message, to_user_message, get_think, clean_text
-from ..utils.config import base_system_prompt
+from ..utils import model_select, to_system_message, to_user_message, get_think, clean_text, split_provider_model
+from ..utils.config import base_system_prompt, summarize_history_system_prompt
 
 # tool
 from ..tools import tool_description, tool_map
 
-from core.functions import is_async, image_to_base64
+from core.functions import is_async, image_to_base64, current_time
 from core.classes import get_bot
 
 class Chat:
@@ -119,7 +119,7 @@ class Chat:
         
         return think, result, tool_calls
     
-    async def process_completion(self, response: ChatCompletion) -> Tuple[str, str, list]:
+    async def process_completion(self, response: ChatCompletion) -> Tuple[str, str, list, int]:
         think: str = ""
         result: str = ""
         tool_calls: list = []
@@ -137,10 +137,16 @@ class Chat:
         if message.content:
             result = message.content
 
-        think = get_think(result)
+        if (hasattr(message, 'reasoning_content')) is True:
+            think = message.reasoning_content
+        else:
+            think = get_think(result)
+
         result = clean_text(result)
+
+        total_tokens = response.usage.total_tokens
         
-        return think, result, tool_calls
+        return think, result, tool_calls, total_tokens
 
     
     async def process_tool_calls(self, tool_calls: list, history: list):
@@ -239,6 +245,7 @@ class Chat:
                 url: list = None,
                 image: discord.Attachment = None,
                 text_file: discord.Attachment = None,
+                custom_system_prompt: str = None
             ) -> Tuple[str, str, list]:
         if model:
             await self.re_model(model)
@@ -247,10 +254,13 @@ class Chat:
 
         if not history: history = []
 
+        provider, self.model = split_provider_model(self.model)
+        if not self.model: return '', f'{model} is not available.', history
+
         extra_user_info = self.get_extra_user_info()
         system_prompt = self.system_prompt + extra_user_info
 
-        system = to_system_message(system_prompt)
+        system = to_system_message(custom_system_prompt if custom_system_prompt else system_prompt)
 
         history += await self.process_user_prompt(prompt, image, text_file, url)
 
@@ -263,7 +273,7 @@ class Chat:
                 top_p=top_p,
                 stream=False,
                 timeout=timeout,
-                tools=self.process_tool_decrip(delete_tools),
+                tools=self.process_tool_decrip(delete_tools) if is_enable_tools else None,
                 tool_choice='auto' if is_enable_tools else 'none'
             )
             return resp
@@ -273,7 +283,7 @@ class Chat:
         call_times = 0
 
         while call_times < 3: # 3 times to call functions
-            think, result, tool_calls = await self.process_completion(completion)
+            think, result, tool_calls, total_tokens = await self.process_completion(completion)
             if tool_calls:
                 await self.process_tool_calls(tool_calls, history)
                 completion = await call()
@@ -283,8 +293,31 @@ class Chat:
 
         history.append({
             "role": "assistant",
-            "content": result.strip()
+            "content": result.strip(),
+            **({'reasoning': think.strip()} if think else {})
         })
+
+        if provider.lower() in ('ollama', 'lmstudio') and total_tokens >= 30000: await self.summarize_history(history)
+        elif total_tokens > 62000: await self.summarize_history(history)
 
         return think, result, history
             
+    async def summarize_history(self, history: list):
+        ls_prompt = []
+        for h in history:
+            role = h.get('role', '')
+            content = h.get('content', '')
+
+            if role == 'user':
+                ls_prompt.append(f'User: 「{content})」')
+            elif role == 'assistant' and content:
+                ls_prompt.append(f'Assistant: 「{content}」')
+
+        think, result, history = await self.chat(
+            prompt='\n'.join(ls_prompt),
+            is_enable_tools=False,
+            custom_system_prompt=summarize_history_system_prompt,
+            top_p=0.5
+        )
+
+        history = to_user_message(f'# 以下是針對先前的對話總結 (總結時間: {current_time()}):\n```{result}```')

@@ -44,4 +44,7 @@ with open('./cmds/ai_chat/data/prompts/base_system_prompt.md', 'r', encoding='ut
 with open('./cmds/ai_chat/data/prompts/chat_human_prompt_1.md', 'r', encoding='utf-8') as f:
     chat_human_system_prompt = f.read()
 
+with open('./cmds/ai_chat/data/prompts/summarize_history_system_prompt.md', 'r', encoding='utf-8') as f:
+    summarize_history_system_prompt = (f.read()).strip()
+
 db_client = AsyncIOMotorClient(MONGO_URL)

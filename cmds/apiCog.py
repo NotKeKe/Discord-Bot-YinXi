@@ -307,7 +307,14 @@ class ApiCog(commands.Cog):
                         data = await resp.json()
                         results.append((data['data']['title'], data['data']['images']['original']['url']))
 
-            await ctx.send('\n'.join([f'[{title if title else "gif"}]({url})' for title, url in results]))
+            def strip_title(title: str) -> str:
+                if isinstance(title, str): return title.strip()
+                return None
+
+            await ctx.send('\n'.join([
+                    f'[{strip_title(title) if strip_title(title) else "gif"}]({url})' for title, url in results
+                    ])
+                )
 
     @commands.hybrid_command(name=locale_str('tiangou'), description=locale_str('tiangou'), aliases=['舔狗'])
     async def tiangou(self, ctx: commands.Context):

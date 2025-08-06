@@ -4,11 +4,11 @@ from discord.ext import commands
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from core.functions import MONGO_URL, create_basic_embed, current_time, get_attachment, is_testing_guild, split_str_by_len, UnixNow
+from core.functions import MONGO_URL, create_basic_embed, current_time, get_attachment, split_str_by_len, UnixNow
 from core.classes import Cog_Extension, get_bot
 from core.translator import locale_str, load_translated
 from cmds.ai_chat.on_msg import ai_channel_chat, chat_human_chat
-from cmds.ai_chat.utils import model_autocomplete, to_user_message, to_assistant_message, add_think_button
+from cmds.ai_chat.utils import model_autocomplete, to_user_message, to_assistant_message, add_think_button, add_history_button
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ class AIChannelTwo(Cog_Extension):
 
                 for item in ls:
                     if not item: continue
-                    await ctx.send(item)
+                    msg = await ctx.send(item)
 
             await add_think_button(msg, discord.ui.View(), think)
         except:
@@ -116,15 +116,17 @@ class AIChannelTwo(Cog_Extension):
                 system_prompt = init_data.get('system_prompt')
                 urls = get_attachment(msg)
 
-                think, result = await ai_channel_chat(ctx, msg.content, model, system_prompt, urls)
+                think, result, complete_history = await ai_channel_chat(ctx, msg.content, model, system_prompt, urls)
 
                 ls = split_str_by_len(result, 1999)
 
                 for item in ls:
                     if not item: continue
-                    await ctx.send(item)
-
-            await add_think_button(msg, discord.ui.View(), think)
+                    msg = await ctx.send(item)
+            
+            view = discord.ui.View()
+            await add_history_button(msg, view, complete_history)
+            await add_think_button(msg, view, think)
         except:
             logger.error('Error accured at on_msg_ai_channel', exc_info=True)
             await msg.channel.send(await self.bot.tree.translator.get_translate('send_on_msg_ai_channel_error'))
@@ -342,11 +344,6 @@ class AIChannelTwo(Cog_Extension):
                 await ctx.send(embed=eb, view=view)
         except:
             logger.error('Error accured at cancel_chat_human', exc_info=True)
-
-    @commands.command()
-    @is_testing_guild()
-    async def _force_online(self, ctx: commands.Context):
-        ...
 
 async def setup(bot):
     await bot.add_cog(AIChannelTwo(bot))

@@ -4,7 +4,7 @@ from discord.app_commands import Choice
 from discord.ext import commands
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
-import io
+from typing import Optional
 
 from core.functions import MONGO_URL, create_basic_embed, UnixNow
 from core.classes import Cog_Extension
@@ -12,7 +12,7 @@ from core.translator import locale_str, load_translated
 from cmds.ai_chat.chat.chat import Chat
 from cmds.ai_chat.chat import gener_title
 from cmds.ai_chat.tools.map import image_generate, video_generate
-from cmds.ai_chat.utils import model, chat_history_autocomplete, model_autocomplete
+from cmds.ai_chat.utils import model, chat_history_autocomplete, model_autocomplete, add_history_button, add_think_button
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +44,11 @@ class AIChat(Cog_Extension):
             self, 
             ctx: commands.Context, 
             prompt: str, 
-            model: str = 'qwen-3-32b', 
+            model: str = 'cerebras:qwen-3-32b', 
             history: str = None, 
             enable_tools: bool = True, 
-            image: discord.Attachment = None, 
-            text_file: discord.Attachment = None,
+            image: Optional[discord.Attachment] = None, 
+            text_file: Optional[discord.Attachment] = None,
             is_vision_model: bool = False
         ):
         try:
@@ -62,62 +62,52 @@ class AIChat(Cog_Extension):
                 })
                 ls_history = result.get('messages')
                 
+            await ctx.defer()
 
-            async with ctx.typing():
-                client = Chat(
-                    ctx=ctx,
-                    model=model
-                )
+            client = Chat(
+                ctx=ctx,
+                model=model
+            )
 
-                think, result, complete_history = await client.chat(
-                    prompt=prompt, 
-                    is_vision_model=is_vision_model, 
-                    history=ls_history, 
-                    is_enable_tools=enable_tools, 
-                    image=image, 
-                    text_file=text_file
-                )
+            think, result, complete_history = await client.chat(
+                prompt=prompt, 
+                is_vision_model=is_vision_model, 
+                history=ls_history, 
+                is_enable_tools=enable_tools, 
+                image=image, 
+                text_file=text_file
+            )
 
-                '''i18n'''
-                eb = load_translated(await ctx.interaction.translate('embed_chat'))[0]
-                eb_title = eb.get('title')
-                ''''''
+            '''i18n'''
+            eb = load_translated(await ctx.interaction.translate('embed_chat'))[0]
+            eb_title = eb.get('title')
+            ''''''
 
-                embed = create_basic_embed(title=eb_title, description=result, color=ctx.author.color)
-                embed.set_footer(text=f'Powered by {model}')
+            embed = create_basic_embed(title=eb_title, description=result, color=ctx.author.color)
+            embed.set_footer(text=f'Powered by {model}')
 
-                msg = await ctx.send(embed=embed)
+            msg = await ctx.send(embed=embed)
 
-            if history:
-                await collection.update_one({'title': history}, {'$set': {'messages': complete_history}}, upsert=True)
-            else:
-                title = await gener_title(complete_history)
-                await collection.insert_one({
-                    'title': title,
-                    'messages': complete_history,
-                    'createAt': UnixNow()
-                })
+            try:
+                await add_history_button(msg, discord.ui.View(), complete_history)
+            except:
+                logger.error('Cannot add history button at chat command: ', exc_info=True)
 
-            if think:
-                button_label = await ctx.interaction.translate('button_chat_think')
-                button = discord.ui.Button(label=button_label, style=discord.ButtonStyle.blurple)
-                async def button_callback(interaction: discord.Interaction, button):
-                    if think >= 1999:
-                        bytes_io = io.BytesIO(think.encode())
-                        file = discord.File(bytes_io, filename='think.txt')
+            if result:
+                if history:
+                    await collection.update_one({'title': history}, {'$set': {'messages': complete_history}}, upsert=True)
+                else:
+                    title = await gener_title(complete_history)
+                    await collection.insert_one({
+                        'title': title,
+                        'messages': complete_history,
+                        'createAt': UnixNow()
+                    })
 
-                        await interaction.response.send_message(file=file, ephemeral=True)
-                    else:
-                        await interaction.response.send_message(think)
-
-                button.callback = button_callback
-
-                view = discord.ui.View()
-                view.add_item(button)
-
-                await msg.edit(view=view)
+            await add_think_button(msg, discord.ui.View(), think)
         except:
             logger.error('Error accured at chat command', exc_info=True)
+            await ctx.send('Error accured :<', ephemeral=True)
 
     @commands.hybrid_command(name=locale_str('image_generate'), description=locale_str('image_generate'))
     @app_commands.choices(

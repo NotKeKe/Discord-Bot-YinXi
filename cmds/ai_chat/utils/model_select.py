@@ -1,6 +1,7 @@
 from openai import AsyncOpenAI
-from typing import Union
+from typing import Union, Tuple
 import logging
+import re
 
 # from cmds.ai_three import availble_models
 
@@ -19,7 +20,35 @@ PROVIDERS = {
     'zhipu': AsyncClient.zhipu
 }
 
+def split_provider_model(provider_and_model: str) -> Tuple[str, str]:
+    """Return provider, model
+
+    Args:
+        provider_and_model (str): _description_
+
+    Returns:
+        Tuple[str, str]: _description_
+    """    
+    match = re.match(r"(.*?)\s*:\s*(.*)", provider_and_model)
+
+    if match:
+        provider = match.group(1)
+        model = match.group(2)
+        return provider, model
+    
+    return '', ''
+
+
 async def model_select(model: str) -> Union[AsyncOpenAI, None]:
+    match = re.match(r"(.*?)\s*:\s*(.*)", model)
+
+    if match:
+        provider = match.group(1)
+        model = match.group(2)
+    else:
+        return None
+
+
     db = db_client['aichat_available_models']
     collection = db['models']
 
@@ -28,6 +57,8 @@ async def model_select(model: str) -> Union[AsyncOpenAI, None]:
     result = await collection.find_one({'_id': _id})
 
     for key in result:
+        if provider is not None and key.lower().strip() not in provider.lower().strip(): continue
+
         if model in set(result[key]):
             return PROVIDERS[key]
         

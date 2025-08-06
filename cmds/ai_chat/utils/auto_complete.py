@@ -29,10 +29,10 @@ async def model_autocomplete(interaction: Interaction, current: str) -> List[app
 
     result = await collection.find_one({'_id': _id})
 
-    models = [model for provider, item in dict(result).items() if provider != '_id' for model in item]
+    models = [(provider, model) for provider, item in dict(result).items() if provider != '_id' for model in item]
 
     if current:
-        models = [m for m in models if current.lower().strip() in m.lower().strip()]
-        models.sort()
+        models = [(provider, m) for provider, m in models if current.lower().strip() in m.lower().strip() or current.lower().strip() in provider.lower().strip()]
+        models.sort(key=lambda x: x[1])
     
-    return [app_commands.Choice(name=model, value=model) for model in set(models[:25])]
+    return [app_commands.Choice(name=f"[{provider}] {model}", value=f"{provider}:{model}") for provider, model in models[:25]]

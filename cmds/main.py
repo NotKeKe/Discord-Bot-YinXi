@@ -10,12 +10,13 @@ from dotenv import load_dotenv
 import uuid
 import asyncio
 import aiosqlite
+import io
 
 from cmds.AIsTwo.others.func import image_read
 from cmds.AIsTwo.utils import image_url_to_base64
 
 from core.classes import Cog_Extension
-from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow, testing_guildID
+from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow, testing_guildID, image_to_base64
 from core.translator import locale_str, load_translated
 
 # get env
@@ -285,6 +286,16 @@ class Main(Cog_Extension):
                 await db.commit()
 
             await ctx.send((await ctx.interaction.translate('send_lang_success')).format(lang=lang), ephemeral=True)
+
+    @commands.hybrid_command(name=locale_str('to_base64'), description=locale_str('to_base64'))
+    async def _to_base64(self, ctx: commands.Context, image_url: str):
+        async with ctx.typing():
+            base64_str = await image_to_base64(image_url)
+            
+            bytes_io = io.BytesIO(base64_str.encode())
+            file = discord.File(bytes_io, 'base64.txt')
+
+            await ctx.send(file=file)
 
 async def setup(bot):
     await bot.add_cog(Main(bot))
