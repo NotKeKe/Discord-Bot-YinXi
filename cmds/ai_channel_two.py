@@ -8,7 +8,7 @@ from core.functions import MONGO_URL, create_basic_embed, current_time, get_atta
 from core.classes import Cog_Extension, get_bot
 from core.translator import locale_str, load_translated
 from cmds.ai_chat.on_msg import ai_channel_chat, chat_human_chat
-from cmds.ai_chat.utils import model_autocomplete, to_user_message, to_assistant_message, add_think_button, add_history_button
+from cmds.ai_chat.utils import model_autocomplete, to_user_message, to_assistant_message, add_think_button, add_history_button, split_provider_model
 
 logger = logging.getLogger(__name__)
 
@@ -74,17 +74,17 @@ class AIChannelTwo(Cog_Extension):
         try:
             ctx = await self.bot.get_context(msg)
 
-            db = self.db_client['chat_human_setting']
-            collection = db[str(ctx.channel.id)]
+            if ctx.guild:
+                db = self.db_client['chat_human_setting']
+                collection = db[str(ctx.channel.id)]
 
-            init_data = await collection.find_one({'_id': 'chat_human_setting'})
-            if not init_data: return
+                init_data = await collection.find_one({'_id': 'chat_human_setting'})
+                if not init_data: return
 
             async with ctx.typing():
-                model = init_data.get('model')
                 urls = get_attachment(msg)
 
-                think, result = await chat_human_chat(ctx, msg.content, model, (await to_history(msg.channel)), urls)
+                think, result = await chat_human_chat(ctx, msg.content, (await to_history(msg.channel)), urls)
 
                 ls = result.split('。')
 
@@ -113,10 +113,13 @@ class AIChannelTwo(Cog_Extension):
 
             async with ctx.typing():
                 model = init_data.get('model')
+                provider = init_data.get('provider')
                 system_prompt = init_data.get('system_prompt')
                 urls = get_attachment(msg)
 
-                think, result, complete_history = await ai_channel_chat(ctx, msg.content, model, system_prompt, urls)
+                final_model = f'{provider}:{model}'
+
+                think, result, complete_history = await ai_channel_chat(ctx, msg.content, final_model, system_prompt, urls)
 
                 ls = split_str_by_len(result, 1999)
 
@@ -152,10 +155,13 @@ class AIChannelTwo(Cog_Extension):
                     
                 if model is None:
                     model = 'qwen-3-32b'
+
+                provider, model = split_provider_model(model)
                     
                 await collection.insert_one(
                     {
                         '_id': 'ai_channel_setting',
+                        'provider': provider,
                         'model': model,
                         'channel': ctx.channel.id,
                         'initial_member': ctx.author.id,
@@ -163,8 +169,8 @@ class AIChannelTwo(Cog_Extension):
                         'createAt': UnixNow()
                     }
                 )
-                # await ctx.send(locale_str('send_set_ai_channel_success').format(model))
-                await ctx.send('good')
+                await ctx.send((await ctx.interaction.translate('send_set_ai_channel_success')).format(model))
+                # await ctx.send('good')
         except:
             logger.error('Error accured at set_ai_channel command', exc_info=True)
 
@@ -221,6 +227,8 @@ class AIChannelTwo(Cog_Extension):
                 db = self.db
                 collection = db[str(ctx.channel.id)]
 
+                provider, model = split_provider_model(model)
+
                 async def check_model():
                     db = self.db_client['aichat_available_models']
                     collection = db['models']
@@ -237,7 +245,7 @@ class AIChannelTwo(Cog_Extension):
                 if not (await collection.find_one({'_id': 'ai_channel_setting'})):
                     return await ctx.send(await ctx.interaction.translate('send_change_ai_channel_model_channel_not_found'))
                 
-                await collection.update_one({'_id': 'ai_channel_setting'}, {'$set': {'model': model}})
+                await collection.update_one({'_id': 'ai_channel_setting'}, {'$set': {'model': model, 'provider': provider}})
                 
                 await ctx.send((await ctx.interaction.translate('send_change_ai_channel_model_successfully_change_model')).format(model=model))
         except:

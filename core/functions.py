@@ -13,6 +13,7 @@ import inspect
 import base64
 import aiohttp
 from urllib.parse import quote_plus
+from motor.motor_asyncio import AsyncIOMotorClient
 
 import os
 from dotenv import load_dotenv
@@ -196,7 +197,9 @@ else:
     BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 
 MONGO_URL = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{DEVICE_IP}:27020/"
-print(MONGO_URL)
+# print(MONGO_URL)
+
+mongo_db_client = AsyncIOMotorClient(MONGO_URL)
 
 def is_testing_guild():
     '''A guild checking function for commands.command'''

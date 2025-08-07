@@ -73,7 +73,8 @@
         "cancel_chat_human": "取消chat_human对话",
         "chat": "chat",
         "image_generate": "图片生成",
-        "video_generate": "影片生成"
+        "video_generate": "影片生成",
+        "bot_stats": "机器人统计数据"
     },
     "description": {
         "translate": "翻译一些文字",
@@ -149,7 +150,8 @@
         "image_generate": "使用 AI 生成图片",
         "video_generate": "使用 AI 生成影片",
         "set_chat_human": "设定此频道为 chat_human 对话频道",
-        "cancel_chat_human": "取消此频道的 chat_human 对话设定"
+        "cancel_chat_human": "取消此频道的 chat_human 对话设定",
+        "bot_stats": "显示 Bot 的统计数据，包括但不限于启动时间、启动次数、指令呼叫次数..."
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
@@ -684,7 +686,7 @@
         "send_cancel_chat_human_button_check_success": "已成功取消 chat_human 频道",
         "send_cancel_chat_human_button_check_cancel": "已取消操作",
         "embed_cancel_chat_human_whether_cancel": [{
-            "title": "您确定要取消 chat_human 对话频道吗？"
+            "title": "您确定要取消 AI Channel 对话频道吗？"
         }],
         "embed_chat": [{
             "title": "AI文字生成"
@@ -701,6 +703,18 @@
         "send_video_generate_wrong_type": "「是否要声音」的类型错误，请重新确认",
         "send_video_generate_success": "影片生成 (Powered by `{model}`; 花费时间: `{time}`) \n {url}",
         "send_video_generate_fail": "生成失败, reason: {e}",
-        "send_gif_no_results": "找不到结果欸 :<"
+        "send_gif_no_results": "找不到结果欸 :<",
+        "send_set_ai_channel_success": "已将此频道成功设定为 AI 频道 (model: {model})",
+        "embed_bot_stats": [{
+            "author": "Bot 数据显示",
+            "fields": [
+                { "name": "Bot 启动时间" },
+                { "name": "Bot 启动次数" },
+                { "name": "指令呼叫次-数" },
+                { "name": "指令完成次数" },
+                { "name": "指令错误次数" }
+            ],
+            "footer": "开始记录时间"
+        }]
     }
 }

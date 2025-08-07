@@ -73,7 +73,8 @@
         "cancel_chat_human": "取消chat_human對話",
         "chat": "chat",
         "image_generate": "圖片生成",
-        "video_generate": "影片生成"
+        "video_generate": "影片生成",
+        "bot_stats": "機器人統計數據"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -149,7 +150,8 @@
         "image_generate": "使用 AI 生成圖片",
         "video_generate": "使用 AI 生成影片",
         "set_chat_human": "設定此頻道為 chat_human 對話頻道",
-        "cancel_chat_human": "取消此頻道的 chat_human 對話設定"
+        "cancel_chat_human": "取消此頻道的 chat_human 對話設定",
+        "bot_stats": "顯示 Bot 的統計數據，包括但不限於啟動時間、啟動次數、指令呼叫次數..."
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -668,7 +670,7 @@
         "send_cancel_ai_channel_button_check_success": "已成功取消 AI 頻道。",
         "send_cancel_ai_channel_button_check_cancel": "已取消操作。",
         "embed_cancel_ai_channel_whether_cancel": [{
-            "title": "您確定要取消 chat_human 對話頻道嗎？"
+            "title": "您確定要取消 AI Channel 對話頻道嗎？"
         }],
         "send_change_ai_channel_model_not_available_model": "模型 `{model}` 不可用。",
         "send_change_ai_channel_model_channel_not_found": "找不到 AI 頻道設定。",
@@ -701,6 +703,18 @@
         "send_video_generate_wrong_type": "「是否要聲音」的類型錯誤，請重新確認",
         "send_video_generate_success": "影片生成 (Powered by `{model}`; 花費時間: `{time}`) \n {url}",
         "send_video_generate_fail": "生成失敗, reason: {e}",
-        "send_gif_no_results": "找不到結果欸 :<"
+        "send_gif_no_results": "找不到結果欸 :<",
+        "send_set_ai_channel_success": "已將此頻道成功設定為 AI 頻道 (model: {model})",
+        "embed_bot_stats": [{
+            "author": "Bot 數據顯示",
+            "fields": [
+                { "name": "Bot 啟動時間" },
+                { "name": "Bot 啟動次數" },
+                { "name": "指令呼叫次數" },
+                { "name": "指令完成次數" },
+                { "name": "指令錯誤次數" }
+            ],
+            "footer": "開始記錄時間"
+        }]
     }
 }

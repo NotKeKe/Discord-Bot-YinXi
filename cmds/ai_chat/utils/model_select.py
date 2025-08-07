@@ -36,7 +36,7 @@ def split_provider_model(provider_and_model: str) -> Tuple[str, str]:
         model = match.group(2)
         return provider, model
     
-    return '', ''
+    return '', provider_and_model
 
 
 async def model_select(model: str) -> Union[AsyncOpenAI, None]:
@@ -46,7 +46,7 @@ async def model_select(model: str) -> Union[AsyncOpenAI, None]:
         provider = match.group(1)
         model = match.group(2)
     else:
-        return None
+        provider = ''
 
 
     db = db_client['aichat_available_models']
@@ -57,7 +57,7 @@ async def model_select(model: str) -> Union[AsyncOpenAI, None]:
     result = await collection.find_one({'_id': _id})
 
     for key in result:
-        if provider is not None and key.lower().strip() not in provider.lower().strip(): continue
+        if provider and key.lower().strip() not in provider.lower().strip(): continue
 
         if model in set(result[key]):
             return PROVIDERS[key]

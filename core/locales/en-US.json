@@ -73,7 +73,8 @@
         "cancel_chat_human": "cancel_chat_human",
         "chat": "chat",
         "image_generate": "image_generate",
-        "video_generate": "video_generate"
+        "video_generate": "video_generate",
+        "bot_stats": "bot_stats"
     },
     "description": {
         "translate": "Translate some text",
@@ -149,7 +150,8 @@
         "image_generate": "Generate an image using AI",
         "video_generate": "Generate a video using AI",
         "set_chat_human": "Set this channel as a chat_human conversation channel",
-        "cancel_chat_human": "Cancel the chat_human conversation setting for this channel"
+        "cancel_chat_human": "Cancel the chat_human conversation setting for this channel",
+        "bot_stats": "Show bot statistics, including but not limited to uptime, number of starts, command calls..."
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -668,7 +670,7 @@
         "send_cancel_ai_channel_button_check_success": "Successfully cancelled AI channel.",
         "send_cancel_ai_channel_button_check_cancel": "Operation cancelled.",
         "embed_cancel_ai_channel_whether_cancel": [{
-            "title": "Are you sure you want to cancel the chat_human conversation channel?"
+            "title": "Are you sure you want to cancel the AI Channel conversation channel?"
         }],
         "send_change_ai_channel_model_not_available_model": "Model `{model}` is not available.",
         "send_change_ai_channel_model_channel_not_found": "AI channel setting not found.",
@@ -701,6 +703,18 @@
         "send_video_generate_wrong_type": "Incorrect type for 'whether to have sound', please reconfirm",
         "send_video_generate_success": "Video generated (Powered by `{model}`; Time spent: `{time}`) \n {url}",
         "send_video_generate_fail": "Generation failed, reason: {e}",
-        "send_gif_no_results": "Cannot find any result :<"
+        "send_gif_no_results": "Cannot find any result :<",
+        "send_set_ai_channel_success": "Successfully set this channel as an AI channel (model: {model})",
+        "embed_bot_stats": [{
+            "author": "Bot Statistics",
+            "fields": [
+                { "name": "Bot Uptime" },
+                { "name": "Bot Starts" },
+                { "name": "Command Calls" },
+                { "name": "Commands Completed" },
+                { "name": "Command Errors" }
+            ],
+            "footer": "Logging Start Time"
+        }]
     }
 }

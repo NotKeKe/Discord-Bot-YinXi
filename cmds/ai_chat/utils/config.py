@@ -1,7 +1,7 @@
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from core.functions import BASE_OLLAMA_URL, OLLAMA_IP, MONGO_URL
+from core.functions import BASE_OLLAMA_URL, OLLAMA_IP, mongo_db_client
 
 openrouter_KEY = os.getenv('openrouter_KEY')
 zhipu_KEY = os.getenv('zhipuAI_KEY')
@@ -47,4 +47,4 @@ with open('./cmds/ai_chat/data/prompts/chat_human_prompt_1.md', 'r', encoding='u
 with open('./cmds/ai_chat/data/prompts/summarize_history_system_prompt.md', 'r', encoding='utf-8') as f:
     summarize_history_system_prompt = (f.read()).strip()
 
-db_client = AsyncIOMotorClient(MONGO_URL)
+db_client = mongo_db_client

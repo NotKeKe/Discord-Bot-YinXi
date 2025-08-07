@@ -19,6 +19,10 @@ COPY pyproject.toml ./
 
 RUN uv sync
 
+RUN pip install --no-cache-dir --system playwright \
+    && playwright install-deps \
+    && playwright install
+
 COPY . .
 
 EXPOSE 3000

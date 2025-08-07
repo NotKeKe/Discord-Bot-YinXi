@@ -73,11 +73,9 @@ async def before_invoke(ctx: commands.Context):
     """
     在任何指令執行前被呼叫，用於填充 ctx.interaction。
     """
-    logging.info('嘗試填充 ctx')
     if ctx.interaction is None:  
         try:
             ctx.interaction = MockInteraction(ctx)
-            logging.info('填充 ctx')
         except:
             traceback.print_exception()
 
@@ -196,4 +194,9 @@ async def main():
         await bot.start(TOKEN)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        from core.functions import mongo_db_client
+        if mongo_db_client:
+            mongo_db_client.close()

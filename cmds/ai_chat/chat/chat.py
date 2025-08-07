@@ -4,6 +4,8 @@ from typing import Tuple, Union
 from typing import AsyncGenerator
 from openai.types.chat import ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
 import orjson
+import logging
+import re
 
 from ..utils import model_select, to_system_message, to_user_message, get_think, clean_text, split_provider_model
 from ..utils.config import base_system_prompt, summarize_history_system_prompt
@@ -13,6 +15,8 @@ from ..tools import tool_description, tool_map
 
 from core.functions import is_async, image_to_base64, current_time
 from core.classes import get_bot
+
+logger = logging.getLogger(__name__)
 
 class Chat:
     def __init__(self, model: str = None, system_prompt: str = '', ctx: commands.Context = None):
@@ -254,8 +258,10 @@ class Chat:
 
         if not history: history = []
 
+        logger.info(f'Got model: {self.model}')
+
         provider, self.model = split_provider_model(self.model)
-        if not self.model: return '', f'{model} is not available.', history
+        if not self.model: return '', f'`{self.model}` is not available.', history
 
         extra_user_info = self.get_extra_user_info()
         system_prompt = self.system_prompt + extra_user_info
@@ -300,7 +306,12 @@ class Chat:
         if provider.lower() in ('ollama', 'lmstudio') and total_tokens >= 30000: await self.summarize_history(history)
         elif total_tokens > 62000: await self.summarize_history(history)
 
-        return think, result, history
+        def replace_backticks_in_parentheses(s):
+            '''replace "`" to "´", 避免顏文字影響 discord 輸出'''
+            return re.sub(r'\(([^)]*?)\)', lambda m: '(' + m.group(1).replace('`', '´') + ')', s)
+        
+
+        return think, replace_backticks_in_parentheses(result), history
             
     async def summarize_history(self, history: list):
         ls_prompt = []
