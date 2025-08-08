@@ -74,7 +74,9 @@
         "chat": "chat",
         "image_generate": "image_generate",
         "video_generate": "video_generate",
-        "bot_stats": "bot_stats"
+        "bot_stats": "bot_stats",
+        "random_uuid": "random_uuid_generator",
+        "image_to_base64": "image_to_base64"
     },
     "description": {
         "translate": "Translate some text",
@@ -151,7 +153,9 @@
         "video_generate": "Generate a video using AI",
         "set_chat_human": "Set this channel as a chat_human conversation channel",
         "cancel_chat_human": "Cancel the chat_human conversation setting for this channel",
-        "bot_stats": "Show bot statistics, including but not limited to uptime, number of starts, command calls..."
+        "bot_stats": "Show bot statistics, including but not limited to uptime, number of starts, command calls...",
+        "random_uuid": "Generate a random UUID",
+        "image_to_base64": "Convert image to base64"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",

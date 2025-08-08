@@ -10,8 +10,8 @@
         "output_chat_history": "输出聊天记录",
         "giveaway": "抽奖",
         "chat_hugging": "hugging_face_对话",
-        "join_leave_message": "设定加入离开讯息",
-        "delete_spam_messages": "删除垃圾讯息",
+        "join_leave_message": "设定加入离开消息",
+        "delete_spam_messages": "删除垃圾消息",
         "rank": "聊天等级",
         "levels": "服务器聊天等级排行",
         "owner_id": "管理员id",
@@ -19,16 +19,16 @@
         "repeat": "重复你说的话",
         "where_am_i": "我在哪里",
         "avatar": "头像",
-        "get_system_channel": "得得服务器预设频道",
+        "get_system_channel": "取得服务器预设频道",
         "server_info": "服务器信息",
         "convert_timestamp": "转换时间戳",
-        "tw_high_school_score_calculator": "高中生总分计算机",
+        "tw_high_school_score_calculator": "高中生总分计算器",
         "random_number": "随机数字",
         "suggest": "建议",
         "report": "错误回报",
         "tictactoe": "圈圈叉叉",
         "world_chat": "世界频道",
-        "report_bad_image": "不良图片检检",
+        "report_bad_image": "不良图片检举",
         "youtube_notification": "youtube通知设定",
         "play": "播放音乐",
         "add": "新增歌曲至播放清单",
@@ -74,20 +74,22 @@
         "chat": "chat",
         "image_generate": "图片生成",
         "video_generate": "影片生成",
-        "bot_stats": "机器人统计数据"
+        "bot_stats": "机器人统计数据",
+        "random_uuid": "随机uuid生成器",
+        "image_to_base64": "图片转base64"
     },
     "description": {
         "translate": "翻译一些文字",
         "qrcode_generator": "生成一个QRcode",
-        "botinfo": "查看关于这台机器的信息",
-        "help": "显示所有指令的帮助选单",
+        "botinfo": "查看关于这台机器人的信息",
+        "help": "显示所有指令的帮助菜单",
         "checkin": "每日签到",
         "counting": "设置或取消数数频道",
-        "output_chat_history": "将频道的聊天记录输出成档案",
+        "output_chat_history": "将频道的聊天记录输出成文件",
         "giveaway": "举办一个抽奖活动",
         "chat_hugging": "使用 HuggingFace 上的模型进行对话",
-        "join_leave_message": "设定当使用者加入或离开服务器时，要在哪个频道发送讯息。",
-        "delete_spam_messages": "删除特定使用者在特定时间内发送的讯息",
+        "join_leave_message": "设定当使用者加入或离开服务器时，要在哪个频道发送消息。",
+        "delete_spam_messages": "删除特定使用者在特定时间内发送的消息",
         "keep": "让机器人在指定时间提醒你",
         "rank": "查看你在此服务器的聊天等级",
         "levels": "查看此服务器的聊天等级排行榜",
@@ -99,7 +101,7 @@
         "get_system_channel": "取得此服务器的系统频道",
         "server_info": "显示此服务器的详细信息",
         "convert_timestamp": "将Unix时间戳转换为可读的时间格式",
-        "tw_high_school_score_calculator": "计算台湾高中学测总分",
+        "tw_high_school_score_calculator": "计算台湾高中学科能力测验总分",
         "random_number": "在指定范围内产生随机数字",
         "suggest": "向开发者发送建议",
         "report": "向开发者回报错误",
@@ -123,25 +125,25 @@
         "lyrics": "搜寻歌词",
         "volume": "调整音量",
         "joke": "随机抽一个笑话 (英文的)",
-        "news": "查询最近的新闻",
+        "news": "查询最近的消息",
         "cat_fact": "获得一个关于猫的随机事实",
         "nasa": "获取 NASA 每日一天文图",
         "number_history": "查询一个数字的相关历史事实",
         "unsplash_image": "从 Unsplash 获取图片",
         "get_gifs": "从 Giphy 获取 GIF",
-        "tiangou": "获取一句舔狗语录",
+        "tiangou": "获得一句舔狗语录",
         "minecraft_server_status": "获取 Minecraft 服务器的状态",
-        "yiyan": "获取一句一言",
-        "toxic_jacket_soup": "获取一句毒鸡汤",
-        "lovelive": "获取一句 lovelive 语录",
-        "yt_downloader": "透过 yt-dlp 下载影片或音讯",
+        "yiyan": "获得一句一言",
+        "toxic_jacket_soup": "获得一句毒鸡汤",
+        "lovelive": "获得一句 lovelive 语录",
+        "yt_downloader": "透过 yt-dlp 下载影片或音频",
         "lang": "设定你自己的偏好语言，这将会改变音汐对你输出的语言。(仅使用 prefix (前缀指令，即 `[`) 时会生效)",
         "del_keep": "删除你先前使用 /记事 所创建的事件",
         "sub_yt": "在当前 Discord 频道订阅某个 YouTuber，会在此发送通知",
         "sub_yt_cancel": "取消当前 Discord 频道所订阅的某个 YouTuber",
         "sub_yt_list": "列出当前 Discord 频道所订阅的所有 YouTuber",
         "qrcode_scanner": "扫描一个QRcode",
-        "set_ai_channel": "设定此频道为 AI 频道，让 AI 自动回复讯息",
+        "set_ai_channel": "设定此频道为 AI 频道，让 AI 自动回复消息",
         "cancel_ai_channel": "取消此频道的 AI 频道设定",
         "change_ai_channel_model": "更换此 AI 频道的模型",
         "change_ai_channel_system_prompt": "更换此 AI 频道的系统提示词",
@@ -151,31 +153,33 @@
         "video_generate": "使用 AI 生成影片",
         "set_chat_human": "设定此频道为 chat_human 对话频道",
         "cancel_chat_human": "取消此频道的 chat_human 对话设定",
-        "bot_stats": "显示 Bot 的统计数据，包括但不限于启动时间、启动次数、指令呼叫次数..."
+        "bot_stats": "显示 Bot 的统计数据，包括但不限于启动时间、启动次数、指令呼叫次数...",
+        "random_uuid": "生成一个随机的 UUID",
+        "image_to_base64": "将图片转为 base64"
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
         "translate_content": "输入你要翻译的文字",
         "translate_target": "选择目标语言（你希望翻译成哪种语言，预设为zh-TW）",
-        "qrcode_generator_url": "在此输入连结",
+        "qrcode_generator_url": "在此输入链接",
         "help_cog_name": "要查询的指令类别名称",
         "help_cmd_name": "要查询的指令名称",
-        "output_chat_history_count": "要输出的讯息数量 (预设 10)",
-        "output_chat_history_file_type": "输出的档案类型 (txt/json, 预设 json)",
-        "output_chat_history_reverse": "是否反转讯息顺序 (预设为否)",
+        "output_chat_history_count": "要输出的消息数量 (预设 10)",
+        "output_chat_history_file_type": "输出的文件类型 (txt/json, 预设 json)",
+        "output_chat_history_reverse": "是否反转消息顺序 (预设为否)",
         "giveaway_winners_total": "中奖人数",
         "giveaway_prize": "奖品",
         "giveaway_date": "结束日期 (格式: YYYY-MM-DD)",
         "giveaway_time": "结束时间 (格式: HH:MM)",
         "chat_hugging_prompt": "您想对AI说什么？",
         "chat_hugging_model": "选择一个对话模型",
-        "chat_hugging_history": "选择一个历史纪录以继续对话",
+        "chat_hugging_history": "选择一个历史记录以继续对话",
         "chat_hugging_temperature": "设定模型的温度 (随机性)",
         "chat_hugging_show_thoughts": "是否显示 AI 的思考过程 (仅自己可见)",
-        "join_leave_message_join_channel": "使用者加入时要发送讯息的频道",
-        "join_leave_message_leave_channel": "使用者离开时要发送讯息的频道",
-        "delete_spam_messages_hours": "要删除几小时前的讯息",
-        "delete_spam_messages_user": "要删除讯息的使用者",
+        "join_leave_message_join_channel": "使用者加入时要发送消息的频道",
+        "join_leave_message_leave_channel": "使用者离开时要发送消息的频道",
+        "delete_spam_messages_hours": "要删除几小时前的消息",
+        "delete_spam_messages_user": "要删除消息的使用者",
         "keep_event": "要提醒的事项",
         "repeat_text": "要让机器人重复的文字",
         "avatar_member": "要取得头像的使用者 (可留空)",
@@ -185,20 +189,20 @@
         "random_number_start": "随机范围的起始数字",
         "random_number_end": "随机范围的结束数字",
         "random_number_times": "要产生几个随机数字 (预设为1)",
-        "play_query": "输入歌曲名称、YouTube 连结或播放清单",
-        "add_query": "输入要新增的歌曲名称或 YouTube 连结",
+        "play_query": "输入歌曲名称、YouTube 链接或播放清单",
+        "add_query": "输入要新增的歌曲名称或 YouTube 链接",
         "loop_loop_type": "选择循环模式 (None: 无, single: 单曲, list: 清单)",
         "remove_number": "要移除的歌曲编号 (可从 /queue 查看)",
         "lyrics_query": "歌曲名称",
         "lyrics_artist": "歌手名称 (选填)",
-        "lyrics_lrc": "是否显示带​​有时间轴的歌词 (预设为否)",
+        "lyrics_lrc": "是否显示带有时间轴的歌词 (预设为否)",
         "volume_volume": "设定音量 (0-200)，或使用按钮微调",
         "suggest_suggestion": "你的建议内容",
         "report_error": "你遇到的错误信息",
         "world_chat_cancel": "是否要取消世界频道设定",
         "report_bad_image_author": "发送不良图片的使用者名称",
         "report_bad_image_reason": "你检举的原因",
-        "youtube_notification_youtuber": "要设定通知的 YouTube 频道连结 (留空以取消)",
+        "youtube_notification_youtuber": "要设定通知的 YouTube 频道链接 (留空以取消)",
         "news_options": "选择要查询 '所有新闻' 还是 '头条新闻'",
         "news_question": "要搜寻的关键字 (仅在选择 '所有新闻' 时有效)",
         "news_language": "新闻的语言 (预设为中文)",
@@ -210,32 +214,33 @@
         "get_gifs_query": "要搜寻的 GIF 关键字 (留空则随机)",
         "get_gifs_num": "要获取的 GIF 数量 (仅在输入关键字时有效)",
         "get_gifs_lang": "GIF 的语言 (仅在输入关键字时有效)",
-        "minecraft_server_status_address": "服务器位址 (例如: play.hypixel.net)",
-        "minecraft_server_status_edition": "选择服务器版本 (Java/Bedrock)",
-        "yt_downloader_url": "输入影片/音讯的网址",
-        "yt_downloader_type": "选择要下载的格式 (mp4/mp3)",
-        "yt_downloader_quality": "选择影片品质 (仅在选择 mp4 时有效)",
-        "sub_yt_url": "在此输入要订阅的 YouTuber 连结 (例如: https://www.youtube.com/@KeJC130)",
-        "qrcode_scanner_image": "在此上传一个QRcode图片",
+        "minecraft_server_status_address": "服务器地址 (例如: play.hypixel.net)",
         "chat_is_vision_model": "这是一个图片模型吗 (如果你有上传图片的话，请将此设定为True)",
         "video_generate_prompt": "影片的描述",
-        "video_generate_image_url": "要参考的图片连结 (选填)",
+        "video_generate_image_url": "要参考的图片链接 (选填)",
         "video_generate_size": "影片尺寸 (预设 720x480)",
         "video_generate_fps": "影片帧率 (预设 60)",
         "video_generate_has_audio": "是否需要声音 (预设 是)",
         "video_generate_duration": "影片时长 (秒, 预设 5)",
         "video_generate_model": "使用的模型 (目前仅支援 cogvideox-flash)",
+        "minecraft_server_status_edition": "选择服务器版本 (Java/Bedrock)",
+        "yt_downloader_url": "输入影片/音频的网址",
+        "yt_downloader_type": "选择要下载的格式 (mp4/mp3)",
+        "yt_downloader_quality": "选择影片质量 (仅在选择 mp4 时有效)",
+        "sub_yt_url": "在此输入要订阅的 YouTuber 链接 (例如: https://www.youtube.com/@KeJC130)",
+        "qrcode_scanner_image": "在此上传一个QRcode图片",
         "set_ai_channel_model": "要设定的 AI 模型，预设为 qwen-3-32b",
         "set_ai_channel_system_prompt": "要设定的系统提示词 (可选)",
         "change_ai_channel_model_model": "要更换成的 AI 模型",
-        "change_ai_channel_system_prompt_system_prompt": "要更换成的系统提示词"
+        "change_ai_channel_system_prompt_system_prompt": "要更换成的系统提示词",
+        "image_to_base64": "将图片转为 base64"
     },
     "components": {
         "yin_xi": "音汐",
         "send_keep_invalid_format": "你输入了错误的格式",
         "send_keep_time_passed": "{}, 你指定的时间已经过去了，请选择一个未来的时间。",
         "send_keep_too_far": "你设置了1000年后的时间??\n 我都活不到那时候你凭什么:sob:",
-        "send_qrcode_generator_invalid_url": "该功能目前无法使用 或你的连结有问题，请稍后再试",
+        "send_qrcode_generator_invalid_url": "该功能目前无法使用 或你的链接有问题，请稍后再试",
         "embed_keep_created": [{
             "title": "提醒事件:",
             "field": [{
@@ -272,8 +277,8 @@
                 { "name": "🤖 **名字**", "value": "音汐" },
                 { "name": "👨 **作者**", "value": "克克 KeJC" },
                 { "name": "⚙️ **已知指令类别**", "value": "{cogs_list}" },
-                { "name": "🐙 **我的Github连结**", "value": "[NotKeKe](https://github.com/NotKeKe)" },
-                { "name": "🔗 **此专案连结**", "value": "[音汐](https://github.com/NotKeKe/Discord-Bot-YinXi)" }
+                { "name": "🐙 **我的Github链接**", "value": "[NotKeKe](https://github.com/NotKeKe)" },
+                { "name": "🔗 **此项目链接**", "value": "[音汐](https://github.com/NotKeKe/Discord-Bot-YinXi)" }
             ]
         }],
         "embed_help_main": [{
@@ -296,7 +301,7 @@
                 },
                 {
                     "name": "**🔧 实用小功能**",
-                    "value": "> `/minecraft_server_status` —— 查看 Minecraft 服务器的状态\n> `[nasa` —— 获取 NASA 提供的**每日图片**\n> `[cat` —— 获得每日的 **猫猫知识** 🐱\n> `[image {query} {number}` —— 放入你要搜寻的 **关键字** 和要搜寻的 **图片数量** ，就能得到你想要的图片 (不放也可以!)\n> `[gif` —— 使用 `/gif` 来直接看怎么使用吧~\n> `[舔狗` —— 来一句**舔狗**爱说的话🐶🐶🐶** **~~(不过官方说他是渣男语录)~~  \n> `/qrcode生成器` —— 转换连结为 **QR Code**\n> `/keep` —— **提醒功能!** 在你设置完成后，会在时间到的时候 于相同频道提醒你要做的事情\n> `/设定yt通知` —— 通知你追踪的 **YouTuber** 更新了! (如果在youtuber栏位不输入的话就会取消)\n> `/输出聊天记录` —— 频道聊天记录输出 (可以输出成 `json` or `txt` 档)"
+                    "value": "> `/minecraft_server_status` —— 查看 Minecraft 服务器的状态\n> `[nasa` —— 获取 NASA 提供的**每日图片**\n> `[cat` —— 获得每日的 **猫猫知识** 🐱\n> `[image {query} {number}` —— 放入你要搜寻的 **关键字** 和要搜寻的 **图片数量** ，就能得到你想要的图片 (不放也可以!)\n> `[gif` —— 使用 `/gif` 来直接看怎么使用吧~\n> `[舔狗` —— 来一句**舔狗**爱说的话🐶🐶🐶** **~~(不过官方说他是渣男语录)~~  \n> `/qrcode生成器` —— 转换链接为 **QR Code**\n> `/keep` —— **提醒功能!** 在你设置完成后，会在时间到的时候 于相同频道提醒你要做的事情\n> `/设定yt通知` —— 通知你追踪的 **YouTuber** 更新了! (如果在youtuber栏位不输入的话就会取消)\n> `/输出聊天记录` —— 频道聊天记录输出 (可以输出成 `json` or `txt` 文件)"
                 },
                 {
                     "name": "**🤫 一般人用不到的功能**",
@@ -309,7 +314,7 @@
             ]
         }],
         "send_checkin_already_checked_in": "你今天已经签到过了。",
-        "send_checkin_success": "您已在「{time}」时签到, 目前总签到次数为: {times}",
+        "send_checkin_success": "你已在「{time}」时签到, 目前总签到次数为: {times}",
         "send_counting_already_counting": "此频道已经在数数了，目前的数字是 {count}。",
         "send_counting_set_success": "此频道已成功设定为数数频道。",
         "embed_counting_error": [{
@@ -323,22 +328,22 @@
         "send_output_chat_history_bot_no_read_permission": "我没有权限读取此频道的聊天记录。",
         "send_channel_history_file_template": [{
             "author": "作者",
-            "avatar_url": "头像连结",
+            "avatar_url": "头像链接",
             "time": "时间",
             "content": "内容",
             "none": "无",
             "attachments": "附件",
-            "embed": "嵌入讯息 (embed)",
+            "embed": "嵌入消息 (embed)",
             "embed_title": "嵌入标题",
             "embed_description": "嵌入描述",
-            "embed_fields": "嵌入栏位",
+            "embed_fields": "嵌入字段",
             "embed_image": "嵌入图片"
         }],
         "send_error_occurred": "此指令发生了一个错误。",
         "embed_events_recording_message_edit_before": "编辑前",
         "embed_events_recording_message_edit_after": "编辑后",
-        "embed_events_recording_message_delete": "删除的讯息",
-        "embed_events_recording_role_create": "新增的身分组",
+        "embed_events_recording_message_delete": "删除的消息",
+        "embed_events_recording_role_create": "新增的角色",
         "send_giveaway_invalid_format": "你输入了错误的日期或时间格式。",
         "send_giveaway_time_passed": "{mention}, 你指定的时间已经过去了，请选择一个未来的时间。",
         "send_giveaway_too_far": "你设置了1000年后的时间??\n 我都活不到那时候你凭什么:sob:",
@@ -351,7 +356,7 @@
             "fields": [
                 { "name": "中奖人数:" },
                 { "name": "目前参加人数:", "value": "0" },
-                { "name": "注意事项", "value": "如果点击按钮后 bot没有传送任何讯息给你，就代表你尚未参加这个活动" }
+                { "name": "注意事项", "value": "如果点击按钮后 bot没有传送任何消息给你，就代表你尚未参加这个活动" }
             ],
             "footer": "结束时间"
         }],
@@ -367,7 +372,7 @@
             "author": "Hello",
             "fields": [
                 { "name": "作者:", "value": "克克 KeJC", "inline": true },
-                { "name": "Github连结:", "value": "[NotKeKe](https://github.com/NotKeKe)", "inline": true },
+                { "name": "Github链接:", "value": "[NotKeKe](https://github.com/NotKeKe)", "inline": true },
                 { "name": "注意事项:", "value": "目前这只bot还在测试阶段，不要给他任何的管理权限!\n不要给他任何的管理权限!\n不要给他任何的管理权限!", "inline": false }
             ]
         }],
@@ -376,38 +381,38 @@
         "send_join_leave_message_cancel_success": "已取消操作",
         "send_join_leave_message_delete_success": "已为 {guild_name} 删除此功能",
         "embed_join_leave_message_confirm_delete": [{
-            "title": "你确定不让Bot在使用者加入及退出服务器时 发送讯息吗?",
+            "title": "你确定不让Bot在使用者加入及退出服务器时 发送消息吗?",
             "description": "✅表示继续让Bot发送 ❌表示**不**让Bot继续发送"
         }],
         "send_join_leave_message_no_channel_input": "请输入频道",
         "send_join_leave_message_no_join_channel": "请输入加入频道",
         "send_join_leave_message_no_leave_channel": "请输入离开频道",
-        "send_join_leave_message_no_permission": "请选取能让我发送讯息的频道",
+        "send_join_leave_message_no_permission": "请选取能让我发送消息的频道",
         "embed_join_leave_message_set_success": [{
             "title": "已为 {guild_name} 新增此功能",
             "description": "(加入频道: {join_channel_name} 离开频道: {leave_channel_name})"
         }],
-        "send_delete_spam_messages_no_permission": "我没有权限删除讯息",
+        "send_delete_spam_messages_no_permission": "我没有权限删除消息",
         "embed_delete_spam_messages": [{
-            "title": "删除讯息",
+            "title": "删除消息",
             "fields": [
-                { "name": "删除讯息数", "value": "`{count}`", "inline": false },
-                { "name": "无法删除讯息数", "value": "> `{count}`\n> reason: 没有 `管理讯息` 权限\n> 无法删除的讯息: \n{messages}", "inline": false },
-                { "name": "无法删除讯息的频道数", "value": "> `{count}`\n> reason: 没有该频道的 `阅读讯息历史` 权限\n> 无法删除讯息的频道: {channels}", "inline": false }
+                { "name": "删除消息数", "value": "`{count}`", "inline": false },
+                { "name": "无法删除消息数", "value": "> `{count}`\n> reason: 没有 `管理消息` 权限\n> 无法删除的消息: \n{messages}", "inline": false },
+                { "name": "无法删除消息的频道数", "value": "> `{count}`\n> reason: 没有该频道的 `阅读消息历史` 权限\n> 无法删除消息的频道: {channels}", "inline": false }
             ]
         }],
         "send_keep_remind": "{mention}, 你需要做 {event}",
         "send_levels_level_up": "你的长度变成{level}公分了",
-        "send_levels_no_data_yet": "尚未储存任何聊天等级",
-        "send_levels_no_guild_data": "此服务器尚未储存任何聊天等级信息",
-        "send_levels_not_enough_messages": "你尚未在此服务器传送足够的讯息",
+        "send_levels_no_data_yet": "尚未保存任何聊天等级",
+        "send_levels_no_guild_data": "此服务器尚未保存任何聊天等级信息",
+        "send_levels_not_enough_messages": "你尚未在此服务器发送足够的消息",
         "embed_rank": [{
             "description": "你现在是 {rank_name} ({level}等)"
         }],
         "embed_levels": [{
             "title": "服务器等级排行",
             "footer": "{user_name}获得了第一名🎉🎉🎉",
-            "field": { "name": "{rank}. {user_name} ({level}等，{count}则讯息)", "value": " " }
+            "field": { "name": "{rank}. {user_name} ({level}等，{count}则消息)", "value": " " }
         }],
         "embed_owner_id": [{
             "author": "管理员是谁?",
@@ -442,7 +447,7 @@
         }],
         "send_convert_timestamp_invalid_number": "请输入有效的数字",
         "embed_tw_high_school_score_calculator": [{
-            "title": "总分计算机",
+            "title": "总分计算器",
             "fields": [
                 { "name": "加权总分" },
                 { "name": "未加权总分" },
@@ -488,7 +493,7 @@
         "embed_music_info": [{
             "title": "♪ 现正播放",
             "field": [
-                { "name": "🌐 影片连结" },
+                { "name": "🌐 影片链接" },
                 { "name": "🎶 歌曲时长" },
                 { "name": "🔁 循环状态" },
                 { "name": "🔊 音量" },
@@ -515,7 +520,7 @@
             ]
         }],
         "send_player_not_found_song": "找不到第{index}首歌曲",
-        "send_player_play_error": "播放失败，可能因为你播放太久了，导致音讯连结过期  或者其他原因，建议使用 `/remove` 删除后再重新加入音乐。\n(原因: {e})\n(如果你不确定原因的话可以使用 `/错误回报` 进行回报。)",
+        "send_player_play_error": "播放失败，可能因为你播放太久了，导致音频链接过期  或者其他原因，建议使用 `/remove` 删除后再重新加入音乐。\n(原因: {e})\n(如果你不确定原因/看不懂的的话可以使用 `/错误回报` 进行回报。)",
         "send_player_already_paused": "音乐已经暂停了欸:thinking:",
         "send_player_not_playing": "没有正在播放的音乐呢",
         "send_player_paused_success": "已经帮你暂停音乐囉",
@@ -560,7 +565,7 @@
         "embed_world_chat": [{
             "field": [{
                 "name": "**:speech_balloon: {author_name}: **",
-                "value": "使用者传送了 {count} 张图片"
+                "value": "使用者发送了 {count} 张图片"
             }]
         }],
         "choice_world_chat_cancel_no": "否",
@@ -569,10 +574,10 @@
         "send_world_chat_cancelled": "已取消世界频道设定。",
         "send_world_chat_already_set": "此频道已经是世界频道了。",
         "send_world_chat_set_success": "已将此频道设定为世界频道。",
-        "send_report_bad_image_log": "{guild_name} | {reporter_name} 於 {now} 举报了\nauthor={author}\nreason={reason}\n举报人ID: {reporter_id}",
+        "send_report_bad_image_log": "{guild_name} | {reporter_name} 于 {now} 举报了\nauthor={author}\nreason={reason}\n举报人ID: {reporter_id}",
         "send_report_bad_image_success": "已成功向开发者举报 {author}。",
         "send_youtube_notification_new_video": "**{yt_name}** 发布了新影片！\n\n{url}",
-        "send_youtube_notification_invalid_url": "请使用有效的 YouTube 频道连结。",
+        "send_youtube_notification_invalid_url": "请使用有效的 YouTube 频道链接。",
         "send_youtube_notification_already_set": "此频道已经设定过此 YouTube频道的通知了。",
         "send_youtube_notification_set_success": "已开启对「{channel_name}」的通知。",
         "send_youtube_notification_no_youtuber_set": "你尚未设定任何的 YouTube 通知。",
@@ -602,14 +607,14 @@
         "send_yiyan_api_error": "请稍后再试",
         "send_toxic_soup_api_error": "请稍后再试",
         "send_lovelive_api_error": "请稍后再试",
-        "send_yt_download_api_offline": "目前无法下载影片或音讯",
+        "send_yt_download_api_offline": "目前无法下载影片或音频",
         "send_yt_download_tracking": "正在追踪任务 ID: {task_id}",
         "send_yt_download_error": "出现了一个错误 (原因: {reason})",
         "send_yt_download_nsfw_error": "出现了一个错误 (原因: yt-dlp 不允许我们下载好康的影片)",
         "send_yt_download_tracking_failed": "追踪失败",
         "embed_news_search_results": [{
             "title": "新闻搜寻结果",
-            "field": [{ "name": "搜寻到的总数", "value": "{count} (因 Discord 限制，不会全部显示)\n每个文章的连结都在作者名称上" }]
+            "field": [{ "name": "搜寻到的总数", "value": "{count} (因 Discord 限制，不会全部显示)\n每个文章的链接都在作者名称上" }]
         }],
         "embed_news_article": [{
             "footer": "发布时间"
@@ -620,7 +625,7 @@
         "embed_mc_server_status": [{
             "title": "Minecraft 服务器状态",
             "fields": [
-                { "name": "在线状态" }, { "name": "IP 位址" }, { "name": "主机名称" },
+                { "name": "在线状态" }, { "name": "IP 地址" }, { "name": "主机名称" },
                 { "name": "游戏模式" }, { "name": "在线玩家" }, { "name": "最大玩家数" },
                 { "name": "版本" }, { "name": "插件" }, { "name": "模组" }
             ]
@@ -628,7 +633,7 @@
         "embed_yt_downloader": [{
             "title": "{type} 下载",
             "fields": [
-                { "name": "来源连结" }, { "name": "时长" }, { "name": "花费时间(秒)" }
+                { "name": "来源链接" }, { "name": "时长" }, { "name": "花费时间(秒)" }
             ],
             "footer": "不建议您将其用于商业用途"
         }],
@@ -637,8 +642,8 @@
         "send_lang_same_lang": "你原本的偏好设定就是 `{lang}` 了.",
         "send_del_keep_please_use_slash_command": "请使用斜线指令进行选择",
         "send_del_keep_cancel_success": "已取消提醒\n事件: ```{event}```\n时间:```{time}```",
-        "send_sub_yt_invalid_url": "你输入了错误的连结欸:thinking: 要不重新试试看?",
-        "send_sub_yt_cannot_found_ytb": "音汐用你给的连结后，获取不到这个人的频道名称欸:thinking: 要不换个ytb试试?",
+        "send_sub_yt_invalid_url": "你输入了错误的链接欸:thinking: 要不重新试试看?",
+        "send_sub_yt_cannot_found_ytb": "音汐用你给的链接后，获取不到这个人的频道名称欸:thinking: 要不换个ytb试试?",
         "send_sub_yt_successfully_save": "已成功开启对 `{ytb}` 的影片通知 !",
         "send_sub_yt_cancel_no_url": "我在这个频道里面没有找到任何订阅的 YouTuber 欸，先使用 `/订阅youtube频道` 试试开启通知吧~",
         "embed_sub_yt_cancel": [{
@@ -662,7 +667,7 @@
         "send_qrcode_scanner_error": "QR Code 扫描错误 (reason: {error})",
         "send_qrcode_scanner_invalid_image": "你上传的东西不是图片欸，我只接收图片窝~",
         "send_on_msg_chat_human_error": "在处理 chat_human 对话时发生错误。",
-        "send_on_msg_ai_channel_error": "在处理 AI 频道讯息时发生错误。",
+        "send_on_msg_ai_channel_error": "在处理 AI 频道消息时发生错误。",
         "send_set_ai_channel_channel_exist": "此频道已经是 AI 频道。",
         "cancel_ai_channel_channel_not_found": "找不到 AI 频道设定。",
         "button_cancel_ai_channel_check": "确认",
@@ -670,7 +675,7 @@
         "send_cancel_ai_channel_button_check_success": "已成功取消 AI 频道。",
         "send_cancel_ai_channel_button_check_cancel": "已取消操作。",
         "embed_cancel_ai_channel_whether_cancel": [{
-            "title": "您确定要取消 chat_human 对话频道吗？"
+            "title": "您确定要取消 AI Channel 对话频道吗？"
         }],
         "send_change_ai_channel_model_not_available_model": "模型 `{model}` 不可用。",
         "send_change_ai_channel_model_channel_not_found": "找不到 AI 频道设定。",
@@ -686,7 +691,7 @@
         "send_cancel_chat_human_button_check_success": "已成功取消 chat_human 频道",
         "send_cancel_chat_human_button_check_cancel": "已取消操作",
         "embed_cancel_chat_human_whether_cancel": [{
-            "title": "您确定要取消 AI Channel 对话频道吗？"
+            "title": "您确定要取消 chat_human 对话频道吗？"
         }],
         "embed_chat": [{
             "title": "AI文字生成"
@@ -710,7 +715,7 @@
             "fields": [
                 { "name": "Bot 启动时间" },
                 { "name": "Bot 启动次数" },
-                { "name": "指令呼叫次-数" },
+                { "name": "指令呼叫次数" },
                 { "name": "指令完成次数" },
                 { "name": "指令错误次数" }
             ],

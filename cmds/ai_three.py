@@ -5,6 +5,7 @@ from discord.ext import commands
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
+import openai
 
 from core.functions import MONGO_URL, create_basic_embed, UnixNow
 from core.classes import Cog_Extension
@@ -105,6 +106,9 @@ class AIChat(Cog_Extension):
                     })
 
             await add_think_button(msg, discord.ui.View(), think)
+        except openai.BadRequestError as e:
+            logger.error('Error accured at chat command', exc_info=True)
+            await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
         except:
             logger.error('Error accured at chat command', exc_info=True)
             await ctx.send('Error accured :<', ephemeral=True)

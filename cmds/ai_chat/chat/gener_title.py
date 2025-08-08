@@ -28,4 +28,11 @@ async def gener_title(history: list, length: int = 15):
         is_enable_tools=False
     )
 
-    return (result[:length]).strip()
+    return_item = (result[:length]).strip()
+    if not return_item:
+        for item in reversed(history):
+            if item.get('role') == 'user':
+                return_item = item.get('content', 'no_title').strip()
+                break
+
+    return return_item

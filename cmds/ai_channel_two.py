@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
+import openai
 
 from core.functions import MONGO_URL, create_basic_embed, current_time, get_attachment, split_str_by_len, UnixNow
 from core.classes import Cog_Extension, get_bot
@@ -93,6 +94,9 @@ class AIChannelTwo(Cog_Extension):
                     msg = await ctx.send(item)
 
             await add_think_button(msg, discord.ui.View(), think)
+        except openai.BadRequestError as e:
+            logger.error('Error accured at on_msg_chat_human', exc_info=True)
+            await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
         except:
             logger.error('Error accured at on_msg_chat_human', exc_info=True)
             await msg.channel.send(await self.bot.tree.translator.get_translate('send_on_msg_chat_human_error'))
@@ -130,6 +134,9 @@ class AIChannelTwo(Cog_Extension):
             view = discord.ui.View()
             await add_history_button(msg, view, complete_history)
             await add_think_button(msg, view, think)
+        except openai.BadRequestError as e:
+            logger.error('Error accured at on_msg_ai_channel', exc_info=True)
+            await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
         except:
             logger.error('Error accured at on_msg_ai_channel', exc_info=True)
             await msg.channel.send(await self.bot.tree.translator.get_translate('send_on_msg_ai_channel_error'))

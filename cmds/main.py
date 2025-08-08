@@ -287,7 +287,7 @@ class Main(Cog_Extension):
 
             await ctx.send((await ctx.interaction.translate('send_lang_success')).format(lang=lang), ephemeral=True)
 
-    @commands.hybrid_command(name=locale_str('to_base64'), description=locale_str('to_base64'))
+    @commands.hybrid_command(name=locale_str('image_to_base64'), description=locale_str('image_to_base64'))
     async def _to_base64(self, ctx: commands.Context, image_url: str):
         async with ctx.typing():
             base64_str = await image_to_base64(image_url)
@@ -296,6 +296,11 @@ class Main(Cog_Extension):
             file = discord.File(bytes_io, 'base64.txt')
 
             await ctx.send(file=file)
+
+    @commands.hybrid_command(name=locale_str('random_uuid'), description=locale_str('random_uuid'))
+    async def _random_uuid(self, ctx: commands.Context):
+        async with ctx.typing():
+            await ctx.send(str(uuid.uuid4()))
 
 async def setup(bot):
     await bot.add_cog(Main(bot))

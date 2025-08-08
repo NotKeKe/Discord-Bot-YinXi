@@ -287,16 +287,21 @@ class SubYT(Cog_Extension):
             url: [video_ids...]
         }
         '''
-        for url in urls:
-            try:
-                videos = await asyncio.to_thread(scrapetube.get_channel, channel_url=url, limit=5)
-                if not videos: continue
-                video_ids = [video["videoId"] for video in videos]
-                current_video_ids[url] = video_ids
-            except:
-                continue
-            finally:
-                await asyncio.sleep(1)
+        def fetch_video_ids(urls: dict):
+            current_video_ids = {}
+            for url in urls:
+                try:
+                    videos = scrapetube.get_channel(channel_url=url, limit=5)
+                    if not videos: continue
+                    video_ids = [video["videoId"] for video in videos]
+                    current_video_ids[url] = video_ids
+                except:
+                    continue
+                finally:
+                    time.sleep(1)
+            return current_video_ids
+
+        current_video_ids = await asyncio.to_thread(fetch_video_ids, urls)
 
         # 第一次不用執行，避免重複傳送 (因為會取得 5 個 videos)
         if self.update_sub_yt.current_loop == 0 or not self.videos:

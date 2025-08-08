@@ -145,21 +145,21 @@ class AITwo(commands.Cog):
     #         await ctx.send(f'生成失敗, reason: {e}', ephemeral=True)
     #         traceback.print_exc()
 
-    @commands.hybrid_command(name='image_to_base64', description='將圖片轉成base64')
-    async def to_base64(self, ctx:commands.Context, *, url: str):
-        try:
-            result = image_url_to_base64(url)
+    # @commands.hybrid_command(name='image_to_base64', description='將圖片轉成base64')
+    # async def to_base64(self, ctx:commands.Context, *, url: str):
+    #     try:
+    #         result = image_url_to_base64(url)
             
-            if len(result) > 4000:
-                path = f'./cmds/data.json/{(ctx.author.name).strip()}.txt'
-                with open(path, mode='w', encoding="utf-8") as f:
-                    f.write(result)
-                file = discord.File(fp=path, filename=f'{(ctx.author.name).strip()}.txt')
-                await ctx.send(file=file)
-                os.remove(path)
-            else: await ctx.send(result)
-        except Exception as e:
-            await ctx.send(f'轉換失敗, reason: {e}', ephemeral=True)
+    #         if len(result) > 4000:
+    #             path = f'./cmds/data.json/{(ctx.author.name).strip()}.txt'
+    #             with open(path, mode='w', encoding="utf-8") as f:
+    #                 f.write(result)
+    #             file = discord.File(fp=path, filename=f'{(ctx.author.name).strip()}.txt')
+    #             await ctx.send(file=file)
+    #             os.remove(path)
+    #         else: await ctx.send(result)
+    #     except Exception as e:
+    #         await ctx.send(f'轉換失敗, reason: {e}', ephemeral=True)
 
     @commands.hybrid_command(name='文字轉語音', description='利用ChatTTS來把文字轉成語音')
     @app_commands.guilds(discord.Object(id=testing_guildID))

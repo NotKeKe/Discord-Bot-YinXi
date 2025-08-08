@@ -260,6 +260,8 @@ class Music(Cog_Extension):
             result = await search_lyrics(query, artist, lrc)
             await ctx.send(result if result else await ctx.interaction.translate('send_lyrics_not_found'))
 
+            if not isinstance(result, str): return
+
             if len(result.splitlines()) < 10: await ctx.send(await ctx.interaction.translate('send_lyrics_too_short_tip'), ephemeral=True)
 
     @commands.hybrid_command(name=locale_str('volume'), description=locale_str('volume'))

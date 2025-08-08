@@ -74,7 +74,9 @@
         "chat": "chat",
         "image_generate": "圖片生成",
         "video_generate": "影片生成",
-        "bot_stats": "機器人統計數據"
+        "bot_stats": "機器人統計數據",
+        "random_uuid": "隨機uuid生成器",
+        "image_to_base64": "圖片轉base64"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -151,7 +153,9 @@
         "video_generate": "使用 AI 生成影片",
         "set_chat_human": "設定此頻道為 chat_human 對話頻道",
         "cancel_chat_human": "取消此頻道的 chat_human 對話設定",
-        "bot_stats": "顯示 Bot 的統計數據，包括但不限於啟動時間、啟動次數、指令呼叫次數..."
+        "bot_stats": "顯示 Bot 的統計數據，包括但不限於啟動時間、啟動次數、指令呼叫次數...",
+        "random_uuid": "生成一個隨機的 UUID",
+        "image_to_base64": "將圖片轉為 base64"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
