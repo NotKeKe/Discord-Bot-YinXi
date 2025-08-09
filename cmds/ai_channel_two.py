@@ -5,7 +5,7 @@ import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 import openai
 
-from core.functions import MONGO_URL, create_basic_embed, current_time, get_attachment, split_str_by_len, UnixNow
+from core.functions import MONGO_URL, create_basic_embed, current_time, get_attachment, split_str_by_len_and_backtick, UnixNow
 from core.classes import Cog_Extension, get_bot
 from core.translator import locale_str, load_translated
 from cmds.ai_chat.on_msg import ai_channel_chat, chat_human_chat
@@ -125,7 +125,7 @@ class AIChannelTwo(Cog_Extension):
 
                 think, result, complete_history = await ai_channel_chat(ctx, msg.content, final_model, system_prompt, urls)
 
-                ls = split_str_by_len(result, 1999)
+                ls = split_str_by_len_and_backtick(result, 1999)
 
                 for item in ls:
                     if not item: continue

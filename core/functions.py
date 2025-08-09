@@ -221,3 +221,57 @@ async def image_to_base64(image_url: str) -> str:
 
 def split_str_by_len(text: str, chunk_size: int) -> list[str]:
     return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+
+def split_str_by_len_and_backtick(text: str, chunk_size: int = 1800) -> list[str]:
+    '''
+    Gemini win :sob:
+    cmds/useless/20250809 me.py
+    '''
+    lines = text.splitlines()
+    chunks: list[list[str]] = []
+    chunk: list[str] = []
+    str_len = 0
+    in_backtick = False
+    curr_lang = ''
+
+    for line in lines:
+        # 判斷如果加入這行，長度是否會超過
+        # 換行符要算進去，所以+1
+        if chunk and (str_len + len(line) + 1) > chunk_size:
+            # 超過長度，準備封裝目前的 chunk
+            if in_backtick:
+                chunk.append('```')
+            
+            chunks.append(chunk) # 儲存舊的 chunk
+
+            # 建立新的 chunk
+            if in_backtick:
+                # 如果之前在程式碼區塊中，新 chunk 要以它開頭
+                new_chunk_header = f'```{curr_lang}'
+                chunk = [new_chunk_header]
+                str_len = len(new_chunk_header)
+            else:
+                chunk = []
+                str_len = 0
+        
+        # 把當前行加到 chunk (可能是舊的也可能是新的)
+        # 如果 chunk 已經有內容，要加上換行符的長度
+        str_len += (1 if chunk else 0) + len(line)
+        chunk.append(line)
+
+        # 在行的最後，根據內容更新 backtick 狀態給下一次迴圈用
+        if line.strip().startswith('```'):
+            if not in_backtick:
+                # 進入程式碼區塊
+                in_backtick = True
+                curr_lang = line.strip()[3:]
+            else:
+                # 離開程式碼區塊
+                in_backtick = False
+                curr_lang = ''
+    
+    # 不要忘記最後一個 chunk
+    if chunk:
+        chunks.append(chunk)
+
+    return ['\n'.join(c) for c in chunks]
