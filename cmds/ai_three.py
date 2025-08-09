@@ -45,7 +45,7 @@ class AIChat(Cog_Extension):
             self, 
             ctx: commands.Context, 
             prompt: str, 
-            model: str = 'cerebras:qwen-3-32b', 
+            model: str = 'cerebras:gpt-oss-120b', 
             history: str = None, 
             enable_tools: bool = True, 
             image: Optional[discord.Attachment] = None, 
@@ -61,6 +61,7 @@ class AIChat(Cog_Extension):
                 result = await collection.find_one({
                     'title': history
                 })
+                if not result: return await ctx.send(f'Unknow error, cannot found any title called `{history}`')
                 ls_history = result.get('messages')
                 
             await ctx.defer()

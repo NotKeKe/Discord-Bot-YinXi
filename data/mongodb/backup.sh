@@ -9,4 +9,9 @@ mongodump \
   --authenticationDatabase=admin \
   --out=/backup/backup_$(date +%Y%m%d_%H%M%S)
 
-echo "[$(date)] ✅ 備份完成"
+if [ $? -eq 0 ]; then
+  echo "[$(date)] ✅ 備份完成"
+else
+  echo "[$(date)] ❌ 備份失敗"
+  exit 1
+fi
