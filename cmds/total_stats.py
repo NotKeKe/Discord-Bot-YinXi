@@ -94,7 +94,7 @@ class BotStats(Cog_Extension):
         await self.on_any_command_completion((await self.bot.get_context(inter)))
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context):
+    async def on_command_error(self, ctx: commands.Context, error):
         await collection.find_one_and_update(
             {'type': 'on_command_error'},
             {

@@ -252,7 +252,8 @@ class Chat:
                 url: list = None,
                 image: discord.Attachment = None,
                 text_file: discord.Attachment = None,
-                custom_system_prompt: str = None
+                custom_system_prompt: str = None,
+                tool_choice: str = None
             ) -> Tuple[str, str, list]:
         if model:
             await self.re_model(model)
@@ -283,7 +284,7 @@ class Chat:
                 stream=False,
                 timeout=timeout,
                 tools=self.process_tool_decrip(delete_tools) if is_enable_tools else None,
-                tool_choice='auto' if is_enable_tools else 'none'
+                tool_choice=('auto' if is_enable_tools else 'none') if not tool_choice else tool_choice
             )
             return resp
         

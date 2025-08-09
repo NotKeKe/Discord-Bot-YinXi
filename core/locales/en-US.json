@@ -1,6 +1,6 @@
 {
     "name": {
-        "keep": "keep",
+        "keep": "remind",
         "translate": "translate",
         "qrcode_generator": "qrcode_generator",
         "botinfo": "botinfo",
@@ -76,7 +76,8 @@
         "video_generate": "video_generate",
         "bot_stats": "bot_stats",
         "random_uuid": "random_uuid_generator",
-        "image_to_base64": "image_to_base64"
+        "image_to_base64": "image_to_base64",
+        "show_keep": "show_reminder"
     },
     "description": {
         "translate": "Translate some text",
@@ -155,7 +156,8 @@
         "cancel_chat_human": "Cancel the chat_human conversation setting for this channel",
         "bot_stats": "Show bot statistics, including but not limited to uptime, number of starts, command calls...",
         "random_uuid": "Generate a random UUID",
-        "image_to_base64": "Convert image to base64"
+        "image_to_base64": "Convert image to base64",
+        "show_keep": "List all notes you've created using /remind"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -244,7 +246,7 @@
             "title": "Reminder Event:",
             "field": [{
                 "name": "Note: ",
-                "value": "Remember to enable mentions notifications for this channel to avoid missing the reminder!"
+                "value": "1. Remember to enable mention notifications for this channel so you don't miss any reminders!\n2. The 'only you can see these' feature cannot be used when sending notifications (they will be visible when you are reminded QAQ)"
             }],
             "footer": "Time: {keep_time}"
         }],
@@ -719,6 +721,9 @@
                 { "name": "Command Errors" }
             ],
             "footer": "Logging Start Time"
-        }]
+        }],
+        "send_show_keep_sendAt_text": "Time",
+        "send_show_keep_event_text": "Event",
+        "send_show_keep_channel_text": "At"
     }
 }

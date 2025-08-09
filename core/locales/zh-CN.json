@@ -76,7 +76,8 @@
         "video_generate": "影片生成",
         "bot_stats": "机器人统计数据",
         "random_uuid": "随机uuid生成器",
-        "image_to_base64": "图片转base64"
+        "image_to_base64": "图片转base64",
+        "show_keep": "列出所有记事"
     },
     "description": {
         "translate": "翻译一些文字",
@@ -155,7 +156,8 @@
         "cancel_chat_human": "取消此频道的 chat_human 对话设定",
         "bot_stats": "显示 Bot 的统计数据，包括但不限于启动时间、启动次数、指令呼叫次数...",
         "random_uuid": "生成一个随机的 UUID",
-        "image_to_base64": "将图片转为 base64"
+        "image_to_base64": "将图片转为 base64",
+        "show_keep": "列出你使用 /记事 所创建的所有记事"
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
@@ -245,7 +247,7 @@
             "title": "提醒事件:",
             "field": [{
                 "name": "注意事项: ",
-                "value": "记得开启此频道的mentions通知 以免错过提醒!"
+                "value": "1. 记得开启此频道的mentions通知 以免错过提醒!\n2. 传送通知时无法使用 `只有您才能看到这些` 的功能窝 (被提醒的时候会被看到 QAQ)"
             }],
             "footer": "时间: {keep_time}"
         }],
@@ -720,6 +722,9 @@
                 { "name": "指令错误次数" }
             ],
             "footer": "开始记录时间"
-        }]
+        }],
+        "send_show_keep_sendAt_text": "时间",
+        "send_show_keep_event_text": "事件",
+        "send_show_keep_channel_text": "在"
     }
 }

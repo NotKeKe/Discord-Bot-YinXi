@@ -42,6 +42,7 @@ class Events_Recording(Cog_Extension):
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
         guild = before.guild
+        if not guild: return
         guildID = str(guild.id)
         data = self.__class__.data
 

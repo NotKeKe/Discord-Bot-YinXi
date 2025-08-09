@@ -76,7 +76,8 @@
         "video_generate": "影片生成",
         "bot_stats": "機器人統計數據",
         "random_uuid": "隨機uuid生成器",
-        "image_to_base64": "圖片轉base64"
+        "image_to_base64": "圖片轉base64",
+        "show_keep": "列出所有記事"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -155,7 +156,8 @@
         "cancel_chat_human": "取消此頻道的 chat_human 對話設定",
         "bot_stats": "顯示 Bot 的統計數據，包括但不限於啟動時間、啟動次數、指令呼叫次數...",
         "random_uuid": "生成一個隨機的 UUID",
-        "image_to_base64": "將圖片轉為 base64"
+        "image_to_base64": "將圖片轉為 base64",
+        "show_keep": "列出你使用 /記事 所創建的所有記事"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -244,7 +246,7 @@
             "title": "提醒事件:",
             "field": [{
                 "name": "注意事項: ",
-                "value": "記得開啟此頻道的mentions通知 以免錯過提醒!"
+                "value": "1. 記得開啟此頻道的mentions通知 以免錯過提醒!\n2. 傳送通知時無法使用 `只有您才能看到這些` 的功能窩 (被提醒的時候會被看到 QAQ)"
             }],
             "footer": "時間: {keep_time}"
         }],
@@ -640,7 +642,7 @@
         "send_lang_success": "現在音汐會跟你說 `{lang}` 了窩!",
         "send_lang_same_lang": "你原本的偏好設定就是 `{lang}` 了.",
         "send_del_keep_please_use_slash_command": "請使用斜線指令進行選擇",
-        "send_del_keep_cancel_success": "已取消提醒\n事件: ```{event}```\n時間:```{time}```",
+        "send_del_keep_cancel_success": "已取消提醒\n> 事件: `{event}`\n> 時間: `{time}`",
         "send_sub_yt_invalid_url": "你輸入了錯誤的連結欸:thinking: 要不重新試試看?",
         "send_sub_yt_cannot_found_ytb": "音汐用你給的連結後，獲得不到這個人的頻道名稱欸:thinking: 要不換個ytb試試?",
         "send_sub_yt_successfully_save": "已成功開啟對 `{ytb}` 的影片通知 !",
@@ -719,6 +721,9 @@
                 { "name": "指令錯誤次數" }
             ],
             "footer": "開始記錄時間"
-        }]
+        }],
+        "send_show_keep_sendAt_text": "時間",
+        "send_show_keep_event_text": "事件",
+        "send_show_keep_channel_text": "在"
     }
 }

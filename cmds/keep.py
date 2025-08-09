@@ -1,4 +1,4 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 from discord import app_commands, Interaction
 from discord.app_commands import Choice
 import asyncio
@@ -9,64 +9,27 @@ from typing import List
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
 import traceback
-from collections import defaultdict
+from motor.motor_asyncio import AsyncIOMotorCollection
+from textwrap import dedent
 
-from core.classes import Cog_Extension, bot
-from core.functions import read_json, write_json, create_basic_embed, current_time, KeJCID
+from core.classes import Cog_Extension, get_bot
+from core.functions import create_basic_embed, current_time, is_testing_guild, mongo_db_client, UnixToReadable
 from core.translator import load_translated, locale_str
-from cmds.AIsTwo.base_chat import base_url_options
 
-ex_keepData = {
-    'ctx.author.id': [
-        {
-            "When_to_send_str": "2025-05-13 22:00:00",
-            "When_to_send_timestamp": 1747144800.0,
-            "ChannelID": 1300024314518704210,
-            "event": "HI",
-            'uuid': "str(uuid.uuid4())"
-        }, 
-    ]
-}
-
-keepPATH = './cmds/data.json/keep.json'
+from cmds.ai_chat.utils.config import base_url_options
 
 reminder_tasks = {}
+bot = get_bot()
 
-class SaveKeep:
-    keepData = None
-    update = False
+DB_KEY = 'keep'
+DB = mongo_db_client[DB_KEY]
 
-    @classmethod
-    def initData(cls):
-        if not cls.keepData:
-            cls.keepData = read_json(keepPATH)
-
-    @classmethod
-    def save(cls, data=None):
-        if data:
-            cls.keepData = data
-        cls.update = True
-
-    @classmethod
-    def write(cls):
-        write_json(cls.keepData, keepPATH)
-        cls.update = False
-
-    @classmethod
-    def deletekeepEvent(cls, userID: str, uuid: str) -> dict | None:
-        if cls.keepData is not None:
-            for i, item in enumerate(cls.keepData[userID]):
-                if item['uuid'] == uuid:
-                    popped_item = cls.keepData[userID].pop(i)
-                    break
-
-            if not cls.keepData[userID]: del cls.keepData[userID]
-            cls.save(cls.keepData)
-            return popped_item
-        return None
+PROVIDER = 'cerebras'
+MODEL = 'qwen-3-32b'
+OPENAI_CLIENT = AsyncOpenAI(api_key=base_url_options[PROVIDER]['api_key'], base_url=base_url_options[PROVIDER]['base_url'])
 
 class RunKeep:
-    def __init__(self, time: str, event: str, ctx: commands.Context):
+    def __init__(self, time: str, event: str, inter: Interaction):
         self.system_prompt = '''你是一個專門記錄使用者設定提醒事項的AI，你必須使用你的function calling能力，呼叫keep函數，來協助使用者完成這件事，使用者會說他希望你提醒他完成某件事，在 `event` 變數中 一字不漏、不能修改的 傳入這件事，確保你的格式沒有任何錯誤。time部分，如果使用者沒有特別指定準確的小時與分鐘，就使用當前時間。**現在的時間為: {}**'''.format(current_time())
         self.tool_descrip = [
             {
@@ -92,11 +55,10 @@ class RunKeep:
             }
         ]
         self.prompt = f'我想要在 `{time}` 的時候讓你提醒我完成 `{event}`'
-        self.model = 'qwen-3-32b'
-        self.provider = 'cerebras'
-        self.client = AsyncOpenAI(api_key=base_url_options[self.provider]['api_key'], base_url=base_url_options[self.provider]['base_url'])
-        self.ctx = ctx
-        self.interaction = ctx.interaction
+        self.model = MODEL
+        self.client = OPENAI_CLIENT
+        self.collection = DB[str(inter.user.id)]
+        self.inter = inter
 
     async def chat(self) -> ChatCompletionMessageToolCall:
         messages = [
@@ -125,128 +87,116 @@ class RunKeep:
             await self.func(**args)
         except: 
             traceback.print_exc()
-            raise
 
     async def func(self, time: str, event: str):
         '''格式為'%Y-%m-%d %H:%M' '''
-        SaveKeep.initData()
-        data = SaveKeep.keepData
-        ctx = self.ctx
-        channelID = ctx.channel.id
-        userID = str(ctx.author.id)
+        inter = self.inter
+        channelID = inter.channel.id
 
         '''i18n'''
-        invalid_format = await self.interaction.translate('send_keep_invalid_format')
-        time_passed = await self.interaction.translate('send_keep_time_passed')
-        too_far = await self.interaction.translate('send_keep_too_far')
+        invalid_format = await self.inter.translate('send_keep_invalid_format')
+        time_passed = await self.inter.translate('send_keep_time_passed')
+        too_far = await self.inter.translate('send_keep_too_far')
         ''''''
 
         try:        #如果使用者輸入錯誤的格式，則返回訊息並結束keep command
             keep_time = datetime.strptime(f'{time}', '%Y-%m-%d %H:%M')
         except Exception:
-            await ctx.send(invalid_format, ephemeral=True)
+            await inter.followup.send(invalid_format, ephemeral=True)
             return
         
         now = datetime.now()
         delay = (keep_time - now).total_seconds()
 
         if delay <= 0:      #如果使用者輸入現在或過去的時間，則返回訊息並結束keep command
-            await ctx.send(time_passed.format(ctx.author.mention))
+            await inter.followup.send(time_passed.format(inter.user.mention))
             return
         
         if delay > 31557600000:
-            await ctx.send(too_far)
+            await inter.followup.send(too_far)
             return
 
         u = str(uuid.uuid4())
-        if userID not in data:
-            data[userID] = [
-                {
-                    'When_to_send_str': str(keep_time),
-                    'When_to_send_timestamp': keep_time.timestamp(),
-                    'ChannelID': channelID,
-                    "event": event,
-                    'uuid': u
-                }
-            ]
-        else:
-            data[userID].append(
-                {
-                    'When_to_send_str': str(keep_time),
-                    'When_to_send_timestamp': keep_time.timestamp(),
-                    'ChannelID': channelID,
-                    "event": event,
-                    'uuid': u
-                }
-            )
+        self.collection.insert_one({
+            'createAt': datetime.now().timestamp(),
+            'sendAt': keep_time.timestamp(),
+            'channelID': channelID,
+            'event': event,
+            'uuid': u
+        })
+
         '''i18n'''
-        embed_translated = await self.interaction.translate('embed_keep_created')
+        embed_translated = await self.inter.translate('embed_keep_created')
         embed_translated: dict = (load_translated(embed_translated))[0]
 
         title = embed_translated.get('title')
         field_1 = (embed_translated.get('field'))[0]
         ''''''
-        embed = create_basic_embed(title=title, description=f'**{event}**', color=ctx.author.color, time=False)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed = create_basic_embed(title=title, description=f'**{event}**', color=inter.user.color, time=False)
+        embed.set_author(name=inter.user.name, icon_url=inter.user.avatar.url)
         embed.add_field(name=field_1.get('name'), value=field_1.get('value'), inline=True)
         embed.set_footer(text=embed_translated.get('footer').format(keep_time=keep_time))
 
-        await ctx.send(embed=embed)
+        await inter.followup.send(embed=embed)
 
-        SaveKeep.save(data)
-        task = bot.loop.create_task(self.keepMessage(ctx.channel, ctx.author, event, delay, u))
+        task = bot.loop.create_task(keepMessage(self.collection, inter.channel, inter.user, event, delay, u))
         reminder_tasks[u] = task
 
-    @staticmethod
-    async def keepMessage(channel, user, event, delay, uuid: str):
-        await asyncio.sleep(delay)
-        await channel.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
-        reminder_tasks.pop(uuid)
-        SaveKeep.deletekeepEvent(str(user.id), uuid)
 
-    @classmethod
-    async def create_KeepTask(cls):
-        '''This is a function for creating a keep task at bot ready. It will send a message to the user at the specified time.'''
-        try:
-            SaveKeep.initData()
-            data = SaveKeep.keepData
-            if not data: return
-            count = 0
-            for userID in data:
-                for item in data[userID]:
-                    delaySecond = item['When_to_send_timestamp']
-                    delaySecond = (datetime.fromtimestamp(delaySecond) - datetime.now()).total_seconds()
-                    if delaySecond <= 0: delaySecond = 1
-                    channelID = item['ChannelID']
-                    event = item['event']
-                    u = item['uuid']
+async def keepMessage(collection: AsyncIOMotorCollection, channel, user, event: str, delay: float, uuid: str):
+    await asyncio.sleep(delay)
+    await channel.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
+    reminder_tasks.pop(uuid)
 
-                    user = await bot.fetch_user(int(userID))
-                    channel = await bot.fetch_channel(int(channelID))
+    collection.find_one_and_delete({
+        'uuid': uuid,
+        'channelID': channel.id
+    })        
 
-                    task = bot.loop.create_task(cls.keepMessage(channel, user, event, delaySecond, u)) 
-                    reminder_tasks[u] = task
-                    count += 1
-            print(f'已新增 {count} 個 keep 任務')
-        except: traceback.print_exc()
+async def create_KeepTask():
+    ''' A init task for on_ready
+    This is a function for creating a keep task at bot ready. It will send a message to the user at the specified time.
+    '''
+    try:
+        ls_collection = await DB.list_collection_names()
+
+        count = 0
+        for userID in ls_collection:
+            collection = DB[userID]
+            user = await bot.fetch_user(int(userID))
+
+            async for e in collection.find():
+                delaySecond = e['sendAt'] - datetime.now().timestamp()
+                if delaySecond <= 0: delaySecond = 1
+                channelID = e['channelID']
+                event = e['event']
+                u = e['uuid']
+
+                channel = await bot.fetch_channel(int(channelID))
+
+                task = bot.loop.create_task(keepMessage(collection, channel, user, event, delaySecond, u)) 
+                
+                reminder_tasks[u] = task
+                count += 1
+
+        print(f'已新增 {count} 個 keep 任務')
+    except: traceback.print_exc()
 
 
 async def keep_event_autocomplete(interaction: Interaction, current: str) -> List[Choice[str]]:
-    SaveKeep.initData()
-
-    events: list = SaveKeep.keepData.get(str(interaction.user.id), [])
-    if not events: return []
+    userID = str(interaction.user.id)
+    collection = DB[userID]
 
     result = [
         (
-            f"{item['event']} | {item['When_to_send_str']} | at { ( bot.get_channel(item['ChannelID']) ).name }",
-            str(index)
-        ) 
-        for index, item in enumerate(events)
+            f"{item.get('event', '')} | {datetime.fromtimestamp(item.get('sendAt', 0))} | {(bot.get_channel(item.get('channelID', 0))).name} | {(bot.get_channel(item.get('channelID', 0))).guild.name}" ,
+            orjson.dumps((item.get('uuid', ''), item.get('channelID', ''))).decode('utf-8')
+        )
+        async for item in collection.find()
     ]
-    
+
     if current:
-        result = [item for item in result if current.lower().strip() in (item[0].lower(), item[1].lower())]
+        result = [item for item in result if current.lower() in item[0].lower()]
     
     return [Choice(name=item[0], value=item[1]) for item in result[:25]]
 
@@ -254,50 +204,89 @@ class Keep(Cog_Extension):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
-        self.write_keep_data.start()
-        await RunKeep.create_KeepTask()
+        await create_KeepTask()
 
     # Create a Keep
-    @commands.hybrid_command(name=locale_str('keep'), description=locale_str('keep'))
+    @app_commands.command(name=locale_str('keep'), description=locale_str('keep'))
     @app_commands.describe(time=locale_str('keep_time'), event=locale_str('keep_event'))
-    async def keep(self, ctx:commands.Context, time: str, * , event: str):
+    async def keep(self, inter: Interaction, time: str, * , event: str):
         '''[keep time(會使用AI作分析) event: str'''
-        async with ctx.typing():
-            await RunKeep(time, event, ctx).run()
+        await inter.response.defer(ephemeral=True, thinking=True)
+        await RunKeep(time, event, inter).run()
 
-    @commands.hybrid_command(name=locale_str('del_keep'), description=locale_str('del_keep'))
+    @app_commands.command(name=locale_str('del_keep'), description=locale_str('del_keep'))
     @app_commands.autocomplete(keep_event=keep_event_autocomplete)
-    async def del_keep(self, ctx: commands.Context, keep_event: str):
-        try: keep_event = int(keep_event)
-        except: return await ctx.send(await ctx.interaction.translate('send_del_keep_please_use_slash_command'))
+    async def del_keep(self, inter: Interaction, keep_event: str):
+        await inter.response.defer(ephemeral=True, thinking=True)
 
-        SaveKeep.initData()
-        data = SaveKeep.keepData
-        events: list = data.get(str(ctx.author.id), [])
+        collection = DB[str(inter.user.id)]
+
+        try:
+            keep_event = orjson.loads(keep_event)
+        except:
+            return await inter.followup.send(await inter.translate('send_del_keep_please_use_slash_command'), ephemeral=True)
         
-        item = SaveKeep.deletekeepEvent(str(ctx.author.id), events[keep_event]['uuid'])
+        uuid = keep_event[0]
+        channelID = keep_event[1]
 
-        task = reminder_tasks.pop(item['uuid'])
+        doc = await collection.find_one_and_delete({
+            'uuid': uuid,
+            'channelID': channelID
+        })
+
+        task = reminder_tasks.pop(uuid)
         task.cancel()
 
-        SaveKeep.save(data)
-        await ctx.send( (await ctx.interaction.translate('send_del_keep_cancel_success') ).format(event=item['event'], time=item['When_to_send_str']), ephemeral=True)    
+        await inter.followup.send( (await inter.translate('send_del_keep_cancel_success') ).format(
+                event=doc.get('event', ''), 
+                time=datetime.fromtimestamp(doc.get('sendAt', 0)).strftime('%Y-%m-%d %H:%M')
+            ), 
+            ephemeral=True
+        )    
 
-    @commands.command(name='check_keepdata')
+    @app_commands.command(name=locale_str('show_keep'), description=locale_str('show_keep'))
+    async def show_keep(self, inter: Interaction):
+        await inter.response.defer(ephemeral=True, thinking=True)
+
+        collection = DB[str(inter.user.id)]
+
+        '''i18n'''
+        sendAt_text = await inter.translate('send_show_keep_sendAt_text')
+        event_text = await inter.translate('send_show_keep_event_text')
+        channel_text = await inter.translate('send_show_keep_channel_text')
+        ''''''
+
+        data = ['## Events:']
+        index = 1
+
+        async for e in collection.find().sort('sendAt', -1):
+            sendAt = UnixToReadable(e.get('sendAt', 0))
+            event = e.get('event', '')
+            channel = self.bot.get_channel(e.get('channelID', 0))
+            channelName = channel.name
+            guildName = channel.guild.name
+            u = e.get('uuid')
+
+            data.append(dedent(
+                f'''
+                ### {index}. {event}
+                > **{sendAt_text}:** {sendAt}
+                > **{event_text}:** {event}
+                > **{channel_text}:** {channelName} ({guildName})
+                > **event uuid:** {u}
+                ''').strip()
+            )
+            index += 1
+
+            if index > 10: break
+        
+        eb = create_basic_embed(description='\n'.join(data))
+        await inter.followup.send(embed=eb, ephemeral=True)
+
+    @commands.command()
+    @is_testing_guild()
     async def check_keepdata(self, ctx: commands.Context):
-        if str(ctx.author.id) != KeJCID: return
-        await ctx.send(f'{SaveKeep.keepData=}\n\n{SaveKeep.update=}\n\n{reminder_tasks=}')
-
-    @tasks.loop(minutes=1)
-    async def write_keep_data(self):
-        try:
-            if not SaveKeep.update: return
-            SaveKeep.write()
-        except: traceback.print_exc()
-
-    @write_keep_data.before_loop
-    async def write_keep_data_before_loop(self):
-        await self.bot.wait_until_ready()
+        await ctx.send(str(reminder_tasks))
 
 async def setup(bot):
     await bot.add_cog(Keep(bot))
