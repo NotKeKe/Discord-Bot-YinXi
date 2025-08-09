@@ -73,6 +73,9 @@ class Chat:
     def process_tool_decrip(self, delete_func_name: Union[str, list, None] = None):
         tmp_tools_descrip = list(tool_description)
 
+        if not delete_func_name: return tmp_tools_descrip
+        if delete_func_name == 'all': return []
+
         for tool in tmp_tools_descrip:
             tool_name = tool['function']['name']
             if type(delete_func_name) == list:
