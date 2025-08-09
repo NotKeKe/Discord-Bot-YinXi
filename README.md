@@ -14,7 +14,7 @@
 
 ## 閱前提醒
 *   不建議自己 clone 此專案下來用，因為他大概率是啟動不了的，或許拿來學習比較好w<br>
-    畢竟他功能挺雜，有 aiohttp chromadb openai 之類的
+    畢竟他功能挺雜，有 aiohttp, chromadb, openai, MongoDB 之類的
 
 ## ✨ 特色
 *   **音樂播放**: 支援播放 YouTube 影片音樂。
@@ -22,6 +22,7 @@
 *   **小遊戲**: 例如無限圈圈叉叉遊戲。
 *   **SkyBlock 相關**: 提供 SkyBlock 遊戲資訊和追蹤功能。
 *   **翻譯**: 支援 AI 多語言翻譯。
+*   **提醒**: 時間到的時候通知你設定的提醒事項。
 *   **通知**: YouTube 通知功能。
 *   **多語言支持**: 目前支援使用 `zh-TW`, `zh-CN`, `en-US`。
 
@@ -32,15 +33,21 @@
 以下是一些常用的指令範例，讓您快速上手：
 *   `/play [歌曲名稱/URL]`：播放 YouTube 上的音樂。
 *   `/chat [您的訊息]`：與 AI 進行對話。
-*   `/翻譯 [語言] [文字]`：將文字翻譯成指定語言。
+    > (20250806 將整體架構修改，正是支援異步)
+*   `/remind [時間] [提醒事項]`：讓 Bot 提醒你要做什麼事情。
+    > (20250809 轉為使用 MongoDB 存儲)
+*   `/翻譯 [語言] [文字]`：用 AI 將文字翻譯成指定語言。
+*   `/minecraft_server_status`：獲得某個 Minecraft 伺服器的狀態。
 *   `/news`：獲取最新新聞。
 *   `/nasa`：獲取 NASA 每日圖片。
 *   `/gif [關鍵字]`：搜尋並發送 GIF。
 *   `/歌詞搜尋 [歌曲名稱]`：搜尋歌曲歌詞。
 
 ## 成就
-*   **[2025/07/08]** 完成 i18n，prefix + slash command i18n
+*   **[2025/07/08]** 完成 **i18n**，prefix + slash command i18n
     *   可在 [core/locales](core/locales) 查看與 Gemini 2.5 pro 的 `對話紀錄` 與 `提示詞`
+*   **[2025/08/06]** 將此專案接入本地 MongoDB，並將 `chat` 相關命令重寫，以支援異步 function 調用
+    > 如果之後有機會能將整個 Project 改為使用 MongoDB的話，應該就可以直接用 `git clone` 的方式拿下來用
 
 ## ⚡ Quick Start
 **❗建議使用 Python 3.13+ 以上的環境❗**
@@ -49,7 +56,7 @@
 * 請參考以下「配置設定 - 環境變數」部分，建立並填寫您的 `.env` 檔案。 <br>
 **！務必在 .env 內填上 `DISCORD_TOKEN`！**<br><br>
 
-**選項一** 使用 **[Docker](https://www.docker.com/)** (使用 docker 才會包括 fastapi 的部分):
+**選項一** 使用 **[Docker](https://www.docker.com/)** (使用 docker 才會包括 fastapi 與 MongoDB 的部分):
 ```bash
 # 將專案克隆至本地目錄
 git clone https://github.com/NotKeKe/Discord-Bot-YinXi.git

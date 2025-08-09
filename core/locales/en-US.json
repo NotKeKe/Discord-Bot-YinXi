@@ -286,7 +286,7 @@
             "author": "Command Help",
             "fields": [{
                     "name": "**Features**",
-                    "value": "> ✅ Discord Bot combined with AI\n> ✅ Provides many useful small features"
+                    "value": "> ✅ Discord Bot integrated with AI\n> ✅ Has music features, including looping!\n> ✅ Provides many useful small features\n> ✅ Most commands can be directly called using `[` instead of being limited to slash commands"
                 },
                 {
                     "name": "**🌟 AI Features**",
@@ -302,7 +302,7 @@
                 },
                 {
                     "name": "**🔧 Useful Gadgets**",
-                    "value": "> `/minecraft_server_status` - Check the status of a Minecraft server\n> `[nasa` - Get the daily image provided by NASA\n> `[cat` - Get daily cat knowledge 🐱\n> `[image {query} {number}` - Enter the keyword you want to search for and the number of images to search for, and you'll get the images you want (you can also leave it blank!)\n> `[gif` - Use `/gif` to see how to use it~\n> `[simp` - Say something a simp would say 🐶🐶🐶 **~~(but the official says it's a jerk quote)~~**\n> `/qrcode_generator` - Convert a link to a QR Code\n> `/keep` - Reminder function! After you set it up, it will remind you of what you need to do in the same channel when the time comes\n> `/set_yt_notification` - Notifies you when a YouTuber you follow has updated! (If you don't enter anything in the youtuber field, it will be cancelled)\n> `/output_chat_history` - Output channel chat history (can be output as a `json` or `txt` file)"
+                    "value": "> `/minecraft_server_status` - Check the status of a Minecraft server\n> `[nasa` - Get the daily image provided by NASA\n> `[cat` - Get daily cat knowledge 🐱\n> `[image {query} {number}` - Enter the keyword you want to search for and the number of images to search for, and you'll get the images you want (you can also leave it blank!)\n> `[gif` - Use `/gif` to see how to use it~\n> `[simp` - Say something a simp would say 🐶🐶🐶 **~~(but the official says it's a jerk quote)~~**\n> `/qrcode_generator` - Convert a link to a QR Code\n> `/remind` - Reminder function! After you set it up, it will remind you of what you need to do in the same channel when the time comes\n> `/subscribe_youtube` - Notifies you when a YouTuber you follow has updated! (If you don't enter anything in the youtuber field, it will be cancelled)\n> `/output_chat_history` - Output channel chat history (can be output as a `json` or `txt` file)"
                 },
                 {
                     "name": "**🤫 Features most people won't use**",
