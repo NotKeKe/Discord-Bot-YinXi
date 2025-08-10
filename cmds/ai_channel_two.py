@@ -93,7 +93,11 @@ class AIChannelTwo(Cog_Extension):
                     if not item: continue
                     msg = await ctx.send(item)
 
-            await add_think_button(msg, discord.ui.View(), think)
+            view = discord.ui.View()
+            await add_think_button(msg, view, think)
+
+            timeout = await view.wait()
+            if timeout: await msg.edit(view=None)
         except openai.BadRequestError as e:
             logger.error('Error accured at on_msg_chat_human', exc_info=True)
             await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
@@ -134,6 +138,9 @@ class AIChannelTwo(Cog_Extension):
             view = discord.ui.View()
             await add_history_button(msg, view, complete_history)
             await add_think_button(msg, view, think)
+            
+            timeout = await view.wait()
+            if timeout: await msg.edit(view=None)
         except openai.BadRequestError as e:
             logger.error('Error accured at on_msg_ai_channel', exc_info=True)
             await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
@@ -321,7 +328,7 @@ class AIChannelTwo(Cog_Extension):
     async def cancel_chat_human(self, ctx: commands.Context):
         try:
             async with ctx.typing():
-                db = self.db
+                db = self.db_client['chat_human_setting']
                 collection = db[str(ctx.channel.id)]
 
                 if not (await collection.find_one({'_id': 'chat_human_setting'})):
