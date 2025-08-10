@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 
 class Chat:
     def __init__(self, model: str = None, system_prompt: str = '', ctx: commands.Context = None):
-        if not model: model = 'qwen-3-32b'
-        self.model = model
+        if not model: model = 'cerebras:qwen-3-32b'
+        self.model = model.strip()
         self.ctx = ctx
         self.userID: int = ctx.author.id if ctx else None
 
@@ -144,8 +144,10 @@ class Chat:
         if message.content:
             result = message.content
 
-        if (hasattr(message, 'reasoning_content')) is True:
+        if (hasattr(message, 'reasoning_content')):
             think = message.reasoning_content
+        elif (hasattr(message, 'reasoning')):
+            think = message.reasoning
         else:
             think = get_think(result)
 

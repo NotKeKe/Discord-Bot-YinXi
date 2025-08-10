@@ -13,26 +13,29 @@ gener_title_prompt = '''
 '''
 
 async def gener_title(history: list, length: int = 15):
-    client = Chat(system_prompt=gener_title_prompt)
+    try:
+        client = Chat(model='glm-4-flash', system_prompt=gener_title_prompt)
 
-    # process prompt
-    prompt_ls = ['以下為兩個人之間的對話，請生成標題: ']
-    for h in history:
-        if h.get('role') == 'user':
-            prompt_ls.append(f'使用者: {h.get("content")}')
-        elif h.get('role') == 'assistant':
-            prompt_ls.append(f'AI: {h.get("content")}')
+        # process prompt
+        prompt_ls = ['以下為兩個人之間的對話，請生成標題: ']
+        for h in history:
+            if h.get('role') == 'user':
+                prompt_ls.append(f'使用者: {h.get("content")}')
+            elif h.get('role') == 'assistant':
+                prompt_ls.append(f'AI: {h.get("content")}')
 
-    think, result, *_ = await client.chat(
-        '\n'.join(prompt_ls),
-        is_enable_tools=False
-    )
+        think, result, *_ = await client.chat(
+            '\n'.join(prompt_ls),
+            is_enable_tools=False
+        )
 
-    return_item = (result[:length]).strip()
-    if not return_item:
-        for item in reversed(history):
-            if item.get('role') == 'user':
-                return_item = item.get('content', 'no_title').strip()
-                break
+        return_item = (result[:length]).strip()
+        if not return_item:
+            for item in reversed(history):
+                if item.get('role') == 'user':
+                    return_item = item.get('content', 'no_title').strip()
+                    break
 
-    return return_item
+        return return_item
+    except:
+        return None

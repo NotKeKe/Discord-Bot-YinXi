@@ -90,10 +90,9 @@ class AIChat(Cog_Extension):
 
             msg = await ctx.send(embed=embed)
 
-            try:
-                await add_history_button(msg, discord.ui.View(), complete_history)
-            except:
-                logger.error('Cannot add history button at chat command: ', exc_info=True)
+            view = discord.ui.View()
+            await add_history_button(msg, view, complete_history)
+            await add_think_button(msg, view, think)
 
             if result:
                 if history:
@@ -106,7 +105,8 @@ class AIChat(Cog_Extension):
                         'createAt': UnixNow()
                     })
 
-            await add_think_button(msg, discord.ui.View(), think)
+            timeout = await view.wait()
+            if timeout: await msg.edit(view=None)
         except openai.BadRequestError as e:
             logger.error('Error accured at chat command', exc_info=True)
             await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)

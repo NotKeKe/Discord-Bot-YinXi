@@ -29,14 +29,14 @@ def split_provider_model(provider_and_model: str) -> Tuple[str, str]:
     Returns:
         Tuple[str, str]: _description_
     """    
-    match = re.match(r"(.*?)\s*:\s*(.*)", provider_and_model)
+    match = re.match(r"(.*?)\s*:\s*(.*)", provider_and_model.strip())
 
     if match:
         provider = match.group(1)
         model = match.group(2)
         return provider, model
     
-    return '', provider_and_model
+    return '', provider_and_model.strip()
 
 
 async def model_select(model: str) -> Union[AsyncOpenAI, None]:
