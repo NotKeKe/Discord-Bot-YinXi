@@ -95,6 +95,7 @@ class BotStats(Cog_Extension):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error):
+        if not ctx.command: return
         await collection.find_one_and_update(
             {'type': 'on_command_error'},
             {
