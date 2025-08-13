@@ -183,7 +183,7 @@ class AIChannelTwo(Cog_Extension):
                         'createAt': UnixNow()
                     }
                 )
-                await ctx.send((await ctx.interaction.translate('send_set_ai_channel_success')).format(model))
+                await ctx.send((await ctx.interaction.translate('send_set_ai_channel_success')).format(model=model))
                 # await ctx.send('good')
         except:
             logger.error('Error accured at set_ai_channel command', exc_info=True)

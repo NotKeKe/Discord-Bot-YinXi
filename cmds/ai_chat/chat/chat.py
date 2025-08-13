@@ -286,7 +286,7 @@ class Chat:
                 stream=False,
                 timeout=timeout,
                 tools=self.process_tool_decrip(delete_tools) if is_enable_tools else None,
-                tool_choice=('auto' if is_enable_tools else 'none') if not tool_choice else tool_choice
+                tool_choice=tool_choice if tool_choice else ('auto' if is_enable_tools else None) 
             )
             return resp
         
@@ -309,7 +309,7 @@ class Chat:
             **({'reasoning': think.strip()} if think else {})
         })
 
-        if provider.lower() in ('ollama', 'lmstudio') and total_tokens >= 30000: await self.summarize_history(history)
+        if provider.lower() in ('ollama', 'lmstudio', 'cerebras') and total_tokens >= 30000: await self.summarize_history(history)
         elif total_tokens > 62000: await self.summarize_history(history)
 
         def replace_backticks_in_parentheses(s):
@@ -333,6 +333,7 @@ class Chat:
         think, result, history = await self.chat(
             prompt='\n'.join(ls_prompt),
             is_enable_tools=False,
+            tool_choice=None,
             custom_system_prompt=summarize_history_system_prompt,
             top_p=0.5
         )
