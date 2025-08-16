@@ -57,7 +57,21 @@ services:
     container_name: yinxi-dc-lrcapi
     expose:
       - "28883"
+  redis:
+    image: redis:latest
+    container_name: yinxi-dc-redis
+    restart: unless-stopped
+    ports:
+      - "6381:6379"
+    volumes:
+      - yinxi-dc-redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     
 volumes:
   mongodb:
     driver: local
+  yinxi-dc-redis_data:

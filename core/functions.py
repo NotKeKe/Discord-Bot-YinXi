@@ -14,6 +14,7 @@ import base64
 import aiohttp
 from urllib.parse import quote_plus
 from motor.motor_asyncio import AsyncIOMotorClient
+import redis.asyncio as redis
 
 import os
 from dotenv import load_dotenv
@@ -45,6 +46,14 @@ GENIUS_ACCESS_TOKEN = os.getenv('GENIUS_ACCESS_TOKEN')
 # mongo db
 MONGO_USER = quote_plus(os.getenv('MONGO_USER'))
 MONGO_PASSWORD = quote_plus(os.getenv('MONGO_PASSWORD'))
+
+# Redis
+redis_client = redis.Redis(
+    host='redis', 
+    port=6379, 
+    db=0,
+    decode_responses=True
+)
 
 def read_json(path: str) -> Optional[Any]:
     """將path讀取成物件並回傳"""

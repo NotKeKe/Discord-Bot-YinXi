@@ -189,7 +189,7 @@ class Main(Cog_Extension):
     @app_commands.describe(unix_second=locale_str('convert_timestamp_timestamp'))
     async def unixSecondToReadalbe(self, ctx: commands.Context, unix_second: str):
         async with ctx.typing():
-            try: unix_second = int(unix_second)
+            try: unix_second = float(unix_second)
             except: return await ctx.send(await ctx.interaction.translate('send_convert_timestamp_invalid_number'))
             readable = UnixToReadable(unix_second)
             await ctx.send(readable)

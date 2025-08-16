@@ -1,37 +1,24 @@
-import discord
 from discord.ext import commands, tasks
-from discord import app_commands
+from discord import app_commands, Interaction
 import scrapetube
 import asyncio
 import aiohttp
-import aiofiles
 import logging
-import orjson
 from bs4 import BeautifulSoup
-from pathlib import Path
-import io
 import time
-from collections import deque
+from typing import Optional, List, Tuple
+from datetime import datetime
 
 from cmds.music_bot.play4.utils import is_url
 
-from core.functions import create_basic_embed, is_testing_guild, is_KeJC
+from core.functions import create_basic_embed, redis_client
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated
+from core.mongodb import MongoDB_DB
 
 logger = logging.getLogger(__name__)
 
-path = './cmds/data.json/sub_yt_channels.json'
-libpath = Path(path)
-if not libpath.exists() or not libpath.stat().st_size > 0:
-    libpath.write_text('{}')
-
-deleting_ytb = {}
-starts_deleting_ytb = {}
-
-# deleting_ytb = {
-#     'channelID': DeleteYTB()
-# }
+db = MongoDB_DB.sub_yt
 
 async def get_channel_name(url: str) -> str:
     async with aiohttp.ClientSession() as sess:
@@ -47,105 +34,40 @@ async def get_channel_name(url: str) -> str:
     
     return None
 
-class SaveYouTubeData:
-    channels = None
-    update = False
+def fetch_video_ids(urls: dict):
+    current_video_ids = {}
+    for url in urls:
+        try:
+            videos = scrapetube.get_channel(channel_url=url, limit=10)
+            if not videos: continue
+            video_ids = [video["videoId"] for video in videos]
+            current_video_ids[url] = video_ids
+        except:
+            continue
+        finally:
+            time.sleep(1)
+    return current_video_ids
 
-    example = {
-        'ChannelID': [
-            'url1',
-            'url2'
-        ]
-    }
+async def sub_urls_autocomplete(inter: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    collection = db[str(inter.channel.id)]
+    data: List[Tuple[str, str]] = [(d.get('sub_url'), d.get('channelName')) async for d in collection.find()]
 
-    @classmethod
-    async def init_data(cls):
-        if not cls.channels:
-            async with aiofiles.open(path, 'r', encoding='utf-8') as f:
-                cls.channels = orjson.loads(await f.read())
+    if current:
+        data = [item for item in data if current.lower().strip() in item[1].lower().strip() or current.lower().strip() in item[0].lower().strip()]
     
-    @classmethod
-    def update_data(cls, data = None):
-        if data:
-            cls.channels = data
-        cls.update = True
+    return [app_commands.Choice(name=d[1], value=d[0]) for d in data]
 
-    @classmethod
-    async def write_data(cls):
-        async with aiofiles.open(path, 'w', encoding='utf-8') as f:
-            await f.write(orjson.dumps(cls.channels, option=orjson.OPT_INDENT_2).decode())
-        cls.update = False
-
-class DeleteYTB:
-    def __init__(self, channel: discord.TextChannel):
-        self.channel = channel
-        self.channelID = str(channel.id)
-
-    def clear(self):
-        channelID = int(self.channelID)
-        if channelID in deleting_ytb:
-            del deleting_ytb[channelID]
-        if channelID in starts_deleting_ytb:
-            del starts_deleting_ytb[channelID]
-        self.channel = None
-        self.channelID = None
-
-    def delete(self, url: str) -> bool:
-        data: dict = SaveYouTubeData.channels
-        channelID = self.channelID
-
-        urls: list = data.get(channelID, [])
-        if not urls: return False
-
-        clean_url = url.strip()
-
-        if clean_url in data[channelID]:
-            data[channelID].remove(clean_url)
-            if not data[channelID]:
-                del data[channelID]
-            SaveYouTubeData.update_data(data)
-            return True
-        else:
-            logger.error(f'{url} not in data[{channelID}]')
-            return False
+async def add_to_all(url: str):
+    try:
+        collection = db['ALL']
+        await collection.update_one({'urls': {'$exists': True}}, {'$addToSet': {'urls': url}}, upsert=True)
+    except:
+        logger.error(f'Error while add {url} to sub_yt ALL: ', exc_info=True)
 
 class SubYT(Cog_Extension):
-    def __init__(self, bot: commands.Bot):
-        super().__init__(bot)
-        self.videos = {}
-        self.processed = {}
-
     async def cog_load(self):
         logger.info(f'已載入「{__name__}」')
-        await SaveYouTubeData.init_data()
-        # await self.bot.wait_until_ready()
-        self.write_data_task.start()
         self.update_sub_yt.start()
-        self.deleting_outdate.start()
-
-    @commands.Cog.listener()
-    async def on_message(self, msg: discord.Message):
-        if msg.author.bot: return
-        if msg.channel.id not in deleting_ytb: return
-        content = msg.content
-        if not content.startswith('[! '): return
-        url = content[3:]
-        if not is_url(url): return
-
-        deleteYTB: DeleteYTB = deleting_ytb.get(msg.channel.id)
-
-        ctx = await self.bot.get_context(msg)
-        async with ctx.typing():
-            success = deleteYTB.delete(url)
-            if not success:
-                return await ctx.send( ( await self.bot.tree.translator.get_translate('send_sub_yt_cannot_delete', ctx=ctx, lang_code=ctx.guild.preferred_locale.value) ).format(url=url))
-            deleteYTB.clear() # OC
-
-            '''i18n'''
-            send_message = await self.bot.tree.translator.get_translate('send_sub_yt_successfully_delete', ctx=ctx, lang_code=ctx.guild.preferred_locale.value)
-            ''''''
-
-            await ctx.send(send_message.format(ytb = (await get_channel_name(url))))
 
     @commands.hybrid_command(name=locale_str('sub_yt'), description=locale_str('sub_yt'))
     @app_commands.describe(url=locale_str('sub_yt_url'))
@@ -153,53 +75,42 @@ class SubYT(Cog_Extension):
         async with ctx.typing():
             url = url.strip()
             if not is_url(url): return await ctx.send(await ctx.interaction.translate('send_sub_yt_invalid_url'), ephemeral=True)
-            if not (await get_channel_name(url)): return await ctx.send(await ctx.interaction.translate('send_sub_yt_cannot_found_ytb'), ephemeral=True)
+            channel_name = await get_channel_name(url)
+            if not (channel_name): return await ctx.send(await ctx.interaction.translate('send_sub_yt_cannot_found_ytb'), ephemeral=True)
 
-            channelID = str(ctx.channel.id)
+            collection = db[str(ctx.channel.id)]
+            exist = await collection.find_one({'url': url})
+            if exist: return await ctx.send('Already exist')
 
-            data = SaveYouTubeData.channels
-            urls: list = data.get(channelID, [])
-            urls.append(url)
+            await collection.insert_one({'sub_url': url, 'channelName': channel_name, 'createAt': datetime.now().timestamp()})
 
-            data[channelID] = urls
-            SaveYouTubeData.update_data(data)
             await ctx.send( (await ctx.interaction.translate('send_sub_yt_successfully_save') ).format( ytb = (await get_channel_name(url) )))
+            asyncio.create_task(add_to_all(url))
+
+        initial_videos = await asyncio.to_thread(fetch_video_ids, [url])
+        initial_video_ids = initial_videos.get(url, [])
+        try:
+            if initial_video_ids:
+                channelID = str(ctx.channel.id)
+                redis_key = f"sub_yt_processed_videos:{channelID}"
+                current_timestamp = int(time.time())
+                
+                mapping = {video_id: current_timestamp for video_id in initial_video_ids}
+                await redis_client.zadd(redis_key, mapping)
+        except:
+            logger.error('Error accured at sub_yt: ', exc_info=True)
+            await ctx.send('Warning: Unable to initialize video_ids for this channel, etc. may send 10 messages at once (this exception will only occur this time)')
 
     @commands.hybrid_command(name=locale_str('sub_yt_cancel'), description=locale_str('sub_yt_cancel'))
-    async def sub_yt_cancel(self, ctx: commands.Context):
+    @app_commands.autocomplete(ytb=sub_urls_autocomplete)
+    async def sub_yt_cancel(self, ctx: commands.Context, ytb: str):
         async with ctx.typing():
             try:
-                channelID = str(ctx.channel.id)
-                data = SaveYouTubeData.channels
-                urls: list = data.get(channelID, [])
-                if not urls: return await ctx.send(await ctx.interaction.translate('send_sub_yt_cancel_no_url'))
+                # ytb = sub_url
+                collection = db[str(ctx.channel.id)]
+                d = await collection.find_one_and_delete({'sub_url': ytb})
 
-                '''i18n'''
-                eb_translated = await ctx.interaction.translate('embed_sub_yt_cancel')
-                embed_translated: dict = (load_translated(eb_translated))[0]
-
-                title = embed_translated.get('title')
-                author = embed_translated.get('author')
-
-                field: dict = embed_translated.get('fields')[0]
-                eb_field1_name = field.get('name')
-                ''''''
-
-                # list every urls' user.
-                value = '\n'.join( [f'{await get_channel_name(url)}: {url}' for url in urls] )
-                file = None
-                if len(value) >= 2000:
-                    mem_file = io.BytesIO(value.encode())
-                    file = discord.File(mem_file, 'sub_yt_cancel.txt')
-
-                eb = create_basic_embed(title=title, 功能=author, color=ctx.author.color)
-                if not file:
-                    eb.add_field(name=eb_field1_name, value=value, inline=False)
-
-                deleting_ytb[ctx.channel.id] = DeleteYTB(ctx.channel)
-                starts_deleting_ytb[ctx.channel.id] = time.time()
-
-                await ctx.send(embed=eb, file=file)
+                await ctx.send((await ctx.interaction.translate('send_sub_yt_cancel_successfully')).format(name=d.get('channelName'), url=d.get('sub_url')))
             except:
                 logger.error('Error accured at sub_yt_cancel: ', exc_info=True)
 
@@ -212,53 +123,15 @@ class SubYT(Cog_Extension):
             author: str = eb.get('author')
             ''''''
 
-            result = []
-            for url in SaveYouTubeData.channels.get(str(ctx.channel.id), []):
-                try: name = await get_channel_name(url)
-                except: ...
-                result.append(f'[{name}]({url})')
+            result = [f"[{item.get('channelName', 'None')}]({item.get('sub_url', 'None')})" async for item in db[str(ctx.channel.id)].find()]
 
             descrip = ', '.join( result or ['None'] )
 
             eb = create_basic_embed(description=descrip, color=ctx.author.color, 功能=author.format(channelName=ctx.channel.name))
             await ctx.send(embed=eb)
 
-    @commands.command(name='sub_yt_data')
-    @is_testing_guild()
-    async def send_sub_yt_data(self, ctx: commands.Context):
-        if not is_KeJC(ctx.author.id): return
-        str_bytes = orjson.dumps(SaveYouTubeData.channels, option=orjson.OPT_INDENT_2)
-        mem_file = io.BytesIO(str_bytes)
-        file = discord.File(mem_file, 'SaveYouTubeData_channels.json')
-
-        await ctx.send(file=file)
-        await ctx.send(str(deleting_ytb))
-
-    @tasks.loop(minutes=1)
-    async def write_data_task(self):
-        if not SaveYouTubeData.update: return
-        await SaveYouTubeData.write_data()
-
-    @tasks.loop(minutes=1)
-    async def deleting_outdate(self):
-        '''刪除已經超過 10 分鐘的 取消訂閱 活動'''
-        if not deleting_ytb and not starts_deleting_ytb: return
-
-        now = time.time()
-        for cnlID in starts_deleting_ytb:
-            if cnlID not in deleting_ytb: # 避免兩者不一致的情況，此時cnlID in deleting_ytb
-                del starts_deleting_ytb[cnlID]
-                return
-            
-            start_time = starts_deleting_ytb[cnlID]
-            if (now - start_time) > 10*60: # 10分鐘
-                deleting_ytb[cnlID].clear()
-
     @tasks.loop(seconds=30)
     async def update_sub_yt(self):
-        data: dict = SaveYouTubeData.channels
-        if not data: return
-
         '''
         1. 先取得全部 url's video ids
         {
@@ -277,68 +150,60 @@ class SubYT(Cog_Extension):
         '''
 
         # 1. 取得 data 內全部 url
-        urls = set()
-        urls = {url for item in data.values() for url in item}
+        all_urls = await db['ALL'].find_one({'urls': {'$exists': True}})
+        if not all_urls: return
+        urls = set(all_urls.get('urls'))
 
         # 2. 遞迴取得每個 url 當前的 video ids
-        current_video_ids = {}
         '''example
         {
             url: [video_ids...]
         }
         '''
-        def fetch_video_ids(urls: dict):
-            current_video_ids = {}
-            for url in urls:
-                try:
-                    videos = scrapetube.get_channel(channel_url=url, limit=5)
-                    if not videos: continue
-                    video_ids = [video["videoId"] for video in videos]
-                    current_video_ids[url] = video_ids
-                except:
-                    continue
-                finally:
-                    time.sleep(1)
-            return current_video_ids
+        current_video_ids: dict = await asyncio.to_thread(fetch_video_ids, urls)
+        all_dc_channel_id = [item for item in (await db.list_collection_names()) if item != 'ALL']
 
-        current_video_ids = await asyncio.to_thread(fetch_video_ids, urls)
-
-        # 第一次不用執行，避免重複傳送 (因為會取得 5 個 videos)
-        if self.update_sub_yt.current_loop == 0 or not self.videos:
-            self.videos = current_video_ids
-            return
-
-        for cnlID in data:
+        for cnlID in all_dc_channel_id:
             channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
             if not channel: continue
 
+            # get prefer lang
             guild = self.bot.get_guild(channel.guild.id) or await self.bot.fetch_guild(channel.guild.id)
             preferred_lang = guild.preferred_locale.value if guild else 'zh-TW'
+            
+            # redis
+            redis_key = f"sub_yt_processed_videos:{str(cnlID)}"
+            # 清理過期 video ids
+            ts = int(time.time()) - (60*60*24*30)
+            await redis_client.zremrangebyscore(redis_key, 0, ts)
 
-            for url in data.get(cnlID, []):
-                if ( self.videos.get(url, None) ) is None: continue # 避免新增頻道後 連續舊的影片   
+            # get sub_urls
+            sub_urls = [item.get('sub_url') async for item in db[str(cnlID)].find()]
+
+            for url in sub_urls:
+                latest_video_ids = current_video_ids.get(url, [])
+                if not latest_video_ids: continue
+
+                # 判斷元素是否在 redis 當中的 redis_key 內，如果在的話(results[i] is not None)就代表已經被處理過
+                pipe = redis_client.pipeline()
+                for video_id in latest_video_ids:
+                    pipe.zscore(redis_key, video_id)
+                result: list[Optional[float]] = await pipe.execute()
+
+                new_video_ids = [latest_video_ids[i] for i, score in enumerate(result) if score is None]
+                current_ts = int(time.time())
+                if not new_video_ids: continue
+                if len(new_video_ids) >= 10: # 可能因為第一次初始化失敗而造成一次傳送10個 (畢竟應該沒有人會30秒內一次傳送10個影片)
+                    for video_id in new_video_ids:
+                        await redis_client.zadd(redis_key, {video_id: current_ts})
+                    return
                 
-                try:
-                    old_video_ids = set(self.videos[url])
-                    new_video_ids = set(current_video_ids[url])
-                except:
-                    continue
-                
-                if old_video_ids != new_video_ids:
-                    print(old_video_ids, new_video_ids, sep='\n')
-                    print(new_video_ids - old_video_ids)
-
-                for video_id in new_video_ids - old_video_ids:
-                    if video_id in self.processed.get(cnlID, []): continue
-
+                for video_id in reversed(new_video_ids):
                     sent_url = f"https://youtu.be/{video_id}"
                     sent_message = await self.bot.tree.translator.get_translate('send_sub_yt_new_video', lang_code=preferred_lang)
                     await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url)))          
 
-                    self.processed.setdefault(cnlID, deque(maxlen=20))
-                    self.processed[cnlID].append(video_id)
-
-        self.videos = current_video_ids
+                    await redis_client.zadd(redis_key, {video_id: current_ts})
 
 
 async def setup(bot):

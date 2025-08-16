@@ -1,7 +1,7 @@
 [project]
 name = "yinxi-discord-bot"
 version = "0.1.0"
-requires-python = ">=3.13"
+requires-python = "==3.13.5"
 
 dependencies = [
     "aiofiles==24.1.0",
@@ -30,6 +30,7 @@ dependencies = [
     "pytubefix==8.12.0",
     "pyzbar>=0.1.9",
     "qrcode==8.2",
+    "redis[hiredis]>=6.4.0",
     "Requests==2.32.3",
     "scrapetube==2.5.1",
     "tenacity==9.0.0",
