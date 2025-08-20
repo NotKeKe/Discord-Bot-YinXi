@@ -206,8 +206,6 @@ else:
     BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 
 MONGO_URL = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{DEVICE_IP}:27020/"
-# print(MONGO_URL)
-
 mongo_db_client = AsyncIOMotorClient(MONGO_URL)
 
 def is_testing_guild():

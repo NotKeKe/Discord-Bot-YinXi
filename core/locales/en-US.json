@@ -724,6 +724,7 @@
         }],
         "send_show_keep_sendAt_text": "Time",
         "send_show_keep_event_text": "Event",
-        "send_show_keep_channel_text": "At"
+        "send_show_keep_channel_text": "At",
+        "send_sub_yt_cancel_successfully": "Successfully unsubscribed from [{name}]({url})"
     }
 }

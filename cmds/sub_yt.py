@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 
 db = MongoDB_DB.sub_yt
 
+# YouTube 先前更新了 shorts 的 JSON tree，但 pypi 上的 scrapetube 一直沒有更新
+# https://github.com/dermasmid/scrapetube/issues/65
+scrapetube.scrapetube.type_property_map['shorts'] = 'reelWatchEndpoint'
+
 async def get_channel_name(url: str) -> str:
     async with aiohttp.ClientSession() as sess:
         async with sess.get(url) as resp:
@@ -38,9 +42,11 @@ def fetch_video_ids(urls: dict):
     current_video_ids = {}
     for url in urls:
         try:
-            videos = scrapetube.get_channel(channel_url=url, limit=10)
+            videos = scrapetube.get_channel(channel_url=url, limit=5)
+            shorts = scrapetube.get_channel(channel_url=url, limit=8, content_type='shorts')
+            # streams = scrapetube.get_channel(channel_url=url, limit=5, content_type='streams')
             if not videos: continue
-            video_ids = [video["videoId"] for video in videos]
+            video_ids = [video["videoId"] for video in videos] + [short["videoId"] for short in shorts]
             current_video_ids[url] = video_ids
         except:
             continue
@@ -70,6 +76,7 @@ class SubYT(Cog_Extension):
         self.update_sub_yt.start()
 
     @commands.hybrid_command(name=locale_str('sub_yt'), description=locale_str('sub_yt'))
+    @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.describe(url=locale_str('sub_yt_url'))
     async def sub_yt(self, ctx: commands.Context, url: str):
         async with ctx.typing():
@@ -79,7 +86,7 @@ class SubYT(Cog_Extension):
             if not (channel_name): return await ctx.send(await ctx.interaction.translate('send_sub_yt_cannot_found_ytb'), ephemeral=True)
 
             collection = db[str(ctx.channel.id)]
-            exist = await collection.find_one({'url': url})
+            exist = await collection.find_one({'sub_url': url})
             if exist: return await ctx.send('Already exist')
 
             await collection.insert_one({'sub_url': url, 'channelName': channel_name, 'createAt': datetime.now().timestamp()})
@@ -102,6 +109,7 @@ class SubYT(Cog_Extension):
             await ctx.send('Warning: Unable to initialize video_ids for this channel, etc. may send 10 messages at once (this exception will only occur this time)')
 
     @commands.hybrid_command(name=locale_str('sub_yt_cancel'), description=locale_str('sub_yt_cancel'))
+    @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.autocomplete(ytb=sub_urls_autocomplete)
     async def sub_yt_cancel(self, ctx: commands.Context, ytb: str):
         async with ctx.typing():
@@ -113,6 +121,7 @@ class SubYT(Cog_Extension):
                 await ctx.send((await ctx.interaction.translate('send_sub_yt_cancel_successfully')).format(name=d.get('channelName'), url=d.get('sub_url')))
             except:
                 logger.error('Error accured at sub_yt_cancel: ', exc_info=True)
+                await ctx.send('Cannot cancel the YouTuber, please /report this issue')
 
     @commands.hybrid_command(name=locale_str('sub_yt_list'), description=locale_str('sub_yt_list'))
     async def sub_yt_list(self, ctx: commands.Context):
@@ -193,14 +202,14 @@ class SubYT(Cog_Extension):
                 new_video_ids = [latest_video_ids[i] for i, score in enumerate(result) if score is None]
                 current_ts = int(time.time())
                 if not new_video_ids: continue
-                if len(new_video_ids) >= 10: # 可能因為第一次初始化失敗而造成一次傳送10個 (畢竟應該沒有人會30秒內一次傳送10個影片)
+                if len(new_video_ids) >= 5: # 可能因為第一次初始化失敗而造成一次傳送5個 (畢竟應該沒有人會30秒內一次傳送5個影片)
                     for video_id in new_video_ids:
                         await redis_client.zadd(redis_key, {video_id: current_ts})
                     return
                 
                 for video_id in reversed(new_video_ids):
                     sent_url = f"https://youtu.be/{video_id}"
-                    sent_message = await self.bot.tree.translator.get_translate('send_sub_yt_new_video', lang_code=preferred_lang)
+                    sent_message: str = await self.bot.tree.translator.get_translate('send_sub_yt_new_video', lang_code=preferred_lang)
                     await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url)))          
 
                     await redis_client.zadd(redis_key, {video_id: current_ts})

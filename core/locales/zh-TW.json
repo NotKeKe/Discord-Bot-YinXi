@@ -724,6 +724,7 @@
         }],
         "send_show_keep_sendAt_text": "時間",
         "send_show_keep_event_text": "事件",
-        "send_show_keep_channel_text": "在"
+        "send_show_keep_channel_text": "在",
+        "send_sub_yt_cancel_successfully": "已成功取消 [{name}]({url})"
     }
 }
