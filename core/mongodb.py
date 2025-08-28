@@ -7,3 +7,4 @@ class MongoDB_DB:
     bot_collect_stats = mongo_db_client['bot_collect_stats']
     keep = mongo_db_client['keep']
     sub_yt = mongo_db_client['sub_yt']
+    pjsk = mongo_db_client['pjsk']

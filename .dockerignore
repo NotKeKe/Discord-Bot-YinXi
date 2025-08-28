@@ -1,0 +1,5 @@
+.venv
+.pm2
+.vscode
+.continue
+__pycache__/

@@ -19,7 +19,7 @@ COPY pyproject.toml ./
 
 RUN uv sync
 
-RUN pip install --no-cache-dir --system playwright \
+RUN pip install --no-cache-dir playwright \
     && playwright install-deps \
     && playwright install
 
