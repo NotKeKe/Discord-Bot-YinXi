@@ -77,7 +77,9 @@
         "bot_stats": "bot_stats",
         "random_uuid": "random_uuid_generator",
         "image_to_base64": "image_to_base64",
-        "show_keep": "show_reminder"
+        "show_keep": "show_reminder",
+        "pjsk_new_song": "pjsk_new_song",
+        "pjsk_search_song": "pjsk_search_song"
     },
     "description": {
         "translate": "Translate some text",
@@ -157,7 +159,9 @@
         "bot_stats": "Show bot statistics, including but not limited to uptime, number of starts, command calls...",
         "random_uuid": "Generate a random UUID",
         "image_to_base64": "Convert image to base64",
-        "show_keep": "List all notes you've created using /remind"
+        "show_keep": "List all notes you've created using /remind",
+        "pjsk_new_song": "The latest three new songs in Project Sekai (JP server)",
+        "pjsk_search_song": "Search for songs in Project Sekai. You can search by keywords, difficulty levels, etc."
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -234,7 +238,11 @@
         "set_ai_channel_model": "AI model to set, default is qwen-3-32b",
         "set_ai_channel_system_prompt": "System prompt to set (optional)",
         "change_ai_channel_model_model": "AI model to change to",
-        "change_ai_channel_system_prompt_system_prompt": "System prompt to change to"
+        "change_ai_channel_system_prompt_system_prompt": "System prompt to change to",
+        "pjsk_search_song_name": "Song Name",
+        "pjsk_search_song_level": "Song Level (can be any difficulty level like: master, append)",
+        "pjsk_search_song_num": "Search results count (default 5); set to 1 for detailed song info",
+        "pjsk_search_song_combo": "Song Combo (Note) Count"
     },
     "components": {
         "yin_xi": "YinXi",
@@ -725,6 +733,15 @@
         "send_show_keep_sendAt_text": "Time",
         "send_show_keep_event_text": "Event",
         "send_show_keep_channel_text": "At",
-        "send_sub_yt_cancel_successfully": "Successfully unsubscribed from [{name}]({url})"
+        "send_sub_yt_cancel_successfully": "Successfully unsubscribed from [{name}]({url})",
+        "embed_pjsk_global_full_info": [{
+            "description": "## __**{song_name}**__\n🎯 **Difficulty:**\n{difficulty}\n\n📀 [Cover]({image_url}) ｜ 🎬 [Video]({video_url})\n\n📊 **Chart Link:**\n{charts_url}\n\n🏷 **Band Tag:**\n{music_tag}\n\n🗓 **Release Date (JP)**: {publish_at}\n\n✍ Lyrics: {lyricist}\n🎼 Composer: {composer}\n🎹 Arranger: {arranger}\n\n━━━━━━━━",
+            "footer": "Source: sekai.best | All materials copyrighted by their original owners"
+        }],
+        "embed_pjsk_search_song_short_info": [{
+            "description": "## __**{song_name}**__\n🎯 **Difficulty:**\n{difficulty}\n\n🗓 **Release Date (JP)**: {publish_at}\n\n✍ Lyrics: {lyricist}\n🎼 Composer: {composer}\n🎹 Arranger: {arranger}\n\n━━━━━━━━",
+            "footer": "Source: sekai.best | All materials copyrighted by their original owners"
+        }],
+        "send_pjsk_search_song_no_param": "Please enter at least one of the following to search: song name, level, or combo count."
     }
 }

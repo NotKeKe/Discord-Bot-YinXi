@@ -77,7 +77,9 @@
         "bot_stats": "機器人統計數據",
         "random_uuid": "隨機uuid生成器",
         "image_to_base64": "圖片轉base64",
-        "show_keep": "列出所有記事"
+        "show_keep": "列出所有記事",
+        "pjsk_new_song": "世界計畫_新歌",
+        "pjsk_search_song": "世界計畫_搜尋歌曲"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -157,7 +159,9 @@
         "bot_stats": "顯示 Bot 的統計數據，包括但不限於啟動時間、啟動次數、指令呼叫次數...",
         "random_uuid": "生成一個隨機的 UUID",
         "image_to_base64": "將圖片轉為 base64",
-        "show_keep": "列出你使用 /記事 所創建的所有記事"
+        "show_keep": "列出你使用 /記事 所創建的所有記事",
+        "pjsk_new_song": "世界計畫(日服)的近三首新歌",
+        "pjsk_search_song": "搜尋世界計畫裡面的歌曲，可以使用關鍵字、等級......等 進行搜尋"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -234,7 +238,11 @@
         "set_ai_channel_model": "要設定的 AI 模型，預設為 qwen-3-32b",
         "set_ai_channel_system_prompt": "要設定的系統提示詞 (可選)",
         "change_ai_channel_model_model": "要更換成的 AI 模型",
-        "change_ai_channel_system_prompt_system_prompt": "要更換成的系統提示詞"
+        "change_ai_channel_system_prompt_system_prompt": "要更換成的系統提示詞",
+        "pjsk_search_song_name": "歌曲名稱",
+        "pjsk_search_song_level": "歌曲的等級 (可以是任意難度(如:master, append) 的等級)",
+        "pjsk_search_song_num": "搜尋結果的數量 (預設為5) | 如果設定為1的話，可以該歌曲更詳細的資訊。",
+        "pjsk_search_song_combo": "歌曲的 combo (連擊) 數"
     },
     "components": {
         "yin_xi": "音汐",
@@ -725,6 +733,15 @@
         "send_show_keep_sendAt_text": "時間",
         "send_show_keep_event_text": "事件",
         "send_show_keep_channel_text": "在",
-        "send_sub_yt_cancel_successfully": "已成功取消 [{name}]({url})"
+        "send_sub_yt_cancel_successfully": "已成功取消 [{name}]({url})",
+        "embed_pjsk_global_full_info": [{
+            "description": "## __**{song_name}**__\n🎯 **難易度:**\n{difficulty}\n\n📀 [封面]({image_url}) ｜ 🎬 [影片]({video_url})\n\n📊 **譜面連結:**\n{charts_url}\n\n🏷 **樂團標籤:**\n{music_tag}\n\n🗓 **發布時間 (JP)**: {publish_at}\n\n✍ 作詞: {lyricist}\n🎼 作曲: {composer}\n🎹 編曲: {arranger}\n\n━━━━━━━━",
+            "footer": "資料來源: sekai.best | 所有素材版權歸原著作權人所有"
+        }],
+        "embed_pjsk_search_song_short_info": [{
+            "description": "## __**{song_name}**__\n🎯 **難易度:**\n{difficulty}\n\n🗓 **發布時間 (JP)**: {publish_at}\n\n✍ 作詞: {lyricist}\n🎼 作曲: {composer}\n🎹 編曲: {arranger}\n\n━━━━━━━━",
+            "footer": "資料來源: sekai.best | 所有素材版權歸原著作權人所有"
+        }],
+        "send_pjsk_search_song_no_param": "請至少輸入歌曲名稱、等級或 combo 數其中一項以進行搜尋。"
     }
 }

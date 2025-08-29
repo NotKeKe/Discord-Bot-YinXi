@@ -35,12 +35,22 @@ async def song_autocomplete(inter: Interaction, current: str) -> list[Choice[str
         ]
     })
 
-async def create_info_embed(cursor: AsyncIOMotorCursor):
+async def create_info_embed(ctx: commands.Context, cursor: AsyncIOMotorCursor):
     '''
     cursor: collection.find()
     '''
     embed = create_basic_embed()
     descrips = []
+
+    '''i18n'''
+    eb_text = load_translated(
+        (await ctx.interaction.translate('embed_pjsk_global_full_info')) 
+        if ctx.interaction else 
+        (await ctx.bot.tree.translator.get_translate('embed_pjsk_global_full_info', ctx.guild.preferred_locale.value))
+    )[0]
+    footer = eb_text.get('footer')
+    descrip = eb_text.get('description')
+    ''''''
 
     async for item in cursor:
         song_name = item.get('songName')
@@ -57,27 +67,7 @@ async def create_info_embed(cursor: AsyncIOMotorCursor):
         composer = item.get('composer')
         arranger = item.get('arranger')
 
-        descrips.append(dedent("""
-            ## __**{song_name}**__
-            🎯 **難易度:**
-            {difficulty}
-
-            📀 [封面]({image_url}) ｜ 🎬 [影片]({video_url})
-
-            📊 **譜面連結:**
-            {charts_url}
-
-            🏷 **樂團標籤:**
-            {music_tag}
-
-            🗓 **發布時間 (JP)**: {publish_at}
-
-            ✍ 作詞: {lyricist}
-            🎼 作曲: {composer}
-            🎹 編曲: {arranger}
-
-            ━━━━━━━━
-            """).strip().format(
+        descrips.append(descrip.format(
                 song_name=song_name,
                 difficulty=difficulty,
                 image_url=image_url,
@@ -90,10 +80,11 @@ async def create_info_embed(cursor: AsyncIOMotorCursor):
                 arranger=arranger,
         ))
         
-        embed.description = '\n\n'.join(descrips)
-        embed.set_footer(text="資料來源: sekai.best | 所有素材版權歸原著作權人所有")
+    embed.description = '\n\n'.join(descrips)
+    embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
+    embed.set_footer(text=footer)
 
-        return embed
+    return embed
 
 class PJSK(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -109,19 +100,19 @@ class PJSK(commands.Cog):
     @commands.hybrid_command(name=locale_str('pjsk_new_song'), description=locale_str('pjsk_new_song'))
     async def new_song(self, ctx: commands.Context):
         await ctx.defer()
-        
-        '''i18n'''
-        ''''''
 
-        embed = create_basic_embed()
-        embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
-        embed = await create_info_embed(collection.find().sort('publishAt', -1).limit(3))
-        
+        embed = await create_info_embed(ctx, collection.find().sort('publishAt', -1).limit(3))
         await ctx.send(embed=embed)
 
     @commands.hybrid_command(name=locale_str('pjsk_search_song'), description=locale_str('pjsk_search_song'))
+    @app_commands.describe(
+        name=locale_str('pjsk_search_song_name'), 
+        num=locale_str('pjsk_search_song_num'), 
+        level=locale_str('pjsk_search_song_level'), 
+        combo=locale_str('pjsk_search_song_combo')
+    )
     async def search_song(self, ctx: commands.Context, name: str = None, num: int = 5, level: int = None, combo: int = None):
-        if not (name or level or combo): return await ctx.send('?')
+        if not (name or level or combo): return await ctx.send(await ctx.interaction.translate('send_pjsk_search_song_no_param'))
         await ctx.defer()
         
         '''Copilot(with GPT5) did this'''
@@ -177,36 +168,36 @@ class PJSK(commands.Cog):
 
         cursor = self.collection.aggregate(pipeline)
         ''''''
+        try:
+            if num == 1:
+                eb = await create_info_embed(ctx, cursor)
+            else:
+                '''i18n'''
+                eb_text = load_translated(
+                    (await ctx.interaction.translate('embed_pjsk_search_song_short_info')) 
+                    if ctx.interaction else 
+                    (await self.bot.tree.translator.get_translate('embed_pjsk_search_song_short_info', ctx.guild.preferred_locale.value))
+                )[0]
+                footer = eb_text.get('footer')
+                descrip = eb_text.get('description')
+                ''''''
 
-        if num == 1:
-            eb = await create_info_embed(cursor)
-        else:
-            eb = create_basic_embed()
-            eb.description = '\n\n'.join([dedent("""
-            ## __**{song_name}**__
-            🎯 **難易度:**
-            {difficulty}
+                eb = create_basic_embed()
+                eb.description = '\n\n'.join([descrip.format(
+                    song_name = item.get('songName'),
+                    difficulty = '\n'.join([
+                        f"- {diff} | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
+                        for diff, value in item.get('musicDifficulty').items()
+                    ]),
+                    publish_at = UnixToReadable(item.get('publishAt', 0)),
+                    lyricist = item.get('lyricist'),
+                    composer = item.get('composer'),
+                    arranger = item.get('arranger')
+                ) async for item in cursor])
 
-            🗓 **發布時間 (JP)**: {publish_at}
-
-            ✍ 作詞: {lyricist}
-            🎼 作曲: {composer}
-            🎹 編曲: {arranger}
-
-            ━━━━━━━━
-            """).format(
-                song_name = item.get('songName'),
-                difficulty = '\n'.join([
-                    f"- {diff} | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
-                    for diff, value in item.get('musicDifficulty').items()
-                ]),
-                publish_at = UnixToReadable(item.get('publishAt', 0)),
-                lyricist = item.get('lyricist'),
-                composer = item.get('composer'),
-                arranger = item.get('arranger')
-            ).strip() async for item in cursor])
-
-            eb.set_footer(text="資料來源: sekai.best | 所有素材版權歸原著作權人所有")
+                eb.set_footer(text=footer)
+        except:
+            logger.error('error:', exc_info=True)
 
         await ctx.send(embed=eb)
 
