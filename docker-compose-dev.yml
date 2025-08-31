@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-dev
-    command: uv run newbot2.py
+    command: uv add yt_dlp && uv run newbot2.py
     container_name: yinxi-dc-bot
     depends_on:
       - lrcapi

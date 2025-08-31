@@ -25,11 +25,11 @@ ffmpeg_options = {
 #     'source_address': '0.0.0.0',
 # }
 
-YTDL_OPTIONS = YTDL_OPTIONS = {
+YTDL_OPTIONS = {
     # === 基本設定 ===
     "quiet": True,                # 安靜模式（減少輸出）
     "no_warnings": True,          # 隱藏警告
-    "no_color": True,             # 禁用顏色輸出
+    "color": 'never',             # 禁用顏色輸出
 
     # === 格式選擇 ===
     "format": "bestaudio/best",   # 獲取最佳音訊品質
@@ -56,6 +56,7 @@ YTDL_OPTIONS = YTDL_OPTIONS = {
     # === 其他優化 ===
     "no_check_certificate": True,         # 避免 SSL 握手延遲（僅限可信環境）
     "call_home": False,                   # 禁用外部請求
+    'ignore_no_formats_error': True
 }
 
 class ID:
@@ -99,7 +100,8 @@ async def leave(ctx: commands.Context):
     if ctx.author.voice.channel != ctx.guild.voice_client.channel: await ctx.send('疑? 我們好像在不同的頻道裡面欸'); return False
     from cmds.play4 import players
     await ctx.guild.voice_client.disconnect()
-    del players[ctx.guild.id]
+    if ctx.guild.id in players:
+        del players[ctx.guild.id]
 
 async def send(ctx: commands.Context | discord.Interaction, text: str = None, embed: discord.Embed = None, view: discord.ui.View = None, ephemeral: bool = False):
     if isinstance(ctx, commands.Context):

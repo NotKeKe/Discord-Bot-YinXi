@@ -35,6 +35,17 @@ class Music(Cog_Extension):
         self.update_music_data.start()
         self.update_recommendations.start()
 
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, exception: commands.errors.CommandError):
+        if isinstance(exception, commands.CommandInvokeError):
+            if isinstance(exception.original, discord.Forbidden):
+                try:
+                    u = self.bot.get_user(ctx.author.id)
+                    return await u.send("I'm missing some permissions:((")
+                except:
+                    ...
+        await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=True)
+
     @commands.hybrid_command(name=locale_str('play'), description=locale_str('play'), aliases=['p', '播放'])
     @app_commands.describe(query=locale_str('play_query'))
     async def _play(self, ctx: commands.Context, *, query: str = None):
@@ -57,7 +68,8 @@ class Music(Cog_Extension):
         except:
             traceback.print_exc()
             await ctx.send(await ctx.interaction.translate('send_play_error'))
-            del players[ctx.guild.id]
+            if ctx.guild.id in players:
+                del players[ctx.guild.id]
 
     @commands.hybrid_command(name=locale_str('add'), description=locale_str('add'))
     @app_commands.describe(query=locale_str('add_query'))

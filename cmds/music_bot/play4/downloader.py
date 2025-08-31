@@ -34,14 +34,16 @@ class Downloader:
 
     async def to_audio(self):
         if not self.video_url: print('Please get_url first'); return
-        with yt_dlp.YoutubeDL(utils.YTDL_OPTIONS) as ydl:
-            # info = ydl.extract_info(self.video_url, download=False)
-            info = await asyncio.to_thread(ydl.extract_info, self.video_url, download=False)
-            self.audio_url = info.get('url')
-            self.thumbnail_url = info.get('thumbnail')
-            self.title = info.get('title')
-            self.duration = secondToReadable(info.get('duration'))
-            self.duration_int = info.get('duration')
+        def run():
+            with yt_dlp.YoutubeDL(utils.YTDL_OPTIONS) as ydl:
+                # info = ydl.extract_info(self.video_url, download=False)
+                info = ydl.extract_info(self.video_url, download=False)
+                self.audio_url = info.get('url')
+                self.thumbnail_url = info.get('thumbnail')
+                self.title = info.get('title')
+                self.duration = secondToReadable(info.get('duration'))
+                self.duration_int = info.get('duration')
+        await asyncio.to_thread(run)
 
         self.process_time = math_round((datetime.now() - self.start_time).total_seconds(), 0)
 

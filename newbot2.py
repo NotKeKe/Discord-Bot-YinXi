@@ -81,7 +81,7 @@ async def before_invoke(ctx: commands.Context):
 
 # 錯誤追蹤
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: commands.Context, error):
     if ctx.command is None: return
     await ctx.invoke(bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=error, user_send=False, ephemeral=True)
 
