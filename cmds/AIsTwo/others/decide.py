@@ -109,7 +109,8 @@ class ActivitySelector:
                     temperature=1, 
                     system_prompt=system_prompt.strip(), 
                     is_enable_tools=False, 
-                    top_p=0.9
+                    top_p=0.9,
+                    no_extra_system_prompt=True
                 )[1]
                 result = translate(result)
                 result = halfToFull(result).replace('。', '\n')
@@ -125,7 +126,8 @@ class ActivitySelector:
                 temperature=0.8,
                 system_prompt=system_prompt, 
                 is_enable_tools=True,
-                top_p=0.9
+                top_p=0.9,
+                no_extra_system_prompt=True
             )[1]
             result = translate(result)
             result = halfToFull(result).replace('。', '\n')
@@ -139,7 +141,8 @@ class ActivitySelector:
                 temperature=0.8,
                 system_prompt=system_prompt, 
                 is_enable_tools=True,
-                top_p=0.9
+                top_p=0.9,
+                no_extra_system_prompt=True
             )[1]
             result = translate(result)
             result = halfToFull(result).replace('。', '\n')

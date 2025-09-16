@@ -15,6 +15,8 @@ def setup_logging():
     # 根記錄器 (Root logger) 的設定維持不變
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     # 終端機 Handler 維持不變
     console_handler = logging.StreamHandler()

@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 
 from core.classes import Cog_Extension
-from core.functions import mongo_db_client, is_KeJC, create_basic_embed
+from core.functions import mongo_db_client, is_KeJC, create_basic_embed, is_testing_guild
 from core.translator import locale_str, load_translated
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,26 @@ class BotStats(Cog_Extension):
                     'type': 'TOP_STATS',
                     'start_time': datetime.now().timestamp()
                 }
+            )
+
+    @commands.Cog.listener()
+    async def on_message(self, msg: discord.Message):
+        await collection.find_one_and_update(
+            {'type': 'on_message'},
+            {'$inc': {'total_times': 1, datetime.now().strftime('%Y-%m-%d'): 1}},
+            upsert=True
+        )
+
+        if msg.guild:
+            await collection.find_one_and_update(
+                {'type': 'on_message_guild_times'},
+                {
+                    '$inc': {
+                        f'{str(msg.guild.id)}_total': 1,
+                        f'{str(msg.guild.id)}_{datetime.now().strftime("%Y-%m-%d")}': 1
+                    }
+                },
+                upsert=True
             )
 
     @commands.Cog.listener()
@@ -139,6 +159,12 @@ class BotStats(Cog_Extension):
         eb.timestamp = datetime.fromtimestamp(start_time.get('start_time'))
 
         await inter.followup.send(embed=eb)
+
+    @commands.command(name='num_guilds')
+    @is_testing_guild()
+    async def num_guilds(self, ctx: commands.Context):
+        await ctx.send(len(self.bot.guilds))
+        await ctx.send(', '.join([guild.name for guild in self.bot.guilds]))
 
 
 async def setup(bot):

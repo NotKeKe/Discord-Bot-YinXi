@@ -1,6 +1,5 @@
 from discord.ext import commands, tasks
 from discord import app_commands, Interaction
-import scrapetube
 import asyncio
 import aiohttp
 import logging
@@ -15,6 +14,7 @@ from core.functions import create_basic_embed, redis_client
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated
 from core.mongodb import MongoDB_DB
+from core.scrapetube import scrapetube
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ db = MongoDB_DB.sub_yt
 
 # YouTube 先前更新了 shorts 的 JSON tree，但 pypi 上的 scrapetube 一直沒有更新
 # https://github.com/dermasmid/scrapetube/issues/65
-scrapetube.scrapetube.type_property_map['shorts'] = 'reelWatchEndpoint'
+# scrapetube.scrapetube.type_property_map['shorts'] = 'reelWatchEndpoint'
 
 async def get_channel_name(url: str) -> str:
     async with aiohttp.ClientSession() as sess:
@@ -38,7 +38,23 @@ async def get_channel_name(url: str) -> str:
     
     return None
 
-def fetch_video_ids(urls: dict):
+# def fetch_video_ids(urls: dict):
+#     current_video_ids = {}
+#     for url in urls:
+#         try:
+#             videos = scrapetube.get_channel(channel_url=url, limit=5)
+#             shorts = scrapetube.get_channel(channel_url=url, limit=8, content_type='shorts')
+#             # streams = scrapetube.get_channel(channel_url=url, limit=5, content_type='streams')
+#             if not videos: continue
+#             video_ids = [video["videoId"] for video in videos] + [short["videoId"] for short in shorts]
+#             current_video_ids[url] = video_ids
+#         except:
+#             continue
+#         finally:
+#             time.sleep(1)
+#     return current_video_ids
+
+async def fetch_video_ids(urls: dict):
     current_video_ids = {}
     for url in urls:
         try:
@@ -46,12 +62,12 @@ def fetch_video_ids(urls: dict):
             shorts = scrapetube.get_channel(channel_url=url, limit=8, content_type='shorts')
             # streams = scrapetube.get_channel(channel_url=url, limit=5, content_type='streams')
             if not videos: continue
-            video_ids = [video["videoId"] for video in videos] + [short["videoId"] for short in shorts]
+            video_ids = [video["videoId"] async for video in videos] + [short["videoId"] async for short in shorts]
             current_video_ids[url] = video_ids
         except:
             continue
         finally:
-            time.sleep(1)
+            await asyncio.sleep(1)
     return current_video_ids
 
 async def sub_urls_autocomplete(inter: Interaction, current: str) -> List[app_commands.Choice[str]]:
@@ -94,7 +110,8 @@ class SubYT(Cog_Extension):
             await ctx.send( (await ctx.interaction.translate('send_sub_yt_successfully_save') ).format( ytb = (await get_channel_name(url) )))
             asyncio.create_task(add_to_all(url))
 
-        initial_videos = await asyncio.to_thread(fetch_video_ids, [url])
+        # initial_videos = await asyncio.to_thread(fetch_video_ids, [url])
+        initial_videos = await fetch_video_ids([url])
         initial_video_ids = initial_videos.get(url, [])
         try:
             if initial_video_ids:
@@ -169,7 +186,8 @@ class SubYT(Cog_Extension):
             url: [video_ids...]
         }
         '''
-        current_video_ids: dict = await asyncio.to_thread(fetch_video_ids, urls)
+        # current_video_ids: dict = await asyncio.to_thread(fetch_video_ids, urls)
+        current_video_ids: dict = await fetch_video_ids(urls)
         all_dc_channel_id = [item for item in (await db.list_collection_names()) if item != 'ALL']
 
         for cnlID in all_dc_channel_id:

@@ -142,6 +142,7 @@ class UpdateStatus(commands.Cog):
     @tasks.loop(minutes=1)
     async def update_status(self):
         channel = self.bot.get_channel(int(jdata['status_channel']['channel_ID']))
+        if not channel: return root_logger.error(f'Cannot find channel ({channel=}): ', exc_info=True)
         message = await channel.fetch_message(int(jdata['status_channel']['message_ID']))       
         embed = create_basic_embed(title='Bot狀態', description=':green_circle:')
         embed.add_field(name='上線時間', value=online_time)
