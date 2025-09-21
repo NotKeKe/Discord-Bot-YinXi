@@ -48,12 +48,15 @@ MONGO_USER = quote_plus(os.getenv('MONGO_USER'))
 MONGO_PASSWORD = quote_plus(os.getenv('MONGO_PASSWORD'))
 
 # Redis
-redis_client = redis.Redis(
-    host='redis', 
-    port=6379, 
+pool = redis.ConnectionPool(
+    host='redis',
+    port=6379,
     db=0,
+    max_connections=10,
     decode_responses=True
 )
+
+redis_client = redis.Redis(connection_pool=pool)
 
 def read_json(path: str) -> Optional[Any]:
     """將path讀取成物件並回傳"""
@@ -206,7 +209,7 @@ else:
     BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 
 MONGO_URL = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{DEVICE_IP}:27020/"
-mongo_db_client = AsyncIOMotorClient(MONGO_URL)
+mongo_db_client = AsyncIOMotorClient(MONGO_URL, maxPoolSize=10, minPoolSize=3)
 
 def is_testing_guild():
     '''A guild checking function for commands.command'''

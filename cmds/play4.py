@@ -27,13 +27,13 @@ class Music(Cog_Extension):
         global music_data
         music_data = MusicData()
         self.data = music_data
-        self.recommend = Recommend(self.data)
+        # self.recommend = Recommend(self.data)
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
         self.update_music_data.start()
-        self.update_recommendations.start()
+        # self.update_recommendations.start()
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, exception: commands.errors.CommandError):

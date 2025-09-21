@@ -9,6 +9,7 @@ import time
 import traceback
 import logging
 import sys
+# import gc
 
 from core.functions import math_round, current_time, testing_guildID, create_basic_embed, thread_pool
 from core.translator import i18n, MockInteraction
@@ -30,6 +31,7 @@ root_logger = logging.getLogger()
 sys.stdout = StreamToLogger(root_logger, logging.INFO)
 sys.stderr = StreamToLogger(root_logger, logging.ERROR)
 root_logger.info('輸出已被重導向至 `/logs`')
+# gc.set_debug(gc.DEBUG_LEAK)
 
 #setting.json
 with open('setting.json', 'r', encoding = 'utf8') as jfile:

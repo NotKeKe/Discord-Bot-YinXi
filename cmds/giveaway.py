@@ -130,7 +130,6 @@ class Giveaway(Cog_Extension):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.bot.wait_until_ready()
         data = read_json(path)
         if not data: return
         for message_id in data:
