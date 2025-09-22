@@ -4,6 +4,11 @@ import traceback
 import orjson
 import requests
 import sqlite3
+import asyncio
+
+from core.mongodb import MongoDB_DB
+from core.classes import get_bot
+
 from cmds.AIsTwo.base_chat import base_zhipu_chat, true_zhipu, ollama, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
 from core.functions import translate, current_time, read_json, write_json
@@ -27,7 +32,7 @@ conn.commit()
 conn.close()
 
 
-def is_talking_with_me(prompt:str, history:list) -> bool:
+def is_talking_with_me(prompt: str, history: list) -> bool:
     system_prompt = """
     You are a Discord bot with human-like behavior.
 
@@ -118,19 +123,30 @@ class ActivitySelector:
                 activity = discord.Game(name=result)
         # Setting `Listening ` status
         elif status == 2:
-            random_num = random.randint(0, 1) 
-            song_type = 'emo' if random_num == 0 else '世界計畫'
-            result = base_openai_chat(
-                prompt=f'基於搜尋，找`一首`有關`{song_type}`的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', 
-                model=model, 
-                temperature=0.8,
-                system_prompt=system_prompt, 
-                is_enable_tools=True,
-                top_p=0.9,
-                no_extra_system_prompt=True
-            )[1]
-            result = translate(result)
-            result = halfToFull(result).replace('。', '\n')
+            random_num = random.uniform(0, 1) 
+            if random_num >= 0.5: 
+                async def fetch():
+                    collection = MongoDB_DB.pjsk['songs']
+                    songs = [song.get('songName', '') async for song in collection.find() if 'songName' in song]
+                    return songs
+                
+                bot = get_bot()
+                fut = asyncio.run_coroutine_threadsafe(fetch(), bot.loop)
+                songs = fut.result(timeout=30)
+                result = songs[random.randint(0, len(songs)-1)]
+            else:
+                song_type = 'emo'
+                result = base_openai_chat(
+                    prompt=f'基於搜尋，找`一首`有關 `{song_type}` 的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', 
+                    model=model, 
+                    temperature=0.8,
+                    system_prompt=system_prompt, 
+                    is_enable_tools=True,
+                    top_p=0.9,
+                    no_extra_system_prompt=True
+                )[1]
+                result = translate(result)
+                result = halfToFull(result).replace('。', '\n')
             cls.past_status.append((f'{cur_time} 正在聽 ' + result))
             activity = discord.Activity(type=discord.ActivityType.listening, name=result)
         # Setting `Watching ` status
