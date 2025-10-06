@@ -1,3 +1,4 @@
+import discord
 from discord import app_commands, Interaction
 from discord.app_commands import Choice
 from discord.ext import commands, tasks
@@ -35,6 +36,40 @@ async def song_autocomplete(inter: Interaction, current: str) -> list[Choice[str
         ]
     })
 
+def get_descrip_of_info_embed(item: dict, descrips: list, descrip_template: str):
+    """
+    Args:
+        item (dict): A item including song_name, difficulty...
+        descrips (list): 最終用於 embed 內的描述 list
+        descrip_template (str): 轉換單個 item 的 str template
+    """    
+    song_name = item.get('songName')
+    difficulty = '\n'.join([
+        f"- {diff} | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
+        for diff, value in item.get('musicDifficulty').items()
+    ])
+    image_url = item.get('imageUrl')
+    video_url = item.get('musicVideoUrl')
+    charts_url = '\n'.join([f'* [{diff}]({val})' for diff, val in item.get('musicChartUrl').items()])
+    music_tag = '\n'.join(item.get('musicTag'))
+    publish_at = UnixToReadable(item.get('publishAt', 0))
+    lyricist = item.get('lyricist')
+    composer = item.get('composer')
+    arranger = item.get('arranger')
+
+    descrips.append(descrip_template.format(
+        song_name=song_name,
+        difficulty=difficulty,
+        image_url=image_url,
+        video_url=video_url,
+        charts_url=charts_url,
+        music_tag=music_tag,
+        publish_at=publish_at,
+        lyricist=lyricist,
+        composer=composer,
+        arranger=arranger,
+    ))
+
 async def create_info_embed(ctx: commands.Context, cursor: AsyncIOMotorCursor):
     '''
     cursor: collection.find()
@@ -53,32 +88,7 @@ async def create_info_embed(ctx: commands.Context, cursor: AsyncIOMotorCursor):
     ''''''
 
     async for item in cursor:
-        song_name = item.get('songName')
-        difficulty = '\n'.join([
-            f"- {diff} | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
-            for diff, value in item.get('musicDifficulty').items()
-        ])
-        image_url = item.get('imageUrl')
-        video_url = item.get('musicVideoUrl')
-        charts_url = '\n'.join([f'* [{diff}]({val})' for diff, val in item.get('musicChartUrl').items()])
-        music_tag = '\n'.join(item.get('musicTag'))
-        publish_at = UnixToReadable(item.get('publishAt', 0))
-        lyricist = item.get('lyricist')
-        composer = item.get('composer')
-        arranger = item.get('arranger')
-
-        descrips.append(descrip.format(
-                song_name=song_name,
-                difficulty=difficulty,
-                image_url=image_url,
-                video_url=video_url,
-                charts_url=charts_url,
-                music_tag=music_tag,
-                publish_at=publish_at,
-                lyricist=lyricist,
-                composer=composer,
-                arranger=arranger,
-        ))
+        get_descrip_of_info_embed(item, descrips, descrip)
         
     embed.description = '\n\n'.join(descrips)
     embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
@@ -92,6 +102,7 @@ class PJSK(commands.Cog):
 
         self.db = db
         self.collection = collection
+        self.send_channels_collection = self.db['notif_channels']
         self.update_pjsk_songs.start()
 
     async def cog_load(self):
@@ -201,6 +212,51 @@ class PJSK(commands.Cog):
 
         await ctx.send(embed=eb)
 
+    @commands.hybrid_command(name=locale_str('pjsk_new_song_notify'), description=locale_str('pjsk_new_song_notify'))
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def pjsk_new_song_notify(self, ctx: commands.Context):
+        async with ctx.typing():
+            is_in_col = await self.send_channels_collection.find_one({'channelID': ctx.channel.id})
+
+            if not is_in_col:
+                await self.send_channels_collection.insert_one({'channelID': ctx.channel.id, 'createAt': datetime.now().timestamp()})
+                await ctx.send(await ctx.interaction.translate('send_pjsk_new_song_notify_opened'))
+                return
+
+            button_check = discord.ui.Button(label='Yes', style=discord.ButtonStyle.blurple, emoji='✅')
+            button_refuse = discord.ui.Button(label='No', style=discord.ButtonStyle.blurple, emoji='❌')
+
+            async def button_check_callback(inter: Interaction):
+                await inter.response.defer()
+                msg = inter.message
+                
+                await self.send_channels_collection.find_one_and_delete({'channelID': ctx.channel.id})
+
+                await inter.followup.send(await inter.translate('send_pjsk_new_song_notify_delete_success'), ephemeral=True)
+                await msg.edit(view=None)
+            async def button_refuse_callback(inter: Interaction):
+                await inter.response.defer()
+                msg = inter.message
+                await inter.followup.send(await inter.translate('send_pjsk_new_song_notify_delete_cancel'), ephemeral=True)
+                await msg.edit(view=None)
+
+
+            button_check.callback = button_check_callback
+            button_refuse.callback = button_refuse_callback
+
+            view = discord.ui.View()
+            view.add_item(button_check)
+            view.add_item(button_refuse)
+
+            '''i18n'''
+            eb = load_translated(await ctx.interaction.translate('embed_pjsk_new_song_notify_delete'))[0]
+            eb_title = eb.get('title')
+            ''''''
+
+            eb = create_basic_embed('❓' + eb_title)
+            
+            await ctx.send(embed=eb, view=view)
+
     @tasks.loop(hours=1)
     async def update_pjsk_songs(self):
         results = []
@@ -251,28 +307,49 @@ class PJSK(commands.Cog):
             image_assetbundle_name = music.get('assetbundleName')
             image_url = f"https://storage.sekai.best/sekai-jp-assets/music/jacket/{image_assetbundle_name}/{image_assetbundle_name}.webp"
 
-            results.append(
-                InsertOne(
-                    {
-                        'musicId': music_id, # 歌曲ID
-                        'songName': song_name, # 歌曲名稱
-                        'musicDifficulty': music_difficulty, # 歌曲難度: dict[難度, dict[lvl | noteCount, int]]
-                        'imageUrl': image_url, # 封面連結
-                        'musicVideoUrl': music_video_url, # 歌曲影片連結 (原唱)
-                        'musicChartUrl': music_chart_url, # 歌曲譜面: dict[難度, url]
-                        'publishAt': publish_at, # 歌曲在遊戲中的發布時間: jp timestamp, int
-                        
-                        'musicTag': music_tag, # 歌曲標籤: list[樂團]'
-                        'lyricist': lyricist, # 作詞
-                        'composer': composer, # 作曲
-                        'arranger': arranger, # 編曲
-                    }
-                )
-            )
+            results.append({
+                'musicId': music_id, # 歌曲ID
+                'songName': song_name, # 歌曲名稱
+                'musicDifficulty': music_difficulty, # 歌曲難度: dict[難度, dict[lvl | noteCount, int]]
+                'imageUrl': image_url, # 封面連結
+                'musicVideoUrl': music_video_url, # 歌曲影片連結 (原唱)
+                'musicChartUrl': music_chart_url, # 歌曲譜面: dict[難度, url]
+                'publishAt': publish_at, # 歌曲在遊戲中的發布時間: jp timestamp, int
+                
+                'musicTag': music_tag, # 歌曲標籤: list[樂團]'
+                'lyricist': lyricist, # 作詞
+                'composer': composer, # 作曲
+                'arranger': arranger, # 編曲
+            })
         
         if not results: return
+    
+        async for item in self.send_channels_collection.find():
+            channelID: int = item.get('channelID')
+            channel = self.bot.get_channel(channelID)
+
+            lang = channel.guild.preferred_locale.value
+
+            '''i18n'''
+            eb_text = load_translated(await self.bot.tree.get_translate('embed_pjsk_global_full_info', lang))[0]
+            footer = eb_text.get('footer')
+            descrip = eb_text.get('description')
+            ''''''
+
+            send_descrip = []
+            for r in results:
+                get_descrip_of_info_embed(r, send_descrip, descrip) # 可能遇到語言不同的問題 descrip 就會不一樣
+
+                embed = create_basic_embed()
+
+                embed.description = '\n\n'.join(send_descrip)
+                embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
+                embed.set_footer(text=footer)
+
+                await channel.send(embed=embed)
         
-        await self.collection.bulk_write(results)
+        
+        await self.collection.bulk_write([InsertOne(r) for r in results])
         await self.collection.update_one({'type': 'TOP_STATS'}, {'$set': {'updateAt': datetime.now().timestamp()}}, upsert=True)
         logger.info(f'Updated pjsk data with {len(results)} results')
 

@@ -92,7 +92,7 @@ class SubYT(Cog_Extension):
         self.update_sub_yt.start()
 
     @commands.hybrid_command(name=locale_str('sub_yt'), description=locale_str('sub_yt'))
-    @app_commands.checks.has_permissions(moderate_members=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.describe(url=locale_str('sub_yt_url'))
     async def sub_yt(self, ctx: commands.Context, url: str):
         async with ctx.typing():
@@ -126,7 +126,7 @@ class SubYT(Cog_Extension):
             await ctx.send('Warning: Unable to initialize video_ids for this channel, etc. may send 10 messages at once (this exception will only occur this time)')
 
     @commands.hybrid_command(name=locale_str('sub_yt_cancel'), description=locale_str('sub_yt_cancel'))
-    @app_commands.checks.has_permissions(moderate_members=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.autocomplete(ytb=sub_urls_autocomplete)
     async def sub_yt_cancel(self, ctx: commands.Context, ytb: str):
         async with ctx.typing():
@@ -156,7 +156,7 @@ class SubYT(Cog_Extension):
             eb = create_basic_embed(description=descrip, color=ctx.author.color, 功能=author.format(channelName=ctx.channel.name))
             await ctx.send(embed=eb)
 
-    @tasks.loop(seconds=30)
+    @tasks.loop(minutes=10)
     async def update_sub_yt(self):
         '''
         1. 先取得全部 url's video ids

@@ -79,7 +79,8 @@
         "image_to_base64": "image_to_base64",
         "show_keep": "show_reminder",
         "pjsk_new_song": "pjsk_new_song",
-        "pjsk_search_song": "pjsk_search_song"
+        "pjsk_search_song": "pjsk_search_song",
+        "pjsk_new_song_notify": "pjsk_new_song_notify"
     },
     "description": {
         "translate": "Translate some text",
@@ -161,7 +162,8 @@
         "image_to_base64": "Convert image to base64",
         "show_keep": "List all notes you've created using /remind",
         "pjsk_new_song": "The latest three new songs in Project Sekai (JP server)",
-        "pjsk_search_song": "Search for songs in Project Sekai. You can search by keywords, difficulty levels, etc."
+        "pjsk_search_song": "Search for songs in Project Sekai. You can search by keywords, difficulty levels, etc.",
+        "pjsk_new_song_notify": "Whenever Project Sekai (JP) has a new song, it will notify you in current channel."
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -742,6 +744,12 @@
             "description": "## __**{song_name}**__\n🎯 **Difficulty:**\n{difficulty}\n\n🗓 **Release Date (JP)**: {publish_at}\n\n✍ Lyrics: {lyricist}\n🎼 Composer: {composer}\n🎹 Arranger: {arranger}\n\n━━━━━━━━",
             "footer": "Source: sekai.best | All materials copyrighted by their original owners"
         }],
-        "send_pjsk_search_song_no_param": "Please enter at least one of the following to search: song name, level, or combo count."
+        "send_pjsk_search_song_no_param": "Please enter at least one of the following to search: song name, level, or combo count.",
+        "send_pjsk_new_song_notify_opened": "Successfully enabled **Project Sekai (JP Server)** new song notifications for the current channel!",
+        "send_pjsk_new_song_notify_delete_success": "Successfully deleted Project Sekai (JP Server) new song notifications for the current channel.",
+        "send_pjsk_new_song_notify_delete_cancel": "Cancelled deletion of Project Sekai (JP Server) new song notifications.",
+        "embed_pjsk_new_song_notify_delete": [{
+            "title": "Are you sure you want to cancel **Project Sekai (JP Server) new song notifications**?"
+        }]
     }
 }
