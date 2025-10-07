@@ -44,6 +44,8 @@ class Music(Cog_Extension):
                     return await u.send("I'm missing some permissions:((")
                 except:
                     ...
+
+        if ctx.cog.__cog_name__ != 'Music': return
         await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=True)
 
     @commands.hybrid_command(name=locale_str('play'), description=locale_str('play'), aliases=['p', '播放'])
