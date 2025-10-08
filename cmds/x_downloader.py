@@ -1,4 +1,4 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 from playwright.async_api import async_playwright, Route, Request, Browser, BrowserContext, Playwright, Page
 import os
 import orjson
@@ -8,6 +8,8 @@ import httpx
 import traceback
 import aiofiles
 from typing import Literal
+from datetime import datetime
+import logging
 
 from core.classes import Cog_Extension
 
@@ -17,13 +19,18 @@ VIDEO_MIMES = ["video/mp4", "video/webm", "application/x-mpegurl", "video/quickt
 COOKIE_FILE_PATH = Path('./data/cookies/x.json')
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
 
+logger = logging.getLogger(__name__)
+
 class Donwloader:
     def __init__(self):
         self.playwright: Playwright = None
         self.broswer: Browser = None
         self.context: BrowserContext = None
 
+        self.last_used: datetime = datetime.now()
+
     async def init_broswer(self):
+        if self.context and self.browser and self.playwright: return logger.debug('Already initialized')
         p = await async_playwright().start()
         browser = await p.chromium.launch(headless=True)
 
@@ -42,6 +49,7 @@ class Donwloader:
         else:
             raise ValueError('Unknown cookie file')
         
+        self.playwright = p
         self.broswer = browser
         self.context = context
 
@@ -52,6 +60,14 @@ class Donwloader:
             await self.broswer.close()
         if self.playwright:
             await self.playwright.stop()
+
+        del self.context
+        del self.broswer
+        del self.playwright
+
+        self.context = None
+        self.broswer = None
+        self.playwright = None
 
     def is_video_request(self, request: Request):
         url = request.url.lower()
@@ -130,8 +146,10 @@ class Donwloader:
         return '\n'.join(srcs) or final_url
 
     async def run(self, url: str, type: Literal['image', 'video'] = 'image', download_dir="videos") -> str:
+        self.last_used = datetime.now()
         try:
             try:
+                await self.init_broswer()
                 page = await self.context.new_page()
             except:
                 page = None
@@ -146,8 +164,8 @@ class Donwloader:
             asyncio.create_task(self.write_cookie(cookie))
 
             return final_url
-        except:
-            traceback.print_exc()
+        except Exception as e:
+            logger.warning(f'Error accured at x Downloader, run: (error: {str(e)})')
         finally:
             if page:
                 await page.close()
@@ -156,7 +174,7 @@ x_downloader = Donwloader()
 
 class XDownloader(Cog_Extension):
     async def cog_load(self):
-        print(f'已載入「{__name__}」')
+        logger.info(f'已載入「{__name__}」')
         await x_downloader.init_broswer()
 
     async def cog_unload(self):
@@ -169,6 +187,13 @@ class XDownloader(Cog_Extension):
             url = await x_downloader.run(url.strip(), type)
         
             await ctx.send(url)
+
+    @tasks.loop(minutes=1)
+    async def check_used(self):
+        if (datetime.now() - x_downloader.last_used).total_seconds > 60: # 一分鐘未被使用
+            await x_downloader.clean_broswer()
+            logger.info("Cleaned x_downloader's browser")
+
 
 async def setup(bot):
     await bot.add_cog(XDownloader(bot))
