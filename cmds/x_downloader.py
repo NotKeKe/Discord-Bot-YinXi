@@ -1,5 +1,5 @@
 from discord.ext import commands, tasks
-from playwright.async_api import async_playwright, Route, Request, Browser, BrowserContext, Playwright, Page
+from playwright.async_api import async_playwright, Route, Request, Browser, BrowserContext, Playwright, Page, TimeoutError
 import os
 import orjson
 import asyncio
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class Donwloader:
     def __init__(self):
         self.playwright: Playwright = None
-        self.broswer: Browser = None
+        self.browser: Browser = None
         self.context: BrowserContext = None
 
         self.last_used: datetime = datetime.now()
@@ -164,6 +164,9 @@ class Donwloader:
             asyncio.create_task(self.write_cookie(cookie))
 
             return final_url
+        except TimeoutError as e:
+            logger.debug(f'XDownloader raise TimeoutError: {str(e)}')
+            return f'Cannot find any video/img, please try again later or check the provided url (`{url}`).'
         except Exception as e:
             logger.warning(f'Error accured at x Downloader, run: (error: {str(e)})')
         finally:
@@ -176,6 +179,7 @@ class XDownloader(Cog_Extension):
     async def cog_load(self):
         logger.info(f'已載入「{__name__}」')
         await x_downloader.init_broswer()
+        self.check_used.start()
 
     async def cog_unload(self):
         await x_downloader.clean_broswer()
@@ -183,16 +187,20 @@ class XDownloader(Cog_Extension):
     @commands.hybrid_command()
     async def x_download(self, ctx: commands.Context, url: str, type: Literal['image', 'video']):
         async with ctx.typing():
-            if not url.startswith('https://x.com/'): return await ctx.send('Invalid URL. Please provide a valid URL starting with https://x.com/')
+            if not url.startswith('https://x.com/') and not url.startswith('https://twitter.com/'): return await ctx.send('Invalid URL. Please provide a valid URL starting with `https://x.com/` or `https://twitter.com/`')
             url = await x_downloader.run(url.strip(), type)
         
             await ctx.send(url)
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=2)
     async def check_used(self):
-        if (datetime.now() - x_downloader.last_used).total_seconds > 60: # 一分鐘未被使用
+        if (datetime.now() - x_downloader.last_used).total_seconds() > 60: # 一分鐘未被使用
             await x_downloader.clean_broswer()
             logger.info("Cleaned x_downloader's browser")
+
+    @check_used.before_loop
+    async def check_used_before_loop(self):
+        await self.bot.wait_until_ready()
 
 
 async def setup(bot):
