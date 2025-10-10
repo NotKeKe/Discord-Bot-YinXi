@@ -331,13 +331,13 @@ class PJSK(commands.Cog):
             lang = channel.guild.preferred_locale.value
 
             '''i18n'''
-            eb_text = load_translated(await self.bot.tree.get_translate('embed_pjsk_global_full_info', lang))[0]
+            eb_text = load_translated(await self.bot.tree.translator.get_translate('embed_pjsk_global_full_info', lang))[0]
             footer = eb_text.get('footer')
             descrip = eb_text.get('description')
             ''''''
 
-            send_descrip = []
             for r in results:
+                send_descrip = []
                 get_descrip_of_info_embed(r, send_descrip, descrip) # 可能遇到語言不同的問題 descrip 就會不一樣
 
                 embed = create_basic_embed()

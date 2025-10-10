@@ -54,6 +54,8 @@ class Donwloader:
         self.context = context
 
     async def clean_broswer(self):
+        if not (self.context or self.broswer or self.playwright): return # 三者都為 none
+
         if self.context:
             await self.context.close()
         if self.broswer:
@@ -68,6 +70,8 @@ class Donwloader:
         self.context = None
         self.broswer = None
         self.playwright = None
+
+        logger.info("Cleaned x_downloader's browser")
 
     def is_video_request(self, request: Request):
         url = request.url.lower()
@@ -196,7 +200,6 @@ class XDownloader(Cog_Extension):
     async def check_used(self):
         if (datetime.now() - x_downloader.last_used).total_seconds() > 60: # 一分鐘未被使用
             await x_downloader.clean_broswer()
-            logger.info("Cleaned x_downloader's browser")
 
     @check_used.before_loop
     async def check_used_before_loop(self):

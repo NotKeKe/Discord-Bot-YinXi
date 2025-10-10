@@ -2,9 +2,20 @@ import re
 import yt_dlp
 from datetime import datetime
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 
 from cmds.music_bot.play4 import utils
 from core.functions import math_round, secondToReadable
+
+def extract_info(video_url: str):
+    with yt_dlp.YoutubeDL(utils.YTDL_OPTIONS) as ydl:
+        info = ydl.extract_info(video_url, download=False)
+        return {
+            "audio_url": info.get("url"),
+            "thumbnail_url": info.get("thumbnail"),
+            "title": info.get("title"),
+            "duration": info.get("duration"),
+        }
 
 class Downloader:
     '''User await Downloader(query).run()'''
@@ -34,16 +45,18 @@ class Downloader:
 
     async def to_audio(self):
         if not self.video_url: print('Please get_url first'); return
-        def run():
-            with yt_dlp.YoutubeDL(utils.YTDL_OPTIONS) as ydl:
-                # info = ydl.extract_info(self.video_url, download=False)
-                info = ydl.extract_info(self.video_url, download=False)
-                self.audio_url = info.get('url')
-                self.thumbnail_url = info.get('thumbnail')
-                self.title = info.get('title')
-                self.duration = secondToReadable(info.get('duration'))
-                self.duration_int = info.get('duration')
-        await asyncio.to_thread(run)
+
+        loop = asyncio.get_running_loop()
+        # 使用 ProcessPoolExecutor
+        with ProcessPoolExecutor() as pool:
+            result = await loop.run_in_executor(pool, extract_info, self.video_url)
+
+        # 更新 self 的屬性
+        self.audio_url = result["audio_url"]
+        self.thumbnail_url = result["thumbnail_url"]
+        self.title = result["title"]
+        self.duration = secondToReadable(result["duration"])
+        self.duration_int = result["duration"]
 
         self.process_time = math_round((datetime.now() - self.start_time).total_seconds(), 0)
 

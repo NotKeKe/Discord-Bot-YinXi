@@ -64,7 +64,7 @@ class Music(Cog_Extension):
                 player = Player(ctx)
                 players[ctx.guild.id] = player
                 data = await player.add(query, ctx)
-                self.recommend.record_data(data, str(ctx.author.id))
+                # self.recommend.record_data(data, str(ctx.author.id))
                 await player.play()
                 await send_info_embed(player, ctx)
         except:
@@ -86,7 +86,7 @@ class Music(Cog_Extension):
 
             data = await player.add(query, ctx)
             size = data[0]
-            self.recommend.record_data(data, str(ctx.author.id))
+            # self.recommend.record_data(data, str(ctx.author.id))
 
             await send_info_embed(player, ctx, size-1)
             await ctx.send((await ctx.interaction.translate('send_add_success')).format(size=size), ephemeral=True)
