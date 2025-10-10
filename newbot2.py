@@ -203,3 +203,6 @@ if __name__ == '__main__':
         from core.functions import mongo_db_client
         if mongo_db_client:
             mongo_db_client.close()
+
+        from cmds.music_bot.play4.downloader import donwloader_pool
+        donwloader_pool.shutdown()
