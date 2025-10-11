@@ -26,6 +26,7 @@ dependencies = [
     "parsedatetime==2.6",
     "Pillow==11.2.1",
     "playwright>=1.54.0",
+    "psutil>=7.1.0",
     "python-dotenv==1.1.0",
     "python-multipart==0.0.20",
     "pytubefix==8.12.0",

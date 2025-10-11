@@ -7,9 +7,12 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 import logging
 from datetime import datetime
+import psutil
+import platform
+import os
 
 from core.classes import Cog_Extension
-from core.functions import mongo_db_client, is_KeJC, create_basic_embed, is_testing_guild
+from core.functions import mongo_db_client, is_KeJC, create_basic_embed, is_testing_guild, secondToReadable
 from core.translator import locale_str, load_translated
 
 logger = logging.getLogger(__name__)
@@ -128,7 +131,7 @@ class BotStats(Cog_Extension):
         )
 
     @app_commands.command(name=locale_str('bot_stats'), description=locale_str('bot_stats'))
-    async def stats(self, inter: Interaction):
+    async def sum_stats(self, inter: Interaction):
         await inter.response.defer(thinking=True)
 
         start_time = (await collection.find_one({'type': 'TOP_STATS'})) or {}
@@ -159,6 +162,46 @@ class BotStats(Cog_Extension):
         eb.timestamp = datetime.fromtimestamp(start_time.get('start_time'))
 
         await inter.followup.send(embed=eb)
+
+    @commands.hybrid_command(name=locale_str('machine_stats'), description=locale_str('machine_stats'))
+    async def machine_stats(self, ctx: commands.Context):
+        await ctx.defer()
+        from newbot2 import start_time
+        
+        discord_version = discord.__version__
+        process = psutil.Process(os.getpid())
+
+        # 記憶體
+        mem_info = process.memory_info()
+        mem_used_mb = mem_info.rss / (1024 * 1024)  # 轉成 MB
+        mem_total_gb = psutil.virtual_memory().total / (1024 * 1024 * 1024) # 轉成 GB
+
+        # CPU
+        cpu_percent = psutil.cpu_percent(interval=1) # CPU 使用率 in 1 second
+
+        # 系統名稱
+        os_name = platform.system()
+
+        '''i18n'''
+        eb_obj = load_translated(await ctx.interaction.translate('embed_machine_stats'))[0]
+        title = eb_obj.get('title')
+        fields = eb_obj.get('fields')
+        field_1 = fields[0]
+        bot_info_name = field_1.get('name')
+        bot_info_value = field_1.get('value').format(discord_version=discord_version, time=secondToReadable(datetime.now().timestamp() - start_time))
+        field_2 = fields[1]
+        system_info_name = field_2.get('name')
+        system_info_value = field_2.get('value').format(mem_mb=f'{mem_used_mb:.2f}', mem_gb=f'{mem_total_gb:.1f}', cpu_percent=f'{cpu_percent:.1f}', os_name=os_name)
+        footer = eb_obj.get('footer')
+        ''''''
+
+        eb = create_basic_embed(title, color=discord.Color.random())
+        eb.add_field(name=bot_info_name, value=bot_info_value, inline=False)
+        eb.add_field(name=system_info_name, value=system_info_value, inline=False)
+        eb.set_footer(text=footer)
+
+        await ctx.send(embed=eb)
+        
 
     @commands.command(name='num_guilds')
     @is_testing_guild()
