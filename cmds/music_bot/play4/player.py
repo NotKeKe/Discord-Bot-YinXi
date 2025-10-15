@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import PCMVolumeTransformer
 import asyncio
 import traceback
-import time
+from typing import Literal
 
 from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.downloader import Downloader
@@ -14,6 +14,7 @@ from core.translator import load_translated
 # from core.classes import bot
 
 loop_option = ('None', 'single', 'list')
+loop_type = Literal['None', 'single', 'list']
 
 class Player:
     '''Ensure the user is current in a channel, and bot already joined the channel'''
@@ -23,7 +24,7 @@ class Player:
 
         self.list = []
         self.current_index = 0
-        self.loop_status = 'None'
+        self.loop_status: loop_type = 'None'
 
         self.user = ctx.author
         self.guild = ctx.guild

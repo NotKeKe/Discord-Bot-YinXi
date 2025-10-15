@@ -117,21 +117,21 @@ class MusicControlButtons(View):
         except Exception as e:
             await self.button_error(interaction, e)
 
-    @button(label='歌曲推薦')
-    async def recommend_callback(self, interaction: Interaction, button: Button):
-        try:
-            from cmds.play4 import music_data
-            item = music_data.data['recommend'].get(str(interaction.user.id))
-            if not item: return await interaction.response.send_message(await self.translator.get_translate('send_button_recommend_not_enabled', self.locale))
+    # @button(label='歌曲推薦')
+    # async def recommend_callback(self, interaction: Interaction, button: Button):
+    #     try:
+    #         from cmds.play4 import music_data
+    #         item = music_data.data['recommend'].get(str(interaction.user.id))
+    #         if not item: return await interaction.response.send_message(await self.translator.get_translate('send_button_recommend_not_enabled', self.locale))
 
-            recommend: list = item.get('recommend')
-            if not recommend: return await interaction.response.send_message(await self.translator.get_translate('send_button_no_recommendations', self.locale))
+    #         recommend: list = item.get('recommend')
+    #         if not recommend: return await interaction.response.send_message(await self.translator.get_translate('send_button_no_recommendations', self.locale))
 
-            eb = create_basic_embed(await self.translator.get_translate('embed_button_recommend_title', self.locale), color=interaction.user.color, 功能='音樂播放')
-            eb.add_field(name='推薦歌曲', value='\n'.join( [ f'[{song[0]}]({song[3]}) - {song[1]}' for song in recommend ] ), inline=False)
-            await interaction.response.send_message(embed=eb)
-        except Exception as e:
-            await self.button_error(interaction, e)
+    #         eb = create_basic_embed(await self.translator.get_translate('embed_button_recommend_title', self.locale), color=interaction.user.color, 功能='音樂播放')
+    #         eb.add_field(name='推薦歌曲', value='\n'.join( [ f'[{song[0]}]({song[3]}) - {song[1]}' for song in recommend ] ), inline=False)
+    #         await interaction.response.send_message(embed=eb)
+    #     except Exception as e:
+    #         await self.button_error(interaction, e)
 
 class VolumeControlButtons(View):
     def __init__(self, player: Player, timeout = 180):

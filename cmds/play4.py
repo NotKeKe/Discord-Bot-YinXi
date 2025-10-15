@@ -9,15 +9,18 @@ import asyncio
 from cmds.music_bot.play4.player import Player, loop_option
 from cmds.music_bot.play4.utils import send_info_embed, check_and_get_player
 from cmds.music_bot.play4 import utils
-from cmds.music_bot.play4.music_data import MusicData, Recommend
+from cmds.music_bot.play4.music_data import MusicData
 from cmds.music_bot.play4.lyrics import search_lyrics
 from cmds.music_bot.play4.buttons import VolumeControlButtons
+from cmds.music_bot.play4.play_list import add_to_custom_list, CustomListPlayer, del_custom_list, get_custom_list
+from cmds.music_bot.play4.autocomplete import *
 
 from core.classes import Cog_Extension
 from core.functions import KeJCID, create_basic_embed
-from core.translator import locale_str
+from core.translator import locale_str, load_translated
 
-players = {}
+players: dict[int, Player] = {}
+custom_list_players: dict[int, CustomListPlayer] = {}
 
 music_data = None
 
@@ -206,7 +209,12 @@ class Music(Cog_Extension):
             view.add_item(button_check)
             view.add_item(button_reject)
 
-            eb = create_basic_embed(await ctx.interaction.translate('embed_clear_confirm_title'), color=ctx.author.color)
+            '''i18n'''
+            eb = load_translated((await ctx.interaction.translate('embed_clear_confirm')))[0]
+            title = eb.get('title')
+            ''''''
+
+            eb = create_basic_embed(title, color=ctx.author.color)
             eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await ctx.send(embed=eb, view=view)
 
@@ -289,6 +297,78 @@ class Music(Cog_Extension):
                 await player.volume_adjust(volume=volume / 100)
 
             await ctx.send(await ctx.interaction.translate('send_volume_buttons_title'), view=VolumeControlButtons(player))
+
+    @commands.hybrid_command(name=locale_str('play_custom_list'), description=locale_str('play_custom_list'))
+    @app_commands.autocomplete(list_name=custom_play_list_autocomplete)
+    async def play_custom_list(self, ctx: commands.Context, list_name: str):
+        async with ctx.typing():
+            if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
+            if not ctx.voice_client:
+                await ctx.author.voice.channel.connect()
+
+            if ctx.voice_client.is_paused(): return await ctx.invoke(self.bot.get_command('resume'))
+            if players.get(ctx.guild.id): return # 如果 player 已經存在，則不再建立
+            
+            # 取得 player
+            custom_list_player = CustomListPlayer(ctx, list_name)
+            player = await custom_list_player.run()
+            players[ctx.guild.id] = player
+            custom_list_players[ctx.guild.id] = custom_list_player
+
+            # 播放
+            await player.play()
+            await send_info_embed(player, ctx)
+            
+    @commands.hybrid_command(name=locale_str('add_custom_list'), description=locale_str('add_custom_list'))
+    @app_commands.autocomplete(list_name=custom_play_list_autocomplete)
+    @app_commands.describe(list_name=locale_str('add_custom_list_list_name'))
+    async def add_custom_list(self, ctx: commands.Context, url: str, list_name: str):
+        async with ctx.typing():
+            result = await add_to_custom_list(url, list_name, ctx.author.id)
+            await ctx.send(result if result is not True else (await ctx.interaction.translate('send_add_to_custom_list_success')).format(list_name=list_name))
+
+    @commands.hybrid_command(name=locale_str('show_custom_list'), description=locale_str('show_custom_list'))
+    @app_commands.autocomplete(list_name=custom_play_list_autocomplete)
+    async def show_custom_list(self, ctx: commands.Context, list_name: str):
+        async with ctx.typing():
+            result = await get_custom_list(list_name, ctx.author.id)
+            description = '\n'.join(f'{i+1}. [{song[0]}]({song[1]})' for i, song in enumerate(result))
+            eb = create_basic_embed(description=description)
+            await ctx.send(embed=eb)
+
+    @commands.hybrid_command(name=locale_str('delete_custom_list'), description=locale_str('delete_custom_list'), aliases=['del_custom_list'])
+    @app_commands.autocomplete(list_name=custom_play_list_autocomplete)
+    async def delete_custom_list(self, ctx: commands.Context, list_name: str):
+        async with ctx.typing():
+            view = discord.ui.View(timeout=60)
+            button_check = discord.ui.Button(emoji='✅', label='Yes', style=discord.ButtonStyle.green)
+            async def button_check_callback(interaction: discord.Interaction):
+                button_reject.disabled = True
+                button_check.disabled = True
+
+                await del_custom_list(list_name, interaction.user.id)
+
+                await interaction.response.edit_message(content=await interaction.translate('send_delete_custom_list_success'), embed=None, view=None)
+            button_check.callback = button_check_callback
+
+            button_reject = discord.ui.Button(emoji='❌', label='No', style=discord.ButtonStyle.red)
+            async def button_reject_callback(interaction: discord.Interaction):
+                button_reject.disabled = True
+                button_check.disabled = True
+                await interaction.response.edit_message(content=await interaction.translate('send_delete_custom_list_cancelled'), embed=None, view=None)
+            button_reject.callback = button_reject_callback
+
+            view.add_item(button_check)
+            view.add_item(button_reject)
+
+            '''i18n'''
+            eb = load_translated((await ctx.interaction.translate('embed_clear_confirm')))[0]
+            title = eb.get('title')
+            ''''''
+
+            eb = create_basic_embed(title, color=ctx.author.color)
+            eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+            await ctx.send(embed=eb, view=view)
 
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):

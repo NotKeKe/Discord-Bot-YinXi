@@ -2,13 +2,9 @@ import re
 import yt_dlp
 from datetime import datetime
 import asyncio
-from concurrent.futures import ProcessPoolExecutor
-import os
 
 from cmds.music_bot.play4 import utils
 from core.functions import math_round, secondToReadable
-
-donwloader_pool = ProcessPoolExecutor(max_workers=os.cpu_count())
 
 def extract_info(video_url: str):
     with yt_dlp.YoutubeDL(utils.YTDL_OPTIONS) as ydl:
@@ -51,7 +47,7 @@ class Downloader:
 
         loop = asyncio.get_running_loop()
         # 使用多進程
-        result = await loop.run_in_executor(donwloader_pool, extract_info, self.video_url)
+        result = await loop.run_in_executor(utils.multi_processing_pool, extract_info, self.video_url)
 
         # 更新 self 的屬性
         self.audio_url = result["audio_url"]

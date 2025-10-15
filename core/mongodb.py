@@ -8,3 +8,4 @@ class MongoDB_DB:
     keep = mongo_db_client['keep']
     sub_yt = mongo_db_client['sub_yt']
     pjsk = mongo_db_client['pjsk']
+    music = mongo_db_client['music']

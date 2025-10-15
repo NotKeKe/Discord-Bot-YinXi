@@ -81,7 +81,11 @@
         "pjsk_new_song": "pjsk_new_song",
         "pjsk_search_song": "pjsk_search_song",
         "pjsk_new_song_notify": "pjsk_new_song_notify",
-        "machine_stats": "machine_stats"
+        "machine_stats": "machine_stats",
+        "play_custom_list": "play_custom_list",
+        "add_custom_list": "play_custom_list",
+        "delete_custom_list": "delete_custom_list",
+        "show_custom_list": "show_custom_list"
     },
     "description": {
         "translate": "Translate some text",
@@ -165,7 +169,11 @@
         "pjsk_new_song": "The latest three new songs in Project Sekai (JP server)",
         "pjsk_search_song": "Search for songs in Project Sekai. You can search by keywords, difficulty levels, etc.",
         "pjsk_new_song_notify": "Whenever Project Sekai (JP) has a new song, it will notify you in current channel.",
-        "machine_stats": "Machine's information/stats"
+        "machine_stats": "Machine's information/stats",
+        "play_custom_list": "Play a custom playlist, you can use /add_custom_list to add songs.",
+        "add_custom_list": "Add songs to a custom playlist",
+        "delete_custom_list": "Delete the entire selected custom playlist",
+        "show_custom_list": "Show all songs in a single custom playlist"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -246,7 +254,8 @@
         "pjsk_search_song_name": "Song Name",
         "pjsk_search_song_level": "Song Level (can be any difficulty level like: master, append)",
         "pjsk_search_song_num": "Search results count (default 5); set to 1 for detailed song info",
-        "pjsk_search_song_combo": "Song Combo (Note) Count"
+        "pjsk_search_song_combo": "Song Combo (Note) Count",
+        "add_custom_list_list_name": "To create a new playlist, simply enter the desired playlist name."
     },
     "components": {
         "yin_xi": "YinXi",
@@ -760,7 +769,9 @@
                 { "name": "System Info", "value": "🧠 Memory Usage: **{mem_mb}MB** / {mem_gb}GB\n💻 CPU Usage: **{cpu_percent}%**\n🖥️ System Platform: **{os_name}**" }
             ],
             "footer": "🔧 Statistics generated at"
-        }]
-
+        }],
+        "send_add_to_custom_list_success": "Successfully added song to custom playlist `({list_name})`.",
+        "send_delete_custom_list_success": "Successfully deleted custom playlist `({list_name})`.",
+        "send_delete_custom_list_cancelled": "Deletion of custom playlist `({list_name})` has been cancelled."
     }
 }

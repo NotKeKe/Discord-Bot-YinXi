@@ -3,14 +3,23 @@ from discord.ext import commands
 import re
 from pytubefix import Search
 from datetime import timedelta
+import urllib.parse
+from concurrent.futures import ProcessPoolExecutor
+import os
+from typing import TYPE_CHECKING
 
 from core.functions import create_basic_embed
 from core.translator import load_translated
+
+if TYPE_CHECKING:
+    from .player import Player
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
     'options': '-vn -af "volume=0.25"',
 }
+
+multi_processing_pool = ProcessPoolExecutor(max_workers=os.cpu_count())
 
 # YTDL_OPTIONS = {
 #     'format': 'bestaudio/best',
@@ -79,8 +88,18 @@ class ID:
             return obj.user.color
         
 def is_url(query: str) -> bool:
-    pattern = r'(https?://)?(www\.)?(youtube\.com|youtu\.be)'
-    return (True if re.match(pattern, query) else False)
+    pattern = r'(https?://)?(www\.|music\.)?(youtube\.com|youtu\.be)'
+    return bool(re.match(pattern, query))
+
+def convert_to_short_url(url: str) -> str:
+    parsed = urllib.parse.urlparse(url)
+    if parsed.netloc == "youtu.be": # 因為連結中可能包含 ?t=...
+        video_id = parsed.path.lstrip("/")
+    else: # 處理 youtube.com or other urls
+        query = urllib.parse.parse_qs(parsed.query)
+        video_id = query.get("v", [None])[0]
+        if not video_id: return
+    return f'https://youtu.be/{video_id}'
 
 def query_search(query: str) -> tuple:
     '''return (title, video_url, length: str)'''
@@ -98,19 +117,22 @@ async def leave(ctx: commands.Context):
     '''leave the voice channel and delete the player object from players dict'''
     if not ctx.author.voice or not ctx.guild.voice_client: await ctx.send('疑? 是你還是我不在語音頻道裡面啊'); return False
     if ctx.author.voice.channel != ctx.guild.voice_client.channel: await ctx.send('疑? 我們好像在不同的頻道裡面欸'); return False
-    from cmds.play4 import players
+    from cmds.play4 import players, custom_list_players
     await ctx.guild.voice_client.disconnect()
     if ctx.guild.id in players:
         del players[ctx.guild.id]
+    if ctx.guild.id in custom_list_players:
+        del custom_list_players[ctx.guild.id]
 
 async def send(ctx: commands.Context | discord.Interaction, text: str = None, embed: discord.Embed = None, view: discord.ui.View = None, ephemeral: bool = False):
+    '''Same as discord.py send function but support interaction'''
     if isinstance(ctx, commands.Context):
         await ctx.send(text, embed=embed, view=view, ephemeral=ephemeral)
     elif isinstance(ctx, discord.Interaction):
         await ctx.response.send_message(text, embed=embed, view=view, ephemeral=ephemeral)
     else: raise ValueError('Invalid context type')
 
-async def send_info_embed(player, ctx: commands.Context | discord.Interaction, index: int = None, if_send: bool = True):
+async def send_info_embed(player: 'Player', ctx: commands.Context | discord.Interaction, index: int = None, if_send: bool = True):
     '''Ensure index is index not id of song'''
     from cmds.music_bot.play4.player import Player
     from cmds.music_bot.play4.buttons import MusicControlButtons
@@ -133,7 +155,7 @@ async def send_info_embed(player, ctx: commands.Context | discord.Interaction, i
     i18n_info_data = load_translated(i18n_info_str)[0]
     ''''''
 
-    eb = create_basic_embed(f'{'▶️ ' + i18n_info_data['title'] if is_current else '已新增 '}`{title}`', color=user.color, 功能='音樂播放')
+    eb = create_basic_embed(f'{i18n_info_data['title'] if is_current else '已新增 '}`{title}`', color=user.color, 功能='音樂播放')
     eb.set_image(url=thumbnail_url)
 
     field_names = i18n_info_data['field']
