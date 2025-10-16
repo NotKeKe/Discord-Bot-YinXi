@@ -2,6 +2,7 @@ import re
 import yt_dlp
 from datetime import datetime
 import asyncio
+from concurrent.futures import ProcessPoolExecutor
 
 from cmds.music_bot.play4 import utils
 from core.functions import math_round, secondToReadable
@@ -47,7 +48,9 @@ class Downloader:
 
         loop = asyncio.get_running_loop()
         # 使用多進程
-        result = await loop.run_in_executor(utils.multi_processing_pool, extract_info, self.video_url)
+        async with utils.Semaphore_multi_processing_pool:
+            with ProcessPoolExecutor() as executor:
+                result = await loop.run_in_executor(executor, extract_info, self.video_url)
 
         # 更新 self 的屬性
         self.audio_url = result["audio_url"]

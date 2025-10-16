@@ -7,6 +7,7 @@ import urllib.parse
 from concurrent.futures import ProcessPoolExecutor
 import os
 from typing import TYPE_CHECKING
+from asyncio import Semaphore
 
 from core.functions import create_basic_embed
 from core.translator import load_translated
@@ -19,7 +20,7 @@ ffmpeg_options = {
     'options': '-vn -af "volume=0.25"',
 }
 
-multi_processing_pool = ProcessPoolExecutor(max_workers=os.cpu_count())
+Semaphore_multi_processing_pool = Semaphore(os.cpu_count())
 
 # YTDL_OPTIONS = {
 #     'format': 'bestaudio/best',

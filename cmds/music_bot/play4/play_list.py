@@ -2,10 +2,11 @@ from datetime import datetime, timezone
 import yt_dlp
 import asyncio
 from discord.ext import commands
+from concurrent.futures import ProcessPoolExecutor
 
 from core.mongodb import MongoDB_DB
 
-from .utils import convert_to_short_url, is_url, multi_processing_pool
+from .utils import convert_to_short_url, is_url, Semaphore_multi_processing_pool
 from .player import Player, loop_option
 
 db = MongoDB_DB.music
@@ -47,7 +48,9 @@ async def add_to_custom_list(url: str, list_name: str, user_id: int) -> str | bo
     if not (await custom_play_list_coll.find_one(_filter)):
         # 取得影片資訊
         loop = asyncio.get_running_loop()
-        result: dict = await loop.run_in_executor(multi_processing_pool, get_url_title, short_url)
+        async with Semaphore_multi_processing_pool:
+            with ProcessPoolExecutor() as executor:
+                result: dict = await loop.run_in_executor(executor, get_url_title, short_url)
         title = result['title']
         duration = result['duration']
         thumbnail = result['thumbnail']
