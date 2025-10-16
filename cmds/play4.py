@@ -30,13 +30,11 @@ class Music(Cog_Extension):
         global music_data
         music_data = MusicData()
         self.data = music_data
-        # self.recommend = Recommend(self.data)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
+        self.check_left_task: asyncio.Task = None
+
+    async def cog_load(self):
         print(f'已載入「{__name__}」')
-        self.update_music_data.start()
-        # self.update_recommendations.start()
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, exception: commands.errors.CommandError):
@@ -67,7 +65,6 @@ class Music(Cog_Extension):
                 player = Player(ctx)
                 players[ctx.guild.id] = player
                 data = await player.add(query, ctx)
-                # self.recommend.record_data(data, str(ctx.author.id))
                 await player.play()
                 await send_info_embed(player, ctx)
         except:
@@ -89,7 +86,6 @@ class Music(Cog_Extension):
 
             data = await player.add(query, ctx)
             size = data[0]
-            # self.recommend.record_data(data, str(ctx.author.id))
 
             await send_info_embed(player, ctx, size-1)
             await ctx.send((await ctx.interaction.translate('send_add_success')).format(size=size), ephemeral=True)
@@ -222,59 +218,6 @@ class Music(Cog_Extension):
     async def _leave(self, ctx: commands.Context):
         await ctx.invoke(self.bot.get_command('stop'))
 
-    @commands.hybrid_command(name='音樂推薦', description='使用此指令來啟用音樂推薦，音汐將會開始記錄你的點播紀錄')
-    async def music_recommendation(self, ctx: commands.Context):
-        async with ctx.typing(ephemeral=True):
-            if str(ctx.author.id) != KeJCID: return await ctx.send('此功能尚未開放')
-            data = self.data.data['recommend']
-            users = data.keys()
-            userID = str(ctx.author.id)
-
-            def create_eb():
-                eb = create_basic_embed(f'當前狀態: {'啟用' if userID in users else '未啟用'}', description='使用此功能即代表你**同意音汐收集你的音樂點播**紀錄，並且最後**使用AI**來推薦你喜歡的音樂。', color=discord.Color.blue())
-                eb.add_field(name='按鈕說明', value='1. 點擊啟用: 啟用音樂推薦功能，並同意音汐收集你的音樂點播紀錄。\n\n2. 點擊取消: 取消音樂推薦功能，如果你本來就沒開啟的話，則無效。\n\n3. 查看當前選擇狀態')
-                return eb
-
-            async def button_callback(interaction: discord.Interaction):
-                if userID in users: return await interaction.response.send_message('你已經啟用過音樂推薦了', ephemeral=True)
-
-                data[userID] = {
-                    'song': [],
-                    'recommend': [],
-                    'update_time': ''
-                }
-
-                self.data.save()
-                msg = interaction.message
-                await interaction.response.send_message('已為你啟用音樂推薦功能', ephemeral=True)
-                await msg.edit(view = None)
-                
-            async def button1_callback(interaction: discord.Interaction):
-                del data[userID]
-
-                self.data.save()
-                msg = interaction.message
-                await interaction.response.send_message('已為你取消音樂推薦功能', ephemeral=True)
-                await msg.edit(view = None)
-
-            async def button2_callback(interaction: discord.Interaction):
-                eb = create_eb()
-                await interaction.response.send_message(embed=eb, view=view, ephemeral=True)
-
-            button = discord.ui.Button(label="啟用音樂推薦", style=discord.ButtonStyle.green)
-            button1 = discord.ui.Button(label="取消音樂推薦", style=discord.ButtonStyle.red)
-            button2 = discord.ui.Button(label="查看當前狀態", style=discord.ButtonStyle.gray)
-            button.callback = button_callback
-            button1.callback = button1_callback
-            button2.callback = button2_callback
-
-            view = discord.ui.View(timeout=60)
-            view.add_item(button)
-            view.add_item(button1)
-            view.add_item(button2)
-
-            await ctx.send(view=view, embed=create_eb(), ephemeral=True)
-
     @commands.hybrid_command(name=locale_str('lyrics'), description=locale_str('lyrics'))
     @app_commands.describe(query=locale_str('lyrics_query'), artist=locale_str('lyrics_artist'), lrc=locale_str('lyrics_lrc'))
     async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None, lrc: bool = False):
@@ -383,23 +326,6 @@ class Music(Cog_Extension):
         global players
         players = {}
         await ctx.send('已清除players', ephemeral=True)
-
-    @tasks.loop(minutes=1)
-    async def update_music_data(self):
-        self.data.write()
-
-    @tasks.loop(hours=10)
-    async def update_recommendations(self):
-        # TODO: 完成此處邏輯以及其他部分
-        recommend = self.recommend
-        userIDs = self.data.data['recommend'].keys()
-        for id in userIDs:
-            await recommend.gener_recommendations(id)
-            await asyncio.sleep(1)
-
-    @update_music_data.before_loop
-    async def before_update_music_data(self):
-        await self.bot.wait_until_ready()
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
