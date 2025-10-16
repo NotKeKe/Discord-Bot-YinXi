@@ -118,12 +118,14 @@ async def leave(ctx: commands.Context):
     '''leave the voice channel and delete the player object from players dict'''
     if not ctx.author.voice or not ctx.guild.voice_client: await ctx.send('疑? 是你還是我不在語音頻道裡面啊'); return False
     if ctx.author.voice.channel != ctx.guild.voice_client.channel: await ctx.send('疑? 我們好像在不同的頻道裡面欸'); return False
-    from cmds.play4 import players, custom_list_players
+    from cmds.play4 import players, custom_list_players, join_channel_time
     await ctx.guild.voice_client.disconnect()
     if ctx.guild.id in players:
         del players[ctx.guild.id]
     if ctx.guild.id in custom_list_players:
         del custom_list_players[ctx.guild.id]
+    if ctx.guild.id in join_channel_time:
+        del join_channel_time[ctx.guild.id]
 
 async def send(ctx: commands.Context | discord.Interaction, text: str = None, embed: discord.Embed = None, view: discord.ui.View = None, ephemeral: bool = False):
     '''Same as discord.py send function but support interaction'''

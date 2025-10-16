@@ -4,12 +4,11 @@ from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands, tasks
 import traceback
-import asyncio
+import copy
 
 from cmds.music_bot.play4.player import Player, loop_option
 from cmds.music_bot.play4.utils import send_info_embed, check_and_get_player
 from cmds.music_bot.play4 import utils
-from cmds.music_bot.play4.music_data import MusicData
 from cmds.music_bot.play4.lyrics import search_lyrics
 from cmds.music_bot.play4.buttons import VolumeControlButtons
 from cmds.music_bot.play4.play_list import add_to_custom_list, CustomListPlayer, del_custom_list, get_custom_list
@@ -21,20 +20,15 @@ from core.translator import locale_str, load_translated
 
 players: dict[int, Player] = {}
 custom_list_players: dict[int, CustomListPlayer] = {}
-
-music_data = None
+join_channel_time: dict[int, datetime] = {}
 
 class Music(Cog_Extension):
     def __init__(self, bot):
         super().__init__(bot)
-        global music_data
-        music_data = MusicData()
-        self.data = music_data
-
-        self.check_left_task: asyncio.Task = None
 
     async def cog_load(self):
         print(f'已載入「{__name__}」')
+        self.check_left_channel.start()
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, exception: commands.errors.CommandError):
@@ -48,6 +42,29 @@ class Music(Cog_Extension):
         if not ctx.cog: return
         if ctx.cog.__cog_name__ != 'Music': return
         await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=True)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        '''用於檢測 bot 加入語音頻道，並紀錄時間'''
+        guild_id = member.guild.id
+        if member.id == self.bot.user.id:
+            if before.channel is None and after.channel is not None: # 加入語音頻道
+                join_channel_time[guild_id] = datetime.now()
+            elif before.channel is not None and after.channel is None: # 離開語音頻道
+                if guild_id in join_channel_time:
+                    del join_channel_time[guild_id]
+            elif before.channel is not None and after.channel is not None: # 切換語音頻道
+                join_channel_time[guild_id] = datetime.now()
+        else: # 普通使用者 or 其他 bot
+            if member.bot: return
+            just_self_deafened = not before.self_deaf and after.self_deaf
+            just_deafened_by_server = not before.deaf and after.deaf
+
+            if not (just_self_deafened or just_deafened_by_server): # 如果不是 (使用者開啟拒聽 or 使用者被伺服器拒聽)
+                return
+            
+            if guild_id in join_channel_time: # 如果確定 bot 在語音頻道，再更新
+                join_channel_time[guild_id] = datetime.now()
 
     @commands.hybrid_command(name=locale_str('play'), description=locale_str('play'), aliases=['p', '播放'])
     @app_commands.describe(query=locale_str('play_query'))
@@ -326,6 +343,73 @@ class Music(Cog_Extension):
         global players
         players = {}
         await ctx.send('已清除players', ephemeral=True)
+
+    @commands.command(name='show_join_channel_time')
+    async def show_join_channel_time(self, ctx: commands.Context):
+        if str(ctx.author.id) != KeJCID: return
+        await ctx.send(join_channel_time)
+
+    @tasks.loop(minutes=1)
+    async def check_left_channel(self):
+        for guild_id, time in copy.deepcopy(join_channel_time).items(): # 使用 deepcopy，避免迴圈途中被進行修改
+            guild = self.bot.get_guild(guild_id) or await self.bot.fetch_guild(guild_id)
+            if not guild:
+                try: del join_channel_time[guild_id]
+                except: ... # 可能在操作途中 使用者就把 bot 退掉了
+                continue
+            
+            voice_client = guild.voice_client
+            if not voice_client:
+                try: del join_channel_time[guild_id]
+                except: ... # 可能在操作途中 使用者就把 bot 退掉了
+                continue
+            channel = voice_client.channel
+
+            curr_time = datetime.now()
+            passed_time = (curr_time - time).total_seconds()
+
+            if passed_time <= 120: continue # 只檢測超過 2 分鐘的 voice_client
+
+            # 檢測 channel 裡面有沒有活人
+            is_alive = False
+            for member in channel.members:
+                assert isinstance(member, discord.Member)
+                if member.id == self.bot.user.id: continue
+                voice_state = member.voice
+                
+                afk = voice_state.afk
+                deaf = voice_state.deaf
+                self_deaf = voice_state.self_deaf
+
+                if not (afk or deaf or self_deaf):
+                    is_alive = True
+                    break
+
+            if is_alive: 
+                if guild_id in join_channel_time:
+                    join_channel_time[guild_id] = datetime.now() # 2 分鐘後再判斷，避免短時間內重複判斷
+                continue
+
+            successful_run = True # 因為可能遇到途中就已經被刪掉，True 代表過程中完全沒被刪掉
+            # 先清除其他變數中的 guild_id，因為 disconnect 會觸發刪除 join_channel_id
+            try: del players[guild_id]
+            except: successful_run = False
+            try: del custom_list_players[guild_id]
+            except: ...
+            try: del join_channel_time[guild_id]
+            except: successful_run = False
+            try: await voice_client.disconnect()
+            except: successful_run = False
+
+
+            # 想想還是算了，因為 voice channel 那裡有個白點看著挺煩的:)
+            # if successful_run: 
+            #     sent_message = await self.bot.tree.translator.get_translate('send_check_left_channel_disconnect_success', guild.preferred_locale.value)
+            #     await channel.send(sent_message, silent=True)
+
+    @check_left_channel.before_loop
+    async def check_left_channel_before_loop(self):
+        await self.bot.wait_until_ready()
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
