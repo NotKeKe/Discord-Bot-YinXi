@@ -133,7 +133,7 @@ class Music(Cog_Extension):
             player, status = await check_and_get_player(ctx)
             if not status: return
 
-            await player.pause()
+            await player.pause(ctx)
     
     @commands.hybrid_command(name=locale_str('resume'), description=locale_str('resume'), aliases=['rs'])
     async def resume(self, ctx: commands.Context):
@@ -142,7 +142,7 @@ class Music(Cog_Extension):
             if not status: return
 
             # 修正邏輯：當暫停時才恢復播放
-            await player.resume()
+            await player.resume(ctx)
 
     @commands.hybrid_command(name=locale_str('stop'), description=locale_str('stop'))
     async def _stop(self, ctx: commands.Context):
@@ -343,11 +343,6 @@ class Music(Cog_Extension):
         global players
         players = {}
         await ctx.send('已清除players', ephemeral=True)
-
-    @commands.command(name='show_join_channel_time')
-    async def show_join_channel_time(self, ctx: commands.Context):
-        if str(ctx.author.id) != KeJCID: return
-        await ctx.send(join_channel_time)
 
     @tasks.loop(minutes=1)
     async def check_left_channel(self):

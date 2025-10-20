@@ -158,27 +158,31 @@ class Player:
         self.manual = False
         return True
     
-    async def pause(self):
+    async def pause(self, ctx: commands.Context = None):
         '''Pause to play music and `SEND` message to notice user'''
+        ctx = ctx or self.ctx
+
         if self.voice_client.is_paused():
-            return await self.ctx.send(await self.translator.get_translate('send_player_already_paused', self.locale))
+            return await ctx.send(await self.translator.get_translate('send_player_already_paused', self.locale))
         if not self.voice_client.is_playing():
-            return await self.ctx.send(await self.translator.get_translate('send_player_not_playing', self.locale))
+            return await ctx.send(await self.translator.get_translate('send_player_not_playing', self.locale))
 
         self.voice_client.pause()
         self.paused = True
-        return await self.ctx.send(await self.translator.get_translate('send_player_paused_success', self.locale), ephemeral=True)
+        return await ctx.send(await self.translator.get_translate('send_player_paused_success', self.locale), ephemeral=True)
     
-    async def resume(self):
+    async def resume(self, ctx: commands.Context = None):
         '''Resume to play music and `SEND` message to notice user'''
+        ctx = ctx or self.ctx
+
         if self.voice_client.is_playing():
-            return await self.ctx.send(await self.translator.get_translate('send_player_is_playing', self.locale))
+            return await ctx.send(await self.translator.get_translate('send_player_is_playing', self.locale))
         if not self.voice_client.is_paused():
-            return await self.ctx.send(await self.translator.get_translate('send_player_not_paused', self.locale))
+            return await ctx.send(await self.translator.get_translate('send_player_not_paused', self.locale))
 
         self.voice_client.resume()
         self.paused = False
-        await self.ctx.send(await self.translator.get_translate('send_player_resumed_success', self.locale), ephemeral=True)
+        await ctx.send(await self.translator.get_translate('send_player_resumed_success', self.locale), ephemeral=True)
 
     def delete_song(self, index: int):
         '''Ensure index is index not id of song'''
