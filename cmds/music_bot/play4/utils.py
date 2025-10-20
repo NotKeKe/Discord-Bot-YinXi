@@ -8,6 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 import os
 from typing import TYPE_CHECKING
 from asyncio import Semaphore
+import httpx
 
 from core.functions import create_basic_embed
 from core.translator import load_translated
@@ -92,15 +93,31 @@ def is_url(query: str) -> bool:
     pattern = r'(https?://)?(www\.|music\.)?(youtube\.com|youtu\.be)'
     return bool(re.match(pattern, query))
 
-def convert_to_short_url(url: str) -> str:
+def get_video_id(url: str):
     parsed = urllib.parse.urlparse(url)
+
     if parsed.netloc == "youtu.be": # 因為連結中可能包含 ?t=...
         video_id = parsed.path.lstrip("/")
     else: # 處理 youtube.com or other urls
         query = urllib.parse.parse_qs(parsed.query)
         video_id = query.get("v", [None])[0]
-        if not video_id: return
+
+    return video_id
+
+def convert_to_short_url(url: str) -> str:
+    video_id = get_video_id(url)
+    if not video_id: return
     return f'https://youtu.be/{video_id}'
+
+async def check_audio_url_alive(audio_url: str) -> bool:
+    try:
+        client = httpx.AsyncClient()
+        resp = await client.head(audio_url, timeout=5)
+        return resp.status_code == 200
+    except:
+        return False
+    finally:
+        await client.aclose()
 
 def query_search(query: str) -> tuple:
     '''return (title, video_url, length: str)'''
