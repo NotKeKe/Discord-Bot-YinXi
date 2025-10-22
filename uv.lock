@@ -402,15 +402,15 @@ wheels = [
 
 [[package]]
 name = "discord-py"
-version = "2.5.2"
+version = "2.6.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "audioop-lts" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/dd/5817c7af5e614e45cdf38cbf6c3f4597590c442822a648121a34dee7fa0f/discord_py-2.5.2.tar.gz", hash = "sha256:01cd362023bfea1a4a1d43f5280b5ef00cad2c7eba80098909f98bf28e578524", size = 1054879, upload-time = "2025-03-05T01:15:29.798Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/e7/9b1dbb9b2fc07616132a526c05af23cfd420381793968a189ee08e12e35f/discord_py-2.6.4.tar.gz", hash = "sha256:44384920bae9b7a073df64ae9b14c8cf85f9274b5ad5d1d07bd5a67539de2da9", size = 1092623, upload-time = "2025-10-08T21:45:43.593Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/a8/dc908a0fe4cd7e3950c9fa6906f7bf2e5d92d36b432f84897185e1b77138/discord_py-2.5.2-py3-none-any.whl", hash = "sha256:81f23a17c50509ffebe0668441cb80c139e74da5115305f70e27ce821361295a", size = 1155105, upload-time = "2025-03-05T01:15:27.323Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/ae/3d3a89b06f005dc5fa8618528dde519b3ba7775c365750f7932b9831ef05/discord_py-2.6.4-py3-none-any.whl", hash = "sha256:2783b7fb7f8affa26847bfc025144652c294e8fe6e0f8877c67ed895749eb227", size = 1209284, upload-time = "2025-10-08T21:45:41.679Z" },
 ]
 
 [package.optional-dependencies]
@@ -1638,11 +1638,11 @@ wheels = [
 
 [[package]]
 name = "pytubefix"
-version = "8.12.0"
+version = "8.13.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/61/fe/8d8e1426ebd070ee35184a887ff7a600d5435ab2353844d228f6d901a32d/pytubefix-8.12.0.tar.gz", hash = "sha256:8a2b51a06efbec926ad88d2d686b6a66c7da37edf406eab7347d4ee43b638a4b", size = 732987, upload-time = "2025-01-14T02:19:31.606Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/db/9a/888947683e333bd3d20a3958115b6c4229d3cd6ff0f75423e841e8606da2/pytubefix-8.13.1.tar.gz", hash = "sha256:c5de0761101a78cb189eec88163368d2300bd86d3c7826ba0e1addb310c58d9c", size = 733912, upload-time = "2025-04-28T23:12:25.989Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/9b/e12bc6bad2ced372932446c5a78e6e81497324d51a6cc62fafe626f0df18/pytubefix-8.12.0-py3-none-any.whl", hash = "sha256:560b0f17b5a5b86fa9a542b02049eaa06492f2f6f66b787244333673387343eb", size = 730557, upload-time = "2025-01-14T02:19:29.261Z" },
+    { url = "https://files.pythonhosted.org/packages/c1/76/a9ba64e808f53b7d491c99afc47f4364a0b841bc31d78cc0cd6706ce6520/pytubefix-8.13.1-py3-none-any.whl", hash = "sha256:302eb359d0e2c9fbe25e88439c731d066cc8e5c10dd6a7bac2ce964ff9695255", size = 731504, upload-time = "2025-04-28T23:12:23.792Z" },
 ]
 
 [[package]]
@@ -2179,7 +2179,7 @@ requires-dist = [
     { name = "chromadb", specifier = ">=1.0.8" },
     { name = "deep-translator", specifier = "==1.11.4" },
     { name = "discord-pretty-help" },
-    { name = "discord-py", specifier = "==2.5.2" },
+    { name = "discord-py", specifier = ">=2.6.4" },
     { name = "discord-py", extras = ["voice"] },
     { name = "duckduckgo-search", specifier = "==7.5.2" },
     { name = "fake-useragent", specifier = "==2.1.0" },
@@ -2196,7 +2196,7 @@ requires-dist = [
     { name = "psutil", specifier = ">=7.1.0" },
     { name = "python-dotenv", specifier = "==1.1.0" },
     { name = "python-multipart", specifier = "==0.0.20" },
-    { name = "pytubefix", specifier = "==8.12.0" },
+    { name = "pytubefix", specifier = ">=8.12.0,<9.0.0" },
     { name = "pyzbar", specifier = ">=0.1.9" },
     { name = "qrcode", specifier = "==8.2" },
     { name = "redis", extras = ["hiredis"], specifier = ">=6.4.0" },
@@ -2211,11 +2211,11 @@ requires-dist = [
 
 [[package]]
 name = "yt-dlp"
-version = "2025.9.26"
+version = "2025.10.14"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/58/8f/0daea0feec1ab85e7df85b98ec7cc8c85d706362e80efc5375c7007dc3dc/yt_dlp-2025.9.26.tar.gz", hash = "sha256:c148ae8233ac4ce6c5fbf6f70fcc390f13a00f59da3776d373cf88c5370bda86", size = 3037475, upload-time = "2025-09-26T22:23:42.882Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/b7/dab729345e22891e79294273bc59c5213a1ec87331f49cb82ccea2b1bc9f/yt_dlp-2025.10.14.tar.gz", hash = "sha256:b18436aa9bb6f04354fd78d31ad9eeaae8c81b6a859f07072b25c18cd6c25844", size = 3045272, upload-time = "2025-10-14T23:39:52.688Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/94/18210c5e6a9d7e622a3b3f4a73dde205f7adf0c46b42b27d0da8c6e5c872/yt_dlp-2025.9.26-py3-none-any.whl", hash = "sha256:36f5fbc153600f759abd48d257231f0e0a547a115ac7ffb05d5b64e5c7fdf8a2", size = 3241906, upload-time = "2025-09-26T22:23:39.976Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/19/399c85d29bd7b366b31ede82698f7963374e5a3842ae9de0cde6514506b0/yt_dlp-2025.10.14-py3-none-any.whl", hash = "sha256:0b9da17eda1bbf48e2315130043d7993fd4ca1c5a35571f8231da1a910c9c115", size = 3248664, upload-time = "2025-10-14T23:39:49.95Z" },
 ]
 
 [[package]]

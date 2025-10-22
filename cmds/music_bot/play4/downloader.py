@@ -1,5 +1,6 @@
 import re
 import yt_dlp
+from pytubefix import YouTube
 from datetime import datetime
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
@@ -17,6 +18,15 @@ def extract_info(video_url: str):
             "title": info.get("title"),
             "duration": info.get("duration"),
         }
+    
+def extract_info_pytube(video_url: str):
+    yt = YouTube(video_url)
+    return {
+        "audio_url": yt.streams.filter(only_audio=True).order_by('abr').desc().first().url,
+        "thumbnail_url": yt.thumbnail_url,
+        "title": yt.title,
+        "duration": yt.length,
+    }
 
 class RedisTemp:
     redis_base_key = 'musics:'
@@ -92,10 +102,14 @@ class Downloader:
             return
 
         loop = asyncio.get_running_loop()
-        # 使用多進程
+        # 使用多進程, get result
         async with utils.Semaphore_multi_processing_pool:
             with ProcessPoolExecutor() as executor:
                 result = await loop.run_in_executor(executor, extract_info, self.video_url)
+        
+                # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多現程 但為了統一 我還用了)
+                if not (await check_audio_url_alive(result["audio_url"])): 
+                    result = await loop.run_in_executor(executor, extract_info_pytube, self.video_url)
 
         # 更新 self 的屬性
         self.audio_url = result["audio_url"]
@@ -106,6 +120,7 @@ class Downloader:
 
         self.process_time = math_round((datetime.now() - self.start_time).total_seconds(), 0)
 
+        # add to redis
         func = RedisTemp.upload(self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int)
         asyncio.create_task(func)
 

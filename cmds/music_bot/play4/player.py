@@ -11,6 +11,7 @@ from cmds.music_bot.play4.lyrics import search_lyrics
 
 from core.functions import create_basic_embed, current_time, secondToReadable, math_round
 from core.translator import load_translated
+from core.mock_interaction import MockInteraction
 # from core.classes import bot
 
 loop_option = ('None', 'single', 'list')
@@ -32,7 +33,13 @@ class Player:
         self.voice_client = ctx.voice_client
         self.bot = ctx.bot
         self.translator = self.bot.tree.translator
-        self.locale = ctx.interaction.locale.value if ctx.interaction else 'zh-TW'
+
+        if ctx.interaction and hasattr(ctx.interaction, 'locale'):
+            self.locale = ctx.interaction.locale.value
+        elif ctx.guild.preferred_locale.value:
+            self.locale = ctx.guild.preferred_locale.value
+        else:
+            self.locale = 'zh-TW'
 
         # volume
         self.source = None

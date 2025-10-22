@@ -111,6 +111,7 @@ def convert_to_short_url(url: str) -> str:
 
 async def check_audio_url_alive(audio_url: str) -> bool:
     try:
+        if not audio_url: return False
         client = httpx.AsyncClient()
         resp = await client.head(audio_url, timeout=5)
         return resp.status_code == 200
