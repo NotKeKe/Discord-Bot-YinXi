@@ -88,6 +88,16 @@ class CustomListPlayer:
         self.list_name = list_name
 
         self.songs: list[str] = [] # list[url]
+
+        self.playlist_load_task: asyncio.Task | None = None
+
+    def __del__(self):
+        try:
+            if self.playlist_load_task:
+                self.playlist_load_task.cancel()
+                del self.playlist_load_task
+        except:
+            ...
     
     async def load_songs(self):
         _filter = {'user_id': self.user_id, 'list_name': self.list_name}

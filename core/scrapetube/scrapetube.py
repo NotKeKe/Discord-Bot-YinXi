@@ -128,3 +128,26 @@ async def get_channel(channel_id: str = None,
     videos = get_videos(url, api_endpoint, type_property_map[content_type], limit, sleep, sort_by)
     async for video in videos:
         yield video
+
+async def get_playlist(
+    playlist_id: str, limit: int = None, sleep: int = 1
+) -> AsyncGenerator[dict, None]:
+    """Get videos for a playlist.
+
+    Parameters:
+        playlist_id (``str``):
+            The playlist id from the playlist you want to get the videos for.
+
+        limit (``int``, *optional*):
+            Limit the number of videos you want to get.
+
+        sleep (``int``, *optional*):
+            Seconds to sleep between API calls to youtube, in order to prevent getting blocked.
+            Defaults to 1.
+    """
+
+    url = f"https://www.youtube.com/playlist?list={playlist_id}"
+    api_endpoint = "https://www.youtube.com/youtubei/v1/browse"
+    videos = get_videos(url, api_endpoint, "playlistVideoRenderer", limit, sleep)
+    async for video in videos:
+        yield video

@@ -51,13 +51,21 @@ class Player:
         # 進度條
         self.init_bar()
 
+        # 使用者輸入 playlist，載入歌曲的 task
+        self.playlist_load_task: asyncio.Task | None = None
+
         # self.downloader = Downloader(query)
 
         # self.downloader.run()
         # self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration = self.downloader.get_info()
     
     def __del__(self):
-        try: self.update_progress_bar_task.cancel()
+        try: 
+            self.update_progress_bar_task.cancel()
+            del self.update_progress_bar_task
+            if self.playlist_load_task:
+                self.playlist_load_task.cancel()
+                del self.playlist_load_task
         except: ...
 
     def init_bar(self):
@@ -78,7 +86,7 @@ class Player:
     
     async def add_playlist(self, playlist_id: str):
         # 取得 playlist 的所有 video id
-        video_ids = await asyncio.to_thread(utils.get_all_video_ids_from_playlist, playlist_id)
+        video_ids = await utils.get_all_video_ids_from_playlist(playlist_id)
         
         # 取得第一個 result
         first_result = await self.add(utils.video_id_to_url(video_ids[0]), self.ctx)
@@ -88,7 +96,7 @@ class Player:
             for video_id in video_ids[1:]:
                 await self.add(utils.video_id_to_url(video_id), self.ctx)
 
-        asyncio.create_task(task())
+        self.playlist_load_task = asyncio.create_task(task())
 
         return first_result
 

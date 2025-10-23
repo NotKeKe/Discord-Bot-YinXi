@@ -9,10 +9,11 @@ import os
 from typing import TYPE_CHECKING
 from asyncio import Semaphore
 import httpx
-import scrapetube
+# import scrapetube
 
 from core.functions import create_basic_embed
 from core.translator import load_translated
+from core.scrapetube import scrapetube
 
 if TYPE_CHECKING:
     from .player import Player
@@ -104,9 +105,9 @@ def get_playlist_id(url: str) -> str:
     params = urllib.parse.parse_qs(query)
     return params.get('list', [None])[0]
 
-def get_all_video_ids_from_playlist(playlist_id: str) -> list:
+async def get_all_video_ids_from_playlist(playlist_id: str) -> list:
     results = scrapetube.get_playlist(playlist_id=playlist_id, limit=100)
-    return [result['videoId'] for result in results]
+    return [result['videoId'] async for result in results]
 
 def get_video_id(url: str):
     parsed = urllib.parse.urlparse(url)
