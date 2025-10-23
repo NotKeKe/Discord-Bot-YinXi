@@ -9,6 +9,7 @@ import os
 from typing import TYPE_CHECKING
 from asyncio import Semaphore
 import httpx
+import scrapetube
 
 from core.functions import create_basic_embed
 from core.translator import load_translated
@@ -93,6 +94,20 @@ def is_url(query: str) -> bool:
     pattern = r'(https?://)?(www\.|music\.)?(youtube\.com|youtu\.be)'
     return bool(re.match(pattern, query))
 
+
+def is_playlist_url(query: str) -> bool:
+    pattern = r'(https?://)?(www\.|music\.)?(youtube\.com|youtu\.be)/playlist'
+    return bool(re.match(pattern, query))
+
+def get_playlist_id(url: str) -> str:
+    query = urllib.parse.urlparse(url).query
+    params = urllib.parse.parse_qs(query)
+    return params.get('list', [None])[0]
+
+def get_all_video_ids_from_playlist(playlist_id: str) -> list:
+    results = scrapetube.get_playlist(playlist_id=playlist_id, limit=100)
+    return [result['videoId'] for result in results]
+
 def get_video_id(url: str):
     parsed = urllib.parse.urlparse(url)
 
@@ -107,6 +122,9 @@ def get_video_id(url: str):
 def convert_to_short_url(url: str) -> str:
     video_id = get_video_id(url)
     if not video_id: return
+    return f'https://youtu.be/{video_id}'
+
+def video_id_to_url(video_id: str) -> str:
     return f'https://youtu.be/{video_id}'
 
 async def check_audio_url_alive(audio_url: str) -> bool:

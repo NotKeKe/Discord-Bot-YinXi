@@ -75,10 +75,31 @@ class Player:
         await downloader.run()
         title, video_url, audio_url, thumbnail_url, duration, duration_int = downloader.get_info()
         return title, video_url, audio_url, thumbnail_url, duration, duration_int
+    
+    async def add_playlist(self, playlist_id: str):
+        # 取得 playlist 的所有 video id
+        video_ids = await asyncio.to_thread(utils.get_all_video_ids_from_playlist, playlist_id)
+        
+        # 取得第一個 result
+        first_result = await self.add(utils.video_id_to_url(video_ids[0]), self.ctx)
+
+        # 創建一個 task，用於在背景新增其他歌曲
+        async def task():
+            for video_id in video_ids[1:]:
+                await self.add(utils.video_id_to_url(video_id), self.ctx)
+
+        asyncio.create_task(task())
+
+        return first_result
 
     async def add(self, query: str, ctx: commands.Context):
         '''return len(self.list), title, video_url, audio_url, thumbnail_url, duration'''
         self.query = query
+
+        play_list_id = utils.get_playlist_id(query)
+        if not utils.get_video_id(query) and play_list_id: # 代表使用者傳入一個 playlist，而非帶有 playlist 的 video
+            return await self.add_playlist(play_list_id)
+
         title, video_url, audio_url, thumbnail_url, duration, duration_int = await self.download()
         self.list.append({
             'title': title,

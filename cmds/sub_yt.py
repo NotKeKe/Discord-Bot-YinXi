@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import time
 from typing import Optional, List, Tuple
 from datetime import datetime
+import scrapetube
 
 from cmds.music_bot.play4.utils import is_url
 
@@ -14,7 +15,7 @@ from core.functions import create_basic_embed, redis_client
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated
 from core.mongodb import MongoDB_DB
-from core.scrapetube import scrapetube
+# from core.scrapetube import scrapetube
 
 logger = logging.getLogger(__name__)
 

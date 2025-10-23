@@ -1,6 +1,7 @@
-from discord import Interaction, SelectOption, Message, errors
+from discord import Interaction, SelectOption, Message, errors, File
 from discord.ui import View, button, select, Button
 import traceback
+import io
 
 from cmds.music_bot.play4.player import Player
 from cmds.music_bot.play4.utils import send_info_embed, create_basic_embed
@@ -81,7 +82,8 @@ class MusicControlButtons(View):
             self.player.turn_loop()
             eb, view = await send_info_embed(self.player, interaction, if_send=False)
             await msg.edit(embed=eb, view=view)
-            await interaction.response.send_message((await self.translator.get_translate('send_button_loop_changed', self.locale)).format(loop_status=self.player.loop_status), ephemeral=True)
+            new_msg = await interaction.response.send_message((await self.translator.get_translate('send_button_loop_changed', self.locale)).format(loop_status=self.player.loop_status), ephemeral=True)
+            await new_msg.resource.delete(delay=30)
         except Exception as e:
             await self.button_error(interaction, e)
     
@@ -106,7 +108,12 @@ class MusicControlButtons(View):
         try:
             await interation.response.defer(ephemeral=True, thinking=True)
             result = await self.player.search_lyrics()
-            await interation.followup.send(result, ephemeral=True)
+
+            file = File(io.BytesIO(result.encode()), filename='lyrics.txt')
+            if len(result) > 2000:
+                result = result[:1996] + '...'
+
+            await interation.followup.send(result, file=file, ephemeral=True)
         except Exception as e:
             await self.button_error(interation, e)
 
