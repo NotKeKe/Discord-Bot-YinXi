@@ -156,15 +156,19 @@ class Music(Cog_Extension):
     @commands.hybrid_command(name=locale_str('loop'), description=locale_str('loop'))
     @app_commands.choices(loop_type = [Choice(name=item, value=item) for item in loop_option])
     @app_commands.describe(loop_type=locale_str('loop_loop_type'))
-    async def _loop(self, ctx: commands.Context, loop_type: str):
+    async def _loop(self, ctx: commands.Context, loop_type: str = None):
         async with ctx.typing():
             loop_option_str = ', '.join(loop_option)
-            if loop_type not in loop_option: return await ctx.send((await ctx.interaction.translate('send_loop_invalid_type')).format(loop_option_str=loop_option_str))
+            if loop_type not in loop_option and loop_type is not None: return await ctx.send((await ctx.interaction.translate('send_loop_invalid_type')).format(loop_option_str=loop_option_str))
 
             player, status = await check_and_get_player(ctx)
             if not status: return
 
-            player.loop(loop_type)
+            if loop_type is not None:
+                player.loop(loop_type)
+            else:
+                loop_type = player.turn_loop()
+
             await ctx.send((await ctx.interaction.translate('send_loop_success')).format(loop_type=loop_type))
 
     @commands.hybrid_command(name=locale_str('nowplaying'), description=locale_str('nowplaying'), aliases=['np', '當前播放', 'now'])

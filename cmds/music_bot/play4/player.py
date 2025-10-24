@@ -165,10 +165,12 @@ class Player:
         if loop_type not in loop_option: return 'Invalid loop type'
         self.loop_status = loop_type
 
-    def turn_loop(self):
+    def turn_loop(self) -> str:
+        '''Return current loop type and change to next loop type'''
         index = loop_option.index(self.loop_status)
         index = (index + 1) % len(loop_option)
         self.loop_status = loop_option[index]
+        return self.loop_status
 
     async def back(self):
         if self.current_index - 1 < 0:
