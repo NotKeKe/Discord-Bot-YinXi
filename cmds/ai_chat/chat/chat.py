@@ -255,8 +255,10 @@ class Chat:
                 image: discord.Attachment = None,
                 text_file: discord.Attachment = None,
                 custom_system_prompt: str = None,
-                tool_choice: str = None
+                tool_choice: str = None,
+                reasoning_effort: str = 'low'
             ) -> Tuple[str, str, list]:
+        '''Return response, think, history'''
         if model:
             await self.re_model(model)
         else:
@@ -286,7 +288,8 @@ class Chat:
                 stream=False,
                 timeout=timeout,
                 tools=self.process_tool_decrip(delete_tools) if is_enable_tools else None,
-                tool_choice=tool_choice if tool_choice else ('auto' if is_enable_tools else None) 
+                tool_choice=tool_choice if tool_choice else ('auto' if is_enable_tools else None),
+                **({'reasoning_effort': reasoning_effort} if 'oss' in self.model and 'gpt' in self.model else {})
             )
             return resp
         

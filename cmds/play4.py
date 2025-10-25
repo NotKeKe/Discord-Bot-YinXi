@@ -68,6 +68,7 @@ class Music(Cog_Extension):
 
     @commands.hybrid_command(name=locale_str('play'), description=locale_str('play'), aliases=['p', '播放'])
     @app_commands.describe(query=locale_str('play_query'))
+    @app_commands.autocomplete(query=play_query_autocomplete)
     async def _play(self, ctx: commands.Context, *, query: str = None):
         try:
             async with ctx.typing():
@@ -92,6 +93,7 @@ class Music(Cog_Extension):
 
     @commands.hybrid_command(name=locale_str('add'), description=locale_str('add'))
     @app_commands.describe(query=locale_str('add_query'))
+    @app_commands.autocomplete(query=play_query_autocomplete)
     async def _add(self, ctx: commands.Context, *, query: str):
         async with ctx.typing():
             if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_add_not_in_voice'))

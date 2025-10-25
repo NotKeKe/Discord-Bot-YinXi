@@ -9,7 +9,7 @@ from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.downloader import Downloader
 from cmds.music_bot.play4.lyrics import search_lyrics
 
-from core.functions import create_basic_embed, current_time, secondToReadable, math_round
+from core.functions import create_basic_embed, current_time, secondToReadable, math_round, redis_client
 from core.translator import load_translated
 from core.mock_interaction import MockInteraction
 # from core.classes import bot
@@ -103,6 +103,11 @@ class Player:
     async def add(self, query: str, ctx: commands.Context):
         '''return len(self.list), title, video_url, audio_url, thumbnail_url, duration'''
         self.query = query
+
+        # 加入進 redis，用於讓使用者下次快速選擇 query
+        key = f'musics_query:{ctx.author.id}'
+        await redis_client.lpush(key, query) # 插入 list 的 head
+        await redis_client.ltrim(key, 0, 9) # 只保留前 10 個，避免過大
 
         play_list_id = utils.get_playlist_id(query)
         if not utils.get_video_id(query) and play_list_id: # 代表使用者傳入一個 playlist，而非帶有 playlist 的 video

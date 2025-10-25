@@ -185,6 +185,8 @@ async def load():
             if filename.endswith('.py'):
                 await bot.load_extension(f'cmds.{filename[:-3]}')
                 print(f'嘗試載入cmds.{filename} (cost: {math_round(time.time()-now, 2)})')
+        except commands.errors.NoEntryPointError:
+            root_logger.warning(f'cmds.{filename[:-3]} has no setup func')
         except Exception as e:
             # traceback.print_exc()
             root_logger.warning(f'出錯 When loading extension: {e} (cost: {math_round(time.time()-now, 2)})', exc_info=True)
@@ -204,6 +206,3 @@ if __name__ == '__main__':
         from core.functions import mongo_db_client
         if mongo_db_client:
             mongo_db_client.close()
-
-        from cmds.music_bot.play4.downloader import donwloader_pool
-        donwloader_pool.shutdown()
