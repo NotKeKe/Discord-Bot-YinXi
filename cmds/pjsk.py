@@ -11,6 +11,7 @@ from textwrap import dedent
 from datetime import datetime
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorCursor
+import re
 
 from core.mongodb import MongoDB_DB
 from core.translator import locale_str, load_translated
@@ -128,6 +129,7 @@ class PJSK(commands.Cog):
         
         '''Copilot(with GPT5) did this'''
         # 基本條件集合
+        name = re.escape(name) if name else ""
         text_conds = []
         if name:
             text_conds = [
@@ -167,7 +169,7 @@ class PJSK(commands.Cog):
                 "$addFields": {
                     "_score": {
                         "$cond": [
-                            {"$regexMatch": {"input": "$songName", "regex": name or "", "options": "i"}},
+                            {"$regexMatch": {"input": "$songName", "regex": name, "options": "i"}},
                             1, 0
                         ]
                     }
