@@ -24,7 +24,7 @@ async def search(keyword: str, client: httpx.AsyncClient) -> list:
 
         h3 = div.find('h3')
         h3_text = ' '.join(h3.stripped_strings if h3 else [])
-        info['word'] = h3_text.strip()
+        info['word'] = h3_text.strip() # type: ignore
         
         meaning_div = div.find_all('span', class_ = Classes.TRANSLATION)
 
