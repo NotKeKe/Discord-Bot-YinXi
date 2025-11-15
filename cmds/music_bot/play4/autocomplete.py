@@ -47,6 +47,7 @@ async def play_query_autocomplete(inter: Interaction, curr: str) -> List[Choice[
     '''曾經在 play or add 中使用的 query，最多 10 項'''
     key = f'musics_query:{inter.user.id}'
     results = await redis_client.lrange(key, 0, 9)
+    await redis_client.expire(key, 60*60*24*30) # 約一個月
 
     if curr:
         results = [result for result in results if curr.lower().strip() in result.lower().strip()]

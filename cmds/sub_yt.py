@@ -7,9 +7,11 @@ from bs4 import BeautifulSoup
 import time
 from typing import Optional, List, Tuple
 from datetime import datetime
+import yt_dlp
+from concurrent.futures import ProcessPoolExecutor
 # import scrapetube
 
-from cmds.music_bot.play4.utils import is_url
+from cmds.music_bot.play4.utils import is_url, Semaphore_multi_processing_pool, get_video_id
 
 from core.functions import create_basic_embed, redis_client
 from core.classes import Cog_Extension
@@ -70,6 +72,59 @@ async def fetch_video_ids(urls: dict):
         finally:
             await asyncio.sleep(1)
     return current_video_ids
+
+def _get_upload_date(url: str):
+    ydl_opts = {
+        'quiet': True,             # 不輸出進度
+        'skip_download': True,     # 跳過下載
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=False)
+        
+        # 'YYYYMMDD'
+        upload_date_str = info_dict.get('upload_date')
+        live_status = info_dict.get("live_status")
+        if live_status != 'not_live': return # 只回傳正常影片
+
+        
+        if not upload_date_str:
+            return
+
+        upload_datetime = datetime.strptime(upload_date_str, '%Y%m%d')
+        
+        return upload_datetime
+
+async def get_upload_date(url: str) -> datetime | None:
+    _BASE_REDIS_KEY = 'sub_yt_upload_time:{}'
+    video_id = get_video_id(url)
+    if not video_id: return
+
+    upload_time = await redis_client.get(_BASE_REDIS_KEY.format(video_id))
+    if upload_time:
+        return datetime.fromisoformat(upload_time)
+
+    # loop = asyncio.get_running_loop()
+    # async with Semaphore_multi_processing_pool:
+    #     with ProcessPoolExecutor() as executor:
+    #         try:
+    #             result = await loop.run_in_executor(executor, _get_upload_date, url)
+    #         except:
+    #             import traceback
+    #             traceback.print_exc() # temp
+    #             return
+
+    try:
+        result = await asyncio.to_thread(_get_upload_date, url)
+    except:
+        import traceback
+        traceback.print_exc()
+        return
+
+    if not result: return
+    await redis_client.set(_BASE_REDIS_KEY.format(video_id), result.isoformat())
+    return result
+                
 
 async def sub_urls_autocomplete(inter: Interaction, current: str) -> List[app_commands.Choice[str]]:
     collection = db[str(inter.channel.id)]
@@ -228,10 +283,16 @@ class SubYT(Cog_Extension):
                 
                 for video_id in reversed(new_video_ids):
                     sent_url = f"https://youtu.be/{video_id}"
+
+                    publish_time = await get_upload_date(sent_url)
+                    if not publish_time: continue
+                    await redis_client.zadd(redis_key, {video_id: current_ts})
+                    if (datetime.now() - publish_time).total_seconds() > 60*60*24*2: # 大於2天
+                        continue
+
                     sent_message: str = await self.bot.tree.translator.get_translate('send_sub_yt_new_video', lang_code=preferred_lang)
                     await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url)))          
 
-                    await redis_client.zadd(redis_key, {video_id: current_ts})
 
 
 async def setup(bot):

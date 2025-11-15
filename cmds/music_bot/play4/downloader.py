@@ -107,7 +107,7 @@ class Downloader:
             with ProcessPoolExecutor() as executor:
                 result = await loop.run_in_executor(executor, extract_info, self.video_url)
         
-                # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多現程 但為了統一 我還用了)
+                # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多現程 但為了統一 我還是用了)
                 if not (await check_audio_url_alive(result["audio_url"])): 
                     result = await loop.run_in_executor(executor, extract_info_pytube, self.video_url)
 
