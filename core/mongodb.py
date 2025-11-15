@@ -9,3 +9,4 @@ class MongoDB_DB:
     sub_yt = mongo_db_client['sub_yt']
     pjsk = mongo_db_client['pjsk']
     music = mongo_db_client['music']
+    cambrdige = mongo_db_client['cambrdige']
