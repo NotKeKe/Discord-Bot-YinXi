@@ -185,6 +185,7 @@
         "output_chat_history_count": "Number of messages to output (default 10)",
         "output_chat_history_file_type": "Output file type (txt/json, default json)",
         "output_chat_history_reverse": "Whether to reverse the message order (default no)",
+        "output_chat_history_content_only": "Whether to output only the message content (default no)",
         "giveaway_winners_total": "Number of winners",
         "giveaway_prize": "Prize",
         "giveaway_date": "End date (format: YYYY-MM-DD)",

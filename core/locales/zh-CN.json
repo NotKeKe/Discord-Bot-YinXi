@@ -185,6 +185,7 @@
         "output_chat_history_count": "要输出的消息数量 (预设 10)",
         "output_chat_history_file_type": "输出的文件类型 (txt/json, 预设 json)",
         "output_chat_history_reverse": "是否反转消息顺序 (预设为否)",
+        "output_chat_history_content_only": "是否只输出讯息内容 (预设为否)",
         "giveaway_winners_total": "中奖人数",
         "giveaway_prize": "奖品",
         "giveaway_date": "结束日期 (格式: YYYY-MM-DD)",

@@ -14,11 +14,12 @@ from core.translator import locale_str, load_translated
 PATH = './data/temp'
 
 class ChannelHistories:
-    def __init__(self, ctx: commands.Context, count: int, file_type: str, reverse: bool):
+    def __init__(self, ctx: commands.Context, count: int, file_type: str, reverse: bool, content_only: bool = False):
         self.file_type = file_type
         self.ctx = ctx
         self.count = count
         self.reverse = reverse
+        self.content_only = content_only
         self.ls = None
         self.channelID = ctx.channel.id
         self.file: discord.File | None = None
@@ -39,7 +40,7 @@ class ChannelHistories:
                     'name': m.author.global_name or m.author.name,
                     'avatar_url': m.author.avatar.url if m.author.avatar else None
                 },
-                'content': m.content,
+                'content': m.content.strip(),
                 'timestamp': m.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 'attachments': [a.url for a in m.attachments] if m.attachments else None,
                 'embeds': [
@@ -97,30 +98,35 @@ class ChannelHistories:
             message_str += "-" * 30 + "\n"
             result.append(message_str)
 
-            for m in self.ls[1:]:
-                message_str = f"{author_str}: {m['author']['name']} ({m['author']['id']})\n" \
-                              f"{avatar_url_str}: {m['author']['avatar_url'] or none_str}\n" \
-                              f"{time_str}: {m['timestamp']}\n" \
-                              f"{content_str}: {m['content'] or none_str}\n"
+            for m in self.ls[1:] if not self.reverse else self.ls[:-1]:
+                if self.content_only:
+                    message_str = m['content']
+                    if not message_str: continue
+                    message_str += '\n'
+                else:
+                    message_str = f"{author_str}: {m['author']['name']} ({m['author']['id']})\n" \
+                                f"{avatar_url_str}: {m['author']['avatar_url'] or none_str}\n" \
+                                f"{time_str}: {m['timestamp']}\n" \
+                                f"{content_str}: {m['content'] or none_str}\n"
 
-                if m['attachments'] is not None:
-                    message_str += f"{attachments_str}: {', '.join(m['attachments'])}\n"
-                
-                if m['embeds'] is not None and m['embeds']:
-                    for embed in m['embeds']:
-                        message_str += f"{embed_str}:\n"
-                        if embed['title'] is not None and embed['title'] != none_str:
-                            message_str += f"  {embed_title_str}: {embed['title']}\n"
-                        if embed['description'] is not None and embed['description'] != none_str:
-                            message_str += f"  {embed_description_str}: {embed['description']}\n"
-                        if embed['fields']:
-                            message_str += f"  {embed_fields_str}:\n"
-                            for field in embed['fields']:
-                                message_str += f"    - {field['name']}: {field['value']}\n"
-                        if embed['image'] is not None:
-                            message_str += f"  {embed_image_str}: {embed['image']}\n"
-                
-                message_str += "-" * 30 + "\n"
+                    if m['attachments'] is not None:
+                        message_str += f"{attachments_str}: {', '.join(m['attachments'])}\n"
+                    
+                    if m['embeds'] is not None and m['embeds']:
+                        for embed in m['embeds']:
+                            message_str += f"{embed_str}:\n"
+                            if embed['title'] is not None and embed['title'] != none_str:
+                                message_str += f"  {embed_title_str}: {embed['title']}\n"
+                            if embed['description'] is not None and embed['description'] != none_str:
+                                message_str += f"  {embed_description_str}: {embed['description']}\n"
+                            if embed['fields']:
+                                message_str += f"  {embed_fields_str}:\n"
+                                for field in embed['fields']:
+                                    message_str += f"    - {field['name']}: {field['value']}\n"
+                            if embed['image'] is not None:
+                                message_str += f"  {embed_image_str}: {embed['image']}\n"
+                    
+                    message_str += "-" * 30 + "\n"
                 result.append(message_str)
 
             self.file = discord.File(
@@ -146,15 +152,15 @@ class ChannelHistory(Cog_Extension):
 
     @commands.hybrid_command(name=locale_str('output_chat_history'), description=locale_str('output_chat_history'))
     @app_commands.choices(file_type=[app_commands.Choice(name=t, value=t) for t in ('json', 'txt')])
-    @app_commands.describe(count=locale_str('output_chat_history_count'), file_type=locale_str('output_chat_history_file_type'), reverse=locale_str('output_chat_history_reverse'))
-    async def output_chat_history(self, ctx: commands.Context, count: int = 10, file_type: str = 'json', reverse: bool = False):
+    @app_commands.describe(count=locale_str('output_chat_history_count'), file_type=locale_str('output_chat_history_file_type'), reverse=locale_str('output_chat_history_reverse'), content_only=locale_str('output_chat_history_content_only'))
+    async def output_chat_history(self, ctx: commands.Context, count: int = 10, file_type: str = 'json', reverse: bool = False, content_only: bool = False):
         async with ctx.typing():
             if not ctx.channel.permissions_for(ctx.author).read_messages or not ctx.channel.permissions_for(ctx.author).read_message_history:
                 return await ctx.send(await ctx.interaction.translate('send_output_chat_history_no_read_permission'))
             if not ctx.channel.permissions_for(ctx.me).read_message_history:
                 return await ctx.send(await ctx.interaction.translate('send_output_chat_history_bot_no_read_permission'))
 
-            ch = ChannelHistories(ctx, count, file_type, reverse)
+            ch = ChannelHistories(ctx, count, file_type, reverse, content_only)
             file = await ch.run()
 
             if file is None:
