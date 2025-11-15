@@ -34,44 +34,6 @@ class Load(Cog_Extension):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
-
-    #load command
-    @commands.hybrid_command()
-    @commands.has_permissions(administrator=True)
-    @app_commands.describe(extension = "選擇一個category")
-    @app_commands.autocomplete(extension = load_autocomplete)
-    @app_commands.guilds(discord.Object(id=testing_guildID))
-    async def load(self, ctx, extension: str):
-        '''只有克克能用的話  還需要幫助嗎:thinking:'''
-        if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
-        
-        await ctx.send(f'嘗試載入「{extension}」', ephemeral=True)
-        try:
-            await self.bot.load_extension(f'cmds.{extension}')
-        except Exception as e:
-            await ctx.send(f"「{extension}」 未被載入", ephemeral=True)
-            print("出錯 when loading: ", e)
-            return
-        await ctx.send(f"「{extension}」 已被載入", ephemeral=True)
-
-    #unload command
-    @commands.hybrid_command()
-    @commands.has_permissions(administrator=True)
-    @app_commands.describe(extension = "選擇一個category")
-    @app_commands.autocomplete(extension = load_autocomplete)
-    @app_commands.guilds(discord.Object(id=testing_guildID))
-    async def unload(self, ctx, extension: str):
-        '''只有克克能用的話  還需要幫助嗎:thinking:'''
-        if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
-
-        await ctx.send(f'嘗試卸載「{extension}」', ephemeral=True)
-        try:
-            await self.bot.unload_extension(f'cmds.{extension}')
-        except Exception as e:
-            await ctx.send(f"「{extension}」 未被卸載", ephemeral=True)
-            print("出錯 when unloading: ", e)
-            return
-        await ctx.send(f"「{extension}」 已被卸載", ephemeral=True)
         
     #reload command
     @commands.hybrid_command()

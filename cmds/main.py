@@ -80,38 +80,6 @@ class Main(Cog_Extension):
             )
             await ctx.send(embed = embed)
 
-    #重複我說的話
-    @commands.hybrid_command(name=locale_str("repeat"), description=locale_str("repeat"))
-    @app_commands.describe(arg=locale_str('repeat_text'))
-    async def test(self, ctx: commands.Context, *, arg: str):
-        '''
-        [重複你說的話 arg(然後打你要的字)
-        沒啥用的功能，如果你想要bot重複你說的話就用吧
-        '''
-        await ctx.send(arg)
-
-    #我在哪
-    @commands.hybrid_command(name=locale_str("where_am_i"), description=locale_str("where_am_i"))
-    async def whereAmI(self, ctx: commands.Context):
-        '''
-        [我在哪裡
-        說出你在哪 會有伺服器名稱跟頻道的名稱
-        '''
-        async with ctx.typing():
-            '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_where_am_i')
-            eb_data = load_translated(eb_template)[0]
-            title = eb_data.get('title')
-            description = eb_data.get('description').format(guild_name=ctx.guild.name, channel_mention=ctx.channel.mention)
-            ''''''
-            embed = discord.Embed(
-                color=discord.Color.blue(),
-                title=title,
-                description=description,
-                timestamp=datetime.now()
-            )
-            await ctx.send(embed=embed)
-
     #回傳使用者頭貼
     @commands.hybrid_command(name=locale_str("avatar"), description=locale_str("avatar"))
     @app_commands.describe(member=locale_str('avatar_member'))
@@ -233,35 +201,6 @@ class Main(Cog_Extension):
 
                 await asyncio.sleep(300)
                 os.remove(path)
-
-    @commands.hybrid_command(name=locale_str("random_number"), description=locale_str("random_number"))
-    @app_commands.describe(range1=locale_str('random_number_start'), range2=locale_str('random_number_end'), times=locale_str('random_number_times'))
-    async def random_number(self, ctx: commands.Context, range1: int, range2: int, times:int = None):
-        async with ctx.typing():
-            if times is None:
-                times = 1
-
-            if range1 > range2: # 如果使用者輸入將起始跟終止順序寫反了
-                range1, range2 = range2, range1
-
-            if times > range2-range1+1:
-                await ctx.send((await ctx.interaction.translate('send_random_number_too_many')).format(range1=range1, range2=range2, times=times))
-                return
-
-            def for_loop(times, range1, range2):
-                result = []
-                for _ in range(times):
-                    while True:
-                        num = random.randint(range1, range2)
-                        if num not in result:
-                            result.append(num)
-                            break
-                return result
-            
-            result = await thread_pool(for_loop, times, range1, range2)
-
-            resultStr = ', '.join(map(str, result))
-            await ctx.send(resultStr)
 
     @commands.hybrid_command(name=locale_str('lang'), description=locale_str('lang'))
     @app_commands.describe(lang=locale_str('lang_lang'))
