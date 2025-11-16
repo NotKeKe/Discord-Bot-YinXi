@@ -93,6 +93,33 @@ async def on_command_error(ctx: commands.Context, error):
 async def on_ready():
     print('我上線了窩\n')
 
+@bot.event
+async def on_disconnect():
+    try:
+        from core.playwright import (
+            p, browser, contexts, 
+            close_context_task, close_browser_task
+        )
+
+        for context in contexts:
+            await context.close()
+        if browser:
+            await browser.close()
+        if p:
+            await p.stop()
+
+        try:
+            close_context_task.cancel()
+            close_browser_task.cancel()
+            await asyncio.gather(close_browser_task, close_context_task)
+        except asyncio.CancelledError:
+            pass
+
+
+        root_logger.info('已關閉 global playwright')
+    except:
+        root_logger.error('無法關閉 global playwright', exc_info=True)
+
 #讓私訊也能被處理
 @bot.event
 async def on_message(message):
@@ -111,11 +138,11 @@ class UpdateStatus(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.update_status.start()
-        self.change_activity.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「UpdateStatus」')
+        self.change_activity.start()
 
     @commands.command()
     async def 改變狀態(self, ctx: commands.Context, activity_code: int = 1):
@@ -165,10 +192,6 @@ class UpdateStatus(commands.Cog):
     async def before_task(self):
         await self.bot.wait_until_ready()
         await asyncio.sleep(1)
-
-    @change_activity.before_loop
-    async def before_change_activity(self):
-        await self.bot.wait_until_ready()
 
 async def load_another():
     try:

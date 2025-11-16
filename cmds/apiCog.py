@@ -17,10 +17,12 @@ from PIL import Image
 import io
 import re
 import aiofiles
+from urllib.parse import urlparse, urljoin
 
 from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable
 from core.translator import locale_str, load_translated
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY, testing_guildID
+from core.playwright import get_context, get_page
 
 youtube_download_base_url = None
 
@@ -542,6 +544,43 @@ class ApiCog(commands.Cog):
         except Exception as e: 
             await ctx.send((await ctx.interaction.translate('send_mc_status_error')).format(reason=str(e)))
             traceback.print_exc()
+
+    @commands.hybrid_command(name=locale_str('codlin_meme'), description=locale_str('codlin_meme'), aliases=['meme', 'codlin'])
+    async def codlin_meme(self, ctx: commands.Context, *, text: str = '', count: int = 1):
+        await ctx.defer()
+
+        base_url = 'https://codlin.me/'
+        context = await get_context(purpose='codlin_meme')
+        page = await get_page(context, urljoin(base_url, 'aquarium/meme-cache/'))
+
+        await page.wait_for_selector('input')
+        locator = page.locator('input')
+        
+        await locator.fill(text)
+
+        await page.wait_for_load_state('networkidle')
+        
+        img_locator = page.locator('img')
+        img_count = await img_locator.count()
+
+        async def fetch(i):
+            try:
+                img = await img_locator.nth(i).get_attribute('src', timeout=300)
+                img_url = urljoin(base_url, img)
+                return img_url
+            except Exception as e:
+                print(f'Cannot fetch image at {i}, error: {e}')
+        
+        tasks = []
+        for i in range(min(count, img_count)):
+            tasks.append(fetch(i))
+
+        urls = await asyncio.gather(*tasks)
+
+        await ctx.send('\n'.join(urls) or 'No Results')
+
+        await page.close()
+
 
     @tasks.loop(minutes=1)
     async def update_alive(self):

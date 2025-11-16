@@ -160,7 +160,7 @@ class CambridgeChannel(Cog_Extension):
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
         content = msg.content
-        if not content: return
+        if not content.strip(): return
         if msg.author.bot: return
         if content.startswith('[') or content.startswith('[! '): return
         if not (await channels.find_one({'channel_id': msg.channel.id})): return
