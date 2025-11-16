@@ -51,7 +51,6 @@ def promision_check(interaction: discord.Interaction,):
 class TestTemp(Cog_Extension):
     def __init__(self, bot):
         super().__init__(bot)
-        self.message_test_data: discord.message.Message
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -145,13 +144,6 @@ class TestTemp(Cog_Extension):
         await ctx.send(f"你選擇了: {selected_value}")
         # 在這裡繼續執行其他邏輯
         await ctx.send("繼續執行你的邏輯...")
-
-    @commands.command()
-    async def message_test2(self, ctx):
-        try:
-            await self.message_test_data.edit(content='edited')
-        except Exception as exception:
-            await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
 
     @commands.command()
     async def fromidtoname(self, ctx, id):

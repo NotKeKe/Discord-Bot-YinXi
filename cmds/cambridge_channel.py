@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import httpx
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, time
 import traceback
 import asyncio
 import random
@@ -18,7 +18,7 @@ db = MongoDB_DB.cambrdige
 channels = db['channels']
 
 async def _get_random_test(user_id: int) -> tuple[str, list[str], str, str, list[dict[str, str | list]]] | None:
-    datas = [d async for d in db[str(user_id)].find().sort('create_at', -1).limit(100)]
+    datas = [d async for d in db[str(user_id)].find({'word': {'$exists': True}}).sort('create_at', -1).limit(100)]
     if len(datas) <= 5: return
 
     data = random.choice(datas)
@@ -81,13 +81,13 @@ async def gener_daily_test(user_id: int) -> tuple[discord.Embed, discord.ui.View
     
     eb = create_basic_embed('Daily Test!!!', description, color=discord.Color.blue())
     
-    view = discord.ui.View()
+    view = discord.ui.View(timeout=60*60*24) # 24小時
     for i, (k, v) in enumerate(options_dict.items()):
         button = discord.ui.Button(label=v or 'Unknown', style=discord.ButtonStyle.primary)
 
         # 顯示這個按鈕的資訊，以及正確/錯誤
-        async def button_callback(button: discord.ui.Button, _k: str, _meanings: list[str], inter: discord.Interaction):
-            await inter.response.defer(thinking=True)
+        async def button_callback(button: discord.ui.Button, _k: str, _meanings: list[str], original_eb: discord.Embed, inter: discord.Interaction):
+            await inter.response.defer() # default thinking=False, 不然沒辦法 edit_original_response
             option = button.label
 
             if option == word:
@@ -101,8 +101,13 @@ async def gener_daily_test(user_id: int) -> tuple[discord.Embed, discord.ui.View
                     await inter.response.send_message('\n\n'.join(strings))
                 other_info_button.callback = other_info_button_callback # type: ignore
 
+                # 刪除原本的按鈕，因為使用者已經答對了
+                view.stop()
+                await inter.edit_original_response(embed=original_eb, view=None)
+
                 _view = discord.ui.View()
                 _view.add_item(other_info_button)
+                
                 await inter.followup.send(f'**✅ Correct!**\nThe answer is **{word}**\n\nClick the button below to see others meanings', view=_view)
             else:
                 eb = create_basic_embed(f'You are WRONG!!! Try again', f'## ({_k}) {option}\n### Meanings:\n{'; '.join(_meanings)}', color=discord.Color.red())
@@ -116,7 +121,7 @@ async def gener_daily_test(user_id: int) -> tuple[discord.Embed, discord.ui.View
                 break
         
         # 因為非裝飾器定義的 button 不會傳入 button 這個 arg
-        button.callback = partial(button_callback, button, k, meanings if i == correct_index else curr_meanings) # type: ignore
+        button.callback = partial(button_callback, button, k, meanings if i == correct_index else curr_meanings, eb) # type: ignore
         view.add_item(button)
 
     return eb, view, description
@@ -144,11 +149,13 @@ class CambridgeChannel(Cog_Extension):
     async def cog_load(self):
         self.get_client()
         self.check_used.start()
+        self.daily_test.start()
 
     async def cog_unload(self):
         if self._client is None: return
         await self._client.aclose()
         self.check_used.stop()
+        self.daily_test.stop()
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -158,53 +165,42 @@ class CambridgeChannel(Cog_Extension):
         if content.startswith('[') or content.startswith('[! '): return
         if not (await channels.find_one({'channel_id': msg.channel.id})): return
 
-        ctx = await self.bot.get_context(msg)
-        async with ctx.typing():
-            self.last_used = datetime.now()
+        self.last_used = datetime.now()
 
-            try:
-                results = await search(content, self.get_client())
-            except:
-                traceback.print_exc()
-                return
+        try:
+            results = await search(content, self.get_client())
+        except:
+            traceback.print_exc()
+            return
 
-            詞性 = set()
-            meanings = set()
-            examples = []
-            for r in results:
-                splited_word = r['word'].split()
-                if len(splited_word) > 0:
-                    詞性.add(splited_word[1])
+        詞性 = set()
+        meanings = set()
+        examples = []
+        for r in results:
+            splited_word = r['word'].split()
+            if len(splited_word) > 0:
+                詞性.add(splited_word[1])
 
-                for m in r['meaning']: meanings.add(m)
-                
-                for e in r['examples']: 
-                    if len(examples) >= 3: continue
-                    examples.append(f'英: {e["eg"]}\n中: {e["translate"]}')
+            for m in r['meaning']: meanings.add(m)
+            
+            for e in r['examples']: 
+                if len(examples) >= 3: continue
+                examples.append(f'英: {e["eg"]}\n中: {e["translate"]}')
 
-#             message = f'''  
-# ### 詞性:   
-# `{';'.join(詞性).strip()}`  
+        meanings_str = '; '.join(meanings).strip()
 
-# ### 意義:   
-# `{';'.join(meanings).strip()}`  
-
-# ### 例句:   
-# {'\n'.join([f'`{i+1}. {item}`' for i, item in enumerate(examples)])}  
-# '''.strip()
-            meanings_str = '; '.join(meanings).strip()
-
-            message = f'''
+        message = f'''
 {content} ||{meanings_str}||
 
 例句:
 {'\n'.join([f'{i+1}.\n||{item}||' for i, item in enumerate(examples)])}
 '''
 
-            await msg.reply(message if meanings_str else '找不到詞性或意義')
+        await msg.reply(message if meanings_str else '找不到詞性或意義')
         
         # add to db
-        await db[str(ctx.author.id)].find_one_and_update(
+        if not (meanings and examples and content): return # 3者皆無
+        await db[str(msg.author.id)].find_one_and_update(
             {'word': content}, 
             {'$set': {
                 'word': content,
@@ -265,39 +261,49 @@ class CambridgeChannel(Cog_Extension):
     @tasks.loop(hours=24)
     async def daily_test(self):
         for col in (await db.list_collection_names()):
-            if col == 'channels': continue
-            user_id = int(col)
-            user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
-            embed, view, question = await gener_daily_test(user_id)
-
             try:
-                await user.send(embed=embed, view=view)
-            except discord.Forbidden:
-                continue
+                if col == 'channels': continue
+                user_id = int(col)
+                user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
+                embed, view, question = await gener_daily_test(user_id)
 
-            await db[str(user_id)].update_one(
-                {'type': 'meta'}, 
-                {
-                    '$set': {
-                        'last_daily_test': datetime.now(timezone.utc)
-                    },
-                    '$push': {
-                        'questions': question
-                    }
-                }, 
-                upsert=True
-            )
+                try:
+                    await user.send(embed=embed, view=view)
+                except discord.Forbidden:
+                    continue
 
-            await asyncio.sleep(1)
+                await db[str(user_id)].update_one(
+                    {'type': 'meta'}, 
+                    {
+                        '$set': {
+                            'last_daily_test': datetime.now(timezone.utc)
+                        },
+                        '$push': {
+                            'questions': question
+                        }
+                    }, 
+                    upsert=True
+                )
+
+                await asyncio.sleep(1)
+            except:
+                traceback.print_exc()
 
     @daily_test.before_loop
     async def before_daily_test(self):
         utc_now = datetime.now(timezone.utc)
         now = utc_now.astimezone(timezone(timedelta(hours=8)))
 
-        target = datetime.combine(now + timedelta(days=1), datetime.min.time())
+        # 設定目標時間為今天的 8:00
+        target = datetime.combine(now.date(), time(8), tzinfo=timezone(timedelta(hours=8)))
+
+        # 如果現在已經過了今天的 8:00，就改成明天的 8:00
+        if now >= target:
+            target += timedelta(days=1)
+
         wait_seconds = (target - now).total_seconds()
         await asyncio.sleep(wait_seconds)
+
 
 async def setup(bot):
     await bot.add_cog(CambridgeChannel(bot))
