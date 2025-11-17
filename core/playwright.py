@@ -8,6 +8,7 @@ import aiofiles
 import orjson
 import asyncio
 import logging
+from copy import deepcopy
 
 from core.functions import yinxi_base_url
 
@@ -90,7 +91,7 @@ async def _close_context():
         global contexts
         while True:
             closed_count = 0
-            for context, data in contexts.items():
+            for context, data in deepcopy(contexts).items():
                 if data['last_used'] < datetime.now() - timedelta(minutes=5):
                     await context.close()
                     del contexts[context]
@@ -121,5 +122,5 @@ async def _close_browser():
     except asyncio.CancelledError:
         pass
 
-close_context_task = asyncio.create_task(_close_context())
-close_browser_task = asyncio.create_task(_close_browser())
+close_context_task: Optional[asyncio.Task] = asyncio.create_task(_close_context())
+close_browser_task: Optional[asyncio.Task] = asyncio.create_task(_close_browser())

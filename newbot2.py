@@ -94,6 +94,14 @@ async def on_ready():
     print('我上線了窩\n')
 
 @bot.event
+async def on_connect():
+    from core.playwright import close_browser_task, close_context_task, _close_context, _close_browser
+    if not close_browser_task:
+        close_browser_task = asyncio.create_task(_close_browser())
+    if not close_context_task:
+        close_context_task = asyncio.create_task(_close_context())
+
+@bot.event
 async def on_disconnect():
     try:
         from core.playwright import (
@@ -109,9 +117,17 @@ async def on_disconnect():
             await p.stop()
 
         try:
-            close_context_task.cancel()
-            close_browser_task.cancel()
-            await asyncio.gather(close_browser_task, close_context_task)
+            tasks = []
+            if close_context_task:
+                close_context_task.cancel()
+                tasks.append(close_context_task)
+                close_context_task = None
+            if close_browser_task:
+                close_browser_task.cancel()
+                tasks.append(close_browser_task)
+                close_browser_task = None
+            if tasks:
+                await asyncio.gather(tasks)
         except asyncio.CancelledError:
             pass
 
