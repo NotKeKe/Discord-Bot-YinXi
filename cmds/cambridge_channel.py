@@ -101,12 +101,21 @@ async def gener_daily_test(user_id: int) -> tuple[discord.Embed, discord.ui.View
                     await inter.response.send_message('\n\n'.join(strings))
                 other_info_button.callback = other_info_button_callback # type: ignore
 
+                # more questions
+                more_questions_button = discord.ui.Button(label='More questions', style=discord.ButtonStyle.primary)
+                async def more_questions_button_callback(inter: discord.Interaction):
+                    await inter.response.defer()
+                    embed, view, question = await gener_daily_test(user_id)
+                    await inter.followup.send(embed=embed, view=view)
+                more_questions_button.callback = more_questions_button_callback # type: ignore
+
                 # 刪除原本的按鈕，因為使用者已經答對了
                 view.stop()
                 await inter.edit_original_response(embed=original_eb, view=None)
 
                 _view = discord.ui.View()
                 _view.add_item(other_info_button)
+                _view.add_item(more_questions_button)
                 
                 await inter.followup.send(f'**✅ Correct!**\nThe answer is **{word}**\n\nClick the button below to see others meanings', view=_view)
             else:
