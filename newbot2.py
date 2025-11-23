@@ -111,6 +111,7 @@ async def on_disconnect():
 
         for context in contexts:
             await context.close()
+        contexts = {}
         if browser:
             await browser.close()
         if p:
@@ -127,7 +128,7 @@ async def on_disconnect():
                 tasks.append(close_browser_task)
                 close_browser_task = None
             if tasks:
-                await asyncio.gather(tasks)
+                await asyncio.gather(*tasks)
         except asyncio.CancelledError:
             pass
 

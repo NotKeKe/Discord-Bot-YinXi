@@ -51,6 +51,8 @@ async def video_generate(prompt: str, image_url = None, size=None, fps=60, with_
 
     def on_timeout(rn: datetime) -> bool:
         return (datetime.now() - rn).total_seconds() > 60*20
+    
+    passed = 0
 
     while True:
         await asyncio.sleep(10)
@@ -70,4 +72,5 @@ async def video_generate(prompt: str, image_url = None, size=None, fps=60, with_
             
             if on_timeout(rn):
                 return 'Timeout (時間超過20分鐘)', passed
-        except: return 'API發送失敗', passed
+        except: 
+            return 'API發送失敗', passed

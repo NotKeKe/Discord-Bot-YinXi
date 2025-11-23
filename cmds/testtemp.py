@@ -234,6 +234,11 @@ class TestTemp(Cog_Extension):
         for item in split_str_by_len_and_backtick(original_text):
             await ctx.send(item)
 
+    @commands.command()
+    async def check_playwright_connect(self, ctx: commands.Context):
+        from core.playwright import contexts
+        await ctx.send(contexts)
+
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()
 

@@ -19,3 +19,4 @@ class Classes:
     EXMAPLE_SENTENCE_div = 'examp dexamp' # a div
     EG_SENTENCE = 'eg deg'
     TRANSLATION_SENTENCE = 'trans dtrans dtrans-se hdb break-cj'
+    US_AUDIO = "span.us source[type='audio/mpeg']"

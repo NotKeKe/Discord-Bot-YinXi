@@ -6,6 +6,7 @@ import traceback
 import asyncio
 import random
 from functools import partial
+import io
 
 from cmds.cambridge.search import search 
 from cmds.cambridge.config import USER_AGENT
@@ -105,7 +106,7 @@ async def gener_daily_test(user_id: int) -> tuple[discord.Embed, discord.ui.View
                 more_questions_button = discord.ui.Button(label='More questions', style=discord.ButtonStyle.primary)
                 async def more_questions_button_callback(inter: discord.Interaction):
                     await inter.response.defer()
-                    embed, view, question = await gener_daily_test(user_id)
+                    embed, view, question = await gener_daily_test(inter.user.id)
                     await inter.followup.send(embed=embed, view=view)
                 more_questions_button.callback = more_questions_button_callback # type: ignore
 
@@ -181,6 +182,12 @@ class CambridgeChannel(Cog_Extension):
         except:
             traceback.print_exc()
             return
+        
+        if not results: return
+        audio_io = ''
+        if results[0].get('audio_io'):
+            audio_io = results[0]['audio_io']
+            results.pop(0)
 
         詞性 = set()
         meanings = set()
@@ -204,8 +211,24 @@ class CambridgeChannel(Cog_Extension):
 例句:
 {'\n'.join([f'{i+1}.\n||{item}||' for i, item in enumerate(examples)])}
 '''
+        
+        # 發送 audio 的按鈕
+        view = discord.ui.View()
+        if audio_io:
+            async def button_callback(audio_io: io.BytesIO, interaction: discord.Interaction):
+                audio_io.seek(0)
+                await interaction.response.send_message(file=discord.File(audio_io, 'audio.mp3'), ephemeral=True)
+            button = discord.ui.Button(label='US Audio', style=discord.ButtonStyle.blurple)
+            button.callback = partial(button_callback, audio_io)
+            view.add_item(button)
 
-        await msg.reply(message if meanings_str else '找不到詞性或意義')
+        msg = await msg.reply(message if meanings_str else '找不到詞性或意義', view=view)
+
+        # for del button
+        async def callback(view: discord.ui.View, msg: discord.Message):
+            await view.wait()
+            await msg.edit(view=None)
+        asyncio.create_task(callback(view, msg))
         
         # add to db
         if not (meanings and examples and content): return # 3者皆無

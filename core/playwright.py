@@ -38,8 +38,15 @@ async def _get_p() -> Playwright:
     return p
 
 async def _get_browser() -> Browser:
-    global browser
-    if not browser:
+    global browser, p
+    if not (browser and browser.is_connected()):
+        try:
+            if p:
+                await p.stop()
+                p = None
+            browser = None
+        except:
+            ...
         p = await _get_p()
         browser = await p.chromium.launch(headless=True)
     return browser
@@ -49,7 +56,7 @@ async def get_context(ua_type: UA_TYPE = 'yinxi', cookie_file: str | Path = '', 
 
     # 先檢查有沒有相同 purpose 的 context
     for context, data in contexts.items():
-        if data['purpose'] == purpose:
+        if data['purpose'] == purpose and data['purpose'] != 'Unknown':
             contexts[context]['last_used'] = datetime.now()
             return context
 

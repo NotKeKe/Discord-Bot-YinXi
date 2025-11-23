@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from collections import defaultdict
 import re
+import io
 
 from .config import *
 
@@ -18,6 +19,18 @@ async def search(keyword: str, client: httpx.AsyncClient) -> list:
     divs = soup.find_all('div', class_ = Classes.DEF_BLOCK) or soup.find_all('div', class_ = Classes.DEF_BLOCK_2)
 
     infos = []
+
+    # find audio
+    audio = soup.select_one(Classes.US_AUDIO)
+    if audio:
+        try:
+            src = audio['src']
+            url = urljoin(BASE_URL, src)
+            infos.append({
+                'audio': url,
+                'audio_io': io.BytesIO((await client.get(url)).content)
+            })
+        except Exception as e: print(f'Cannot get audio, {str(e)}')
 
     for div in divs:
         info = defaultdict(list)
