@@ -773,6 +773,7 @@
         }],
         "send_add_to_custom_list_success": "已成功將歌曲添加到自定義歌單 `({list_name})` 中。",
         "send_delete_custom_list_success": "已成功刪除自定義歌單 `({list_name})`。",
-        "send_delete_custom_list_cancelled": "已取消刪除自定義歌單 `({list_name})`。"
+        "send_delete_custom_list_cancelled": "已取消刪除自定義歌單 `({list_name})`。",
+        "send_play_custom_list_already_playing_left_first": "要先讓我離開，才能播你的自定播放清單窩~"
     }
 }

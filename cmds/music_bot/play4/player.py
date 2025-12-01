@@ -45,6 +45,7 @@ class Player:
         self.transformer: PCMVolumeTransformer = None
 
         self.manual = False
+        self.downloading = False
 
         # 進度條
         self.init_bar()
@@ -76,10 +77,12 @@ class Player:
 
         self.paused: bool = False
 
-    async def download(self):
-        downloader = Downloader(self.query)
+    async def download(self, priority: int = 1):
+        self.downloading = True
+        downloader = Downloader(self.query, priority)
         await downloader.run()
         title, video_url, audio_url, thumbnail_url, duration, duration_int = downloader.get_info()
+        self.downloading = False
         return title, video_url, audio_url, thumbnail_url, duration, duration_int
     
     async def add_playlist(self, playlist_id: str):
@@ -92,13 +95,13 @@ class Player:
         # 創建一個 task，用於在背景新增其他歌曲
         async def task():
             for video_id in video_ids[1:]:
-                await self.add(utils.video_id_to_url(video_id), self.ctx)
+                await self.add(utils.video_id_to_url(video_id), self.ctx, 2)
 
         self.playlist_load_task = asyncio.create_task(task())
 
         return first_result
 
-    async def add(self, query: str, ctx: commands.Context):
+    async def add(self, query: str, ctx: commands.Context, priority: int = 1):
         '''return len(self.list), title, video_url, audio_url, thumbnail_url, duration'''
         self.query = query
 
@@ -111,7 +114,7 @@ class Player:
         if not utils.get_video_id(query) and play_list_id: # 代表使用者傳入一個 playlist，而非帶有 playlist 的 video
             return await self.add_playlist(play_list_id)
 
-        title, video_url, audio_url, thumbnail_url, duration, duration_int = await self.download()
+        title, video_url, audio_url, thumbnail_url, duration, duration_int = await self.download(priority)
         self.list.append({
             'title': title,
             'video_url': video_url,
@@ -126,9 +129,15 @@ class Player:
     async def play(self):
         self.init_bar()
         
-        if not self.list: 
-            print('播放列表為空')
-            return
+        if not self.list:
+            if not self.downloading:
+                print('播放列表為空')
+                return
+            else:
+                # 等待下一首歌下載完成
+                while len(self.list) - 1 == self.current_index:
+                    await asyncio.sleep(0.1)
+
             
         # 確保連接狀態
         if not self.voice_client or not self.voice_client.is_connected(): 

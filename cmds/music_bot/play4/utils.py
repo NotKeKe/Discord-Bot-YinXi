@@ -14,6 +14,7 @@ import httpx
 from core.functions import create_basic_embed
 from core.translator import load_translated
 from core.scrapetube import scrapetube
+from core.priority_queue import MyPriorityQueue
 
 if TYPE_CHECKING:
     from .player import Player
@@ -23,7 +24,8 @@ ffmpeg_options = {
     'options': '-vn -af "volume=0.25"',
 }
 
-Semaphore_multi_processing_pool = Semaphore(os.cpu_count())
+# Semaphore_multi_processing_pool = Semaphore(os.cpu_count())
+QUEUE = MyPriorityQueue()
 
 # YTDL_OPTIONS = {
 #     'format': 'bestaudio/best',

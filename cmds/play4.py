@@ -272,6 +272,8 @@ class Music(Cog_Extension):
     async def play_custom_list(self, ctx: commands.Context, list_name: str):
         async with ctx.typing():
             if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
+            if players.get(ctx.guild.id): # 不讓使用者同時播放兩個 list，或是自訂歌曲 + 自訂歌單
+                return await ctx.send(await ctx.interaction.translate('send_play_custom_list_already_playing_left_first'))
             if not ctx.voice_client:
                 await ctx.author.voice.channel.connect()
 

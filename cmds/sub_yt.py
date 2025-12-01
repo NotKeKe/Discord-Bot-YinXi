@@ -11,7 +11,7 @@ import yt_dlp
 from concurrent.futures import ProcessPoolExecutor
 # import scrapetube
 
-from cmds.music_bot.play4.utils import is_url, Semaphore_multi_processing_pool, get_video_id
+from cmds.music_bot.play4.utils import is_url, get_video_id
 
 from core.functions import create_basic_embed, redis_client
 from core.classes import Cog_Extension

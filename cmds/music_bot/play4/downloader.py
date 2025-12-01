@@ -5,14 +5,15 @@ from datetime import datetime
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
 import logging
+import uuid
 
 from cmds.music_bot.play4 import utils
 from core.functions import math_round, secondToReadable, redis_client
-from .utils import get_video_id, check_audio_url_alive
+from .utils import get_video_id, check_audio_url_alive, QUEUE
 
 logger = logging.getLogger(__name__)
 
-def extract_info(video_url: str):
+def extract_info_yt_dlp(video_url: str):
     with yt_dlp.YoutubeDL(utils.YTDL_OPTIONS) as ydl:
         info = ydl.extract_info(video_url, download=False)
         return {
@@ -30,6 +31,17 @@ def extract_info_pytube(video_url: str):
         "title": yt.title,
         "duration": yt.length,
     }
+
+async def extract_info(video_url: str) -> dict:
+    loop = asyncio.get_running_loop()
+    with ProcessPoolExecutor() as executor:
+        result = await loop.run_in_executor(executor, extract_info_yt_dlp, video_url)
+
+        # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多進程 但為了統一 我還是用了)
+        if not (await check_audio_url_alive(result["audio_url"])): 
+            result = await loop.run_in_executor(executor, extract_info_pytube, video_url)
+
+    return result
 
 class RedisTemp:
     redis_base_key = 'musics:'
@@ -71,8 +83,9 @@ class RedisTemp:
 
 class Downloader:
     '''User await Downloader(query).run()'''
-    def __init__(self, query: str):
+    def __init__(self, query: str, priority: int = 1):
         self.query = query
+        self.priority = priority
 
         self.title = None
         self.video_url = None
@@ -83,6 +96,7 @@ class Downloader:
 
         self.start_time = datetime.now()
         self.process_time = 0
+        self.task_id = str(uuid.uuid4())
 
     def get_info(self) -> tuple:
         '''return (title, video_url, audio_url, thumbnail_url, duration)'''
@@ -104,17 +118,9 @@ class Downloader:
                 setattr(self, key, value)
             return
 
-        loop = asyncio.get_running_loop()
-        # 使用多進程, get result
-        logger.info('Try to enter semaphore')
-        async with utils.Semaphore_multi_processing_pool:
-            logger.info('Entered semaphore')
-            with ProcessPoolExecutor() as executor:
-                result = await loop.run_in_executor(executor, extract_info, self.video_url)
-        
-                # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多現程 但為了統一 我還是用了)
-                if not (await check_audio_url_alive(result["audio_url"])): 
-                    result = await loop.run_in_executor(executor, extract_info_pytube, self.video_url)
+        # 基本上 如果是來自播放清單 後面的歌曲，優先級應該要比較低
+        await QUEUE.add_task(self.task_id, self.priority, extract_info(self.video_url))
+        result = await QUEUE.get_result(self.task_id)
 
         # 更新 self 的屬性
         self.audio_url = result["audio_url"]

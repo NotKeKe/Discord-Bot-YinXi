@@ -3,17 +3,18 @@ import yt_dlp
 import asyncio
 from discord.ext import commands
 from concurrent.futures import ProcessPoolExecutor
+import uuid
 
 from core.mongodb import MongoDB_DB
 
-from .utils import convert_to_short_url, is_url, Semaphore_multi_processing_pool
+from .utils import convert_to_short_url, is_url, QUEUE
 from .player import Player, loop_option
 
 db = MongoDB_DB.music
 metas_coll = db['metas']
 custom_play_list_coll = db['custom_play_list']
 
-def get_url_title(url: str) -> dict:
+def _get_url_title(url: str) -> dict:
     with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
         info = ydl.extract_info(url, download=False)
         return {
@@ -21,6 +22,13 @@ def get_url_title(url: str) -> dict:
             'duration': info['duration'], # 原本就是 int
             'thumbnail': info['thumbnail'],
         }
+
+async def get_url_title(short_url: str):
+    loop = asyncio.get_running_loop()
+    with ProcessPoolExecutor() as executor:
+        result: dict = await loop.run_in_executor(executor, _get_url_title, short_url)
+
+    return result
 
 async def add_to_custom_list(url: str, list_name: str, user_id: int) -> str | bool:
     """將使用者指定的連結，加入 MongoDB 當中
@@ -48,9 +56,11 @@ async def add_to_custom_list(url: str, list_name: str, user_id: int) -> str | bo
     if not (await custom_play_list_coll.find_one(_filter)):
         # 取得影片資訊
         loop = asyncio.get_running_loop()
-        async with Semaphore_multi_processing_pool:
-            with ProcessPoolExecutor() as executor:
-                result: dict = await loop.run_in_executor(executor, get_url_title, short_url)
+    
+        task_id = str(uuid.uuid4())
+        await QUEUE.add_task(task_id, 1, get_url_title(short_url))
+        result = await QUEUE.get_result(task_id)
+
         title = result['title']
         duration = result['duration']
         thumbnail = result['thumbnail']
@@ -118,11 +128,12 @@ class CustomListPlayer:
 
     async def add_songs_to_player(self):
         await self.player.add(self.songs[0], self.ctx)
+        await self.player.add(self.songs[1], self.ctx)
 
-        # 先讓第一首歌出去後，剩下的歌用背景任務的方式新增，避免使用者等待過久
+        # 先讓兩首歌出去後，剩下的歌用背景任務的方式新增，避免使用者等待過久
         async def task():
-            for song in self.songs[1:]:
-                await self.player.add(song, self.ctx)
+            for song in self.songs[2:]:
+                await self.player.add(song, self.ctx, 2)
 
         asyncio.create_task(task())
 

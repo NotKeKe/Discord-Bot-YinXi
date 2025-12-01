@@ -8,6 +8,7 @@ services:
     container_name: yinxi-dc-bot
     depends_on:
       - lrcapi
+      - mongodb
     environment:
       - LRCAPI_URL=http://lrcapi:28883
     volumes:
@@ -15,6 +16,10 @@ services:
       - ./data:/app/data
       - ./logs/bot.log:/app/logs/bot.log
       - ./setting.json:/app/setting.json
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
     restart: unless-stopped
   api_server:
     build: 
