@@ -39,37 +39,21 @@ Semaphore_multi_processing_pool = Semaphore(os.cpu_count())
 # }
 
 YTDL_OPTIONS = {
-    # === 基本設定 ===
-    "quiet": True,                # 安靜模式（減少輸出）
-    "no_warnings": True,          # 隱藏警告
-    "color": 'never',             # 禁用顏色輸出
-
-    # === 格式選擇 ===
-    "format": "bestaudio/best",   # 獲取最佳音訊品質
-    "prefer_free_formats": True,  # 優先選擇開放格式（如 webm）
-
-    # === 下載控制 ===
-    "skip_download": True,        # 跳過實際下載
-    "simulate": False,            # 禁用模擬模式（需完整解析）
-    "dump_single_json": True,     # 直接輸出 JSON 資料
-
-    # === 資訊提取 ===
-    "writeinfojson": True,        # 寫入完整資訊（含標題、連結）
-    "writethumbnail": True,      # 獲取封面連結
-
-    # === 網路優化 ===
-    "socket_timeout": 30,         # 縮短超時時間
-    "retries": 1,                 # 減少重試次數
-    "fragment_retries": 1,
-
-    # === 快取設定（Linux）===
-    "cachedir": "/tmp/yt-dlp-cache",  # 使用 RAM Disk 加速
-    "rm_cachedir": False,
-
-    # === 其他優化 ===
-    "no_check_certificate": True,         # 避免 SSL 握手延遲（僅限可信環境）
-    "call_home": False,                   # 禁用外部請求
-    'ignore_no_formats_error': True
+    'format': 'bestaudio/best',  # 選擇最佳音質
+    'noplaylist': True,          # 如果輸入是播放清單，只下載當前影片
+    'quiet': True,               # 禁止在 console 輸出大量訊息
+    'no_warnings': True,         # 禁止輸出警告
+    'default_search': 'auto',    # 允許輸入關鍵字搜尋 (例如: "play 告白氣球")
+    'source_address': '0.0.0.0', # 強制使用 IPv4 (解決某些 YouTube 阻擋 IPv6 的問題)
+    
+    # 以下選項是為了讓機器人運作更穩定
+    'nocheckcertificate': True,
+    'ignoreerrors': False,
+    'logtostderr': False,
+    
+    # 這裡雖然設了 output template，但因為我們不會實際下載，所以只是備用
+    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'restrictfilenames': True,
 }
 
 class ID:
@@ -129,6 +113,7 @@ def video_id_to_url(video_id: str) -> str:
     return f'https://youtu.be/{video_id}'
 
 async def check_audio_url_alive(audio_url: str) -> bool:
+    client: httpx.AsyncClient | None = None
     try:
         if not audio_url: return False
         client = httpx.AsyncClient()
@@ -137,7 +122,8 @@ async def check_audio_url_alive(audio_url: str) -> bool:
     except:
         return False
     finally:
-        await client.aclose()
+        if client:
+            await client.aclose()
 
 def query_search(query: str) -> tuple:
     '''return (title, video_url, length: str)'''

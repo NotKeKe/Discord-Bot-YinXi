@@ -11,8 +11,6 @@ from cmds.music_bot.play4.lyrics import search_lyrics
 
 from core.functions import create_basic_embed, current_time, secondToReadable, math_round, redis_client
 from core.translator import load_translated
-from core.mock_interaction import MockInteraction
-# from core.classes import bot
 
 loop_option = ('None', 'single', 'list')
 loop_type = Literal['None', 'single', 'list']

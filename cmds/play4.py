@@ -100,14 +100,17 @@ class Music(Cog_Extension):
             if not ctx.voice_client: return await ctx.send(await ctx.interaction.translate('send_add_use_play_first'))
             if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send((await ctx.interaction.translate('send_add_not_in_same_channel')).format(channel_mention=ctx.guild.voice_client.channel.mention))
 
-            player: Player = players.get(ctx.guild.id)
-            if not player: return await ctx.send(await ctx.interaction.translate('send_add_player_crashed'))
+            try:
+                player: Player = players.get(ctx.guild.id)
+                if not player: return await ctx.send(await ctx.interaction.translate('send_add_player_crashed'))
 
-            data = await player.add(query, ctx)
-            size = data[0]
+                data = await player.add(query, ctx)
+                size = data[0]
 
-            await send_info_embed(player, ctx, size-1)
-            await ctx.send((await ctx.interaction.translate('send_add_success')).format(size=size), ephemeral=True)
+                await send_info_embed(player, ctx, size-1)
+                await ctx.send((await ctx.interaction.translate('send_add_success')).format(size=size), ephemeral=True)
+            except:
+                traceback.print_exc()
 
     @commands.hybrid_command(name=locale_str('skip'), description=locale_str('skip'), aliases=['s'])
     async def _skip(self, ctx: commands.Context):
@@ -338,7 +341,8 @@ class Music(Cog_Extension):
 
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):
-        await ctx.send(f'目前共有 {str(len(players))} 個伺服器正在播放音樂\nServers: {", ".join([self.bot.get_guild(id) for id in players.keys()])}')
+        if str(ctx.author.id) != KeJCID: return
+        await ctx.send(f'目前共有 {str(len(players))} 個伺服器正在播放音樂\nServers: {", ".join([self.bot.get_guild(id).name for id in players.keys()])}')
         player: Player = players.get(ctx.guild.id)
         if not player: return
         await send_info_embed(player, ctx)
