@@ -8,7 +8,6 @@ import aiofiles
 import orjson
 import asyncio
 import logging
-from copy import deepcopy
 
 from core.functions import yinxi_base_url
 
@@ -98,7 +97,7 @@ async def _close_context():
         global contexts
         while True:
             closed_count = 0
-            for context, data in deepcopy(contexts).items():
+            for context, data in contexts.copy().items():
                 if data['last_used'] < datetime.now() - timedelta(minutes=5):
                     await context.close()
                     del contexts[context]

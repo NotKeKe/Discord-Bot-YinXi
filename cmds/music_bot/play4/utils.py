@@ -210,17 +210,19 @@ async def check_and_get_player(ctx: commands.Context, *, check_user_in_channel=T
     '''Return current Player object, and a status of this command.'''
     from cmds.play4 import players
     from cmds.music_bot.play4.player import Player
+
+    locale_value = ctx.interaction.locale.value if ctx.interaction else ctx.guild.preferred_locale.value
     
     if check_user_in_channel:
         if not ctx.author.voice:
-            return await ctx.send(await ctx.bot.tree.translator.get_translate('send_check_not_in_voice', ctx.interaction.locale.value)), False
+            return await ctx.send(await ctx.bot.tree.translator.get_translate('send_check_not_in_voice', locale_value)), False
     if not ctx.voice_client:
-        return await ctx.send(await ctx.bot.tree.translator.get_translate('send_check_bot_not_in_voice', ctx.interaction.locale.value)), False
+        return await ctx.send(await ctx.bot.tree.translator.get_translate('send_check_bot_not_in_voice', locale_value)), False
 
     player: Player = players.get(ctx.guild.id)
 
     if not player:
-        return await ctx.send(await ctx.bot.tree.translator.get_translate('send_add_player_crashed', ctx.interaction.locale.value)), False
+        return await ctx.send(await ctx.bot.tree.translator.get_translate('send_add_player_crashed', locale_value)), False
     return player, True
 
 

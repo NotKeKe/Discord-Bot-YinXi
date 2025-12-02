@@ -207,38 +207,41 @@ class Music(Cog_Extension):
 
     @commands.hybrid_command(name=locale_str('clear'), description=locale_str('clear'), aliases=['cq', '清除'])
     async def clear_queue(self, ctx: commands.Context):
-        async with ctx.typing():
-            player, status = await check_and_get_player(ctx)
-            if not status: return
-            if not player.list: return await ctx.send(await ctx.interaction.translate('send_clear_already_empty'))
+        try:
+            async with ctx.typing():
+                player, status = await check_and_get_player(ctx)
+                if not status: return
+                if not player.list: return await ctx.send(await ctx.interaction.translate('send_clear_already_empty'))
 
-            view = discord.ui.View(timeout=60)
-            button_check = discord.ui.Button(emoji='✅', label=await ctx.interaction.translate('send_clear_confirm_button'), style=discord.ButtonStyle.green)
-            async def clear_queue_callback(interaction: discord.Interaction):
-                player.clear_list()
-                button_reject.disabled = True
-                button_check.disabled = True
-                await interaction.response.edit_message(content=await interaction.translate('send_clear_success'), embed=None, view=None)
-            button_check.callback = clear_queue_callback
+                view = discord.ui.View(timeout=60)
+                button_check = discord.ui.Button(emoji='✅', label=await ctx.interaction.translate('send_clear_confirm_button'), style=discord.ButtonStyle.green)
+                async def clear_queue_callback(interaction: discord.Interaction):
+                    player.clear_list()
+                    button_reject.disabled = True
+                    button_check.disabled = True
+                    await interaction.response.edit_message(content=await interaction.translate('send_clear_success'), embed=None, view=None)
+                button_check.callback = clear_queue_callback
 
-            button_reject = discord.ui.Button(emoji='❌', label=await ctx.interaction.translate('send_clear_reject_button'), style=discord.ButtonStyle.red)
-            async def button_reject_callback(interaction: discord.Interaction):
-                button_reject.disabled = True
-                button_check.disabled = True
-                await interaction.response.edit_message(content=await interaction.translate('send_clear_cancelled'), embed=None, view=None)
-            button_reject.callback = button_reject_callback
+                button_reject = discord.ui.Button(emoji='❌', label=await ctx.interaction.translate('send_clear_reject_button'), style=discord.ButtonStyle.red)
+                async def button_reject_callback(interaction: discord.Interaction):
+                    button_reject.disabled = True
+                    button_check.disabled = True
+                    await interaction.response.edit_message(content=await interaction.translate('send_clear_cancelled'), embed=None, view=None)
+                button_reject.callback = button_reject_callback
 
-            view.add_item(button_check)
-            view.add_item(button_reject)
+                view.add_item(button_check)
+                view.add_item(button_reject)
 
-            '''i18n'''
-            eb = load_translated((await ctx.interaction.translate('embed_clear_confirm')))[0]
-            title = eb.get('title')
-            ''''''
+                '''i18n'''
+                eb = load_translated((await ctx.interaction.translate('embed_clear_confirm')))[0]
+                title = eb.get('title')
+                ''''''
 
-            eb = create_basic_embed(title, color=ctx.author.color)
-            eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-            await ctx.send(embed=eb, view=view)
+                eb = create_basic_embed(title, color=ctx.author.color)
+                eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+                await ctx.send(embed=eb, view=view)
+        except:
+            traceback.print_exc()
 
     @commands.hybrid_command(name=locale_str('leave'), description=locale_str('leave'))
     async def _leave(self, ctx: commands.Context):

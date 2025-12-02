@@ -225,12 +225,15 @@ class Player:
         '''Resume to play music and `SEND` message to notice user'''
         ctx = ctx or self.ctx
 
-        if self.voice_client.is_playing():
-            return await ctx.send(await self.translator.get_translate('send_player_is_playing', self.locale))
-        if not self.voice_client.is_paused():
-            return await ctx.send(await self.translator.get_translate('send_player_not_paused', self.locale))
+        # if self.voice_client.is_playing():
+        #     return await ctx.send(await self.translator.get_translate('send_player_is_playing', self.locale))
+        # if not self.voice_client.is_paused():
+        #     return await ctx.send(await self.translator.get_translate('send_player_not_paused', self.locale))
 
-        self.voice_client.resume()
+        try:
+            self.voice_client.resume()
+        except:
+            return
         self.paused = False
         await ctx.send(await self.translator.get_translate('send_player_resumed_success', self.locale), ephemeral=True)
 
@@ -246,9 +249,11 @@ class Player:
             return
         if self.manual: return
             
-        # 檢查播放列表是否為空
+        # 檢查播放列表是否為空, wait for self.list not empty
         if not self.list:
-            print('Player playlist is empty')
+            while not self.list:
+                await asyncio.sleep(0.1)
+            await self.play()
             return
             
         # 更新索引
@@ -321,6 +326,7 @@ class Player:
     def clear_list(self):
         self.list = []
         self.voice_client.stop()
+        self.current_index = 0
 
     def gener_progress_bar(self, bar_length: int = 20) -> str:
         """
