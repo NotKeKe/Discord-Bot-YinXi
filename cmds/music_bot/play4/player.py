@@ -15,6 +15,8 @@ from core.translator import load_translated
 loop_option = ('None', 'single', 'list')
 loop_type = Literal['None', 'single', 'list']
 
+PREFER_LOOP_KEY = 'musics_prefer_loop'
+
 class Player:
     '''Ensure the user is current in a channel, and bot already joined the channel'''
     def __init__(self, ctx: commands.Context):
@@ -128,6 +130,11 @@ class Player:
     
     async def play(self):
         self.init_bar()
+
+        # try to get user prefer loop
+        prefer_loop = await redis_client.get(f'{PREFER_LOOP_KEY}:{self.ctx.author.id}')
+        if prefer_loop:
+            self.loop(prefer_loop)
         
         if not self.list:
             if not self.downloading:
@@ -172,16 +179,23 @@ class Player:
             traceback.print_exc()
             await self.ctx.send((await self.translator.get_translate('send_player_play_error', self.locale)).format(e=str(e)))
 
+    def _change_prefer_loop(self):
+        if self.loop_status not in loop_option: return 'Invalid loop type'
+
+        key = f'{PREFER_LOOP_KEY}:{self.ctx.author.id}'
+        asyncio.create_task(redis_client.set(key, self.loop_status))
 
     def loop(self, loop_type: str):
         if loop_type not in loop_option: return 'Invalid loop type'
         self.loop_status = loop_type
+        self._change_prefer_loop()
 
     def turn_loop(self) -> str:
         '''Return current loop type and change to next loop type'''
         index = loop_option.index(self.loop_status)
         index = (index + 1) % len(loop_option)
         self.loop_status = loop_option[index]
+        self._change_prefer_loop()
         return self.loop_status
 
     async def back(self):
