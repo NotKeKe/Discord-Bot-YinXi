@@ -72,9 +72,13 @@ class Music(Cog_Extension):
     async def _play(self, ctx: commands.Context, *, query: str = None):
         try:
             async with ctx.typing():
-                if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
+                member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
+                if not member:
+                    return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+
+                if not member.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
                 if not ctx.voice_client:
-                    await ctx.author.voice.channel.connect()
+                    await member.voice.channel.connect()
 
                 if ctx.voice_client.is_paused(): return await ctx.invoke(self.bot.get_command('resume'))
                 elif not query: return await ctx.send(await ctx.interaction.translate('send_play_no_query'))
@@ -96,9 +100,13 @@ class Music(Cog_Extension):
     @app_commands.autocomplete(query=play_query_autocomplete)
     async def _add(self, ctx: commands.Context, *, query: str):
         async with ctx.typing():
-            if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_add_not_in_voice'))
+            member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
+            if not member:
+                return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+
+            if not member.voice: return await ctx.send(await ctx.interaction.translate('send_add_not_in_voice'))
             if not ctx.voice_client: return await ctx.send(await ctx.interaction.translate('send_add_use_play_first'))
-            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send((await ctx.interaction.translate('send_add_not_in_same_channel')).format(channel_mention=ctx.guild.voice_client.channel.mention))
+            if member.voice.channel != ctx.voice_client.channel: return await ctx.send((await ctx.interaction.translate('send_add_not_in_same_channel')).format(channel_mention=ctx.guild.voice_client.channel.mention))
 
             try:
                 player: Player = players.get(ctx.guild.id)
@@ -152,8 +160,12 @@ class Music(Cog_Extension):
     @commands.hybrid_command(name=locale_str('stop'), description=locale_str('stop'))
     async def _stop(self, ctx: commands.Context):
         async with ctx.typing():
-            if not (ctx.author.voice and ctx.voice_client): return await ctx.send(await ctx.interaction.translate('send_stop_not_in_voice'))
-            if ctx.author.voice.channel != ctx.voice_client.channel: return await ctx.send(await ctx.interaction.translate('send_stop_not_in_same_channel'))
+            member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
+            if not member:
+                return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+            
+            if not (member.voice and ctx.voice_client): return await ctx.send(await ctx.interaction.translate('send_stop_not_in_voice'))
+            if member.voice.channel != ctx.voice_client.channel: return await ctx.send(await ctx.interaction.translate('send_stop_not_in_same_channel'))
             channel = ctx.voice_client.channel
             await utils.leave(ctx)
             await ctx.send((await ctx.interaction.translate('send_stop_success')).format(channel_mention=channel.mention))
@@ -274,11 +286,15 @@ class Music(Cog_Extension):
     @app_commands.autocomplete(list_name=custom_play_list_autocomplete)
     async def play_custom_list(self, ctx: commands.Context, list_name: str):
         async with ctx.typing():
-            if not ctx.author.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
+            member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
+            if not member:
+                return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+
+            if not member.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
             if players.get(ctx.guild.id): # 不讓使用者同時播放兩個 list，或是自訂歌曲 + 自訂歌單
                 return await ctx.send(await ctx.interaction.translate('send_play_custom_list_already_playing_left_first'))
             if not ctx.voice_client:
-                await ctx.author.voice.channel.connect()
+                await member.voice.channel.connect()
 
             if ctx.voice_client.is_paused(): return await ctx.invoke(self.bot.get_command('resume'))
             if players.get(ctx.guild.id): return # 如果 player 已經存在，則不再建立
@@ -347,7 +363,10 @@ class Music(Cog_Extension):
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):
         if str(ctx.author.id) != KeJCID: return
-        await ctx.send(f'目前共有 {str(len(players))} 個伺服器正在播放音樂\nServers: {", ".join([self.bot.get_guild(id).name for id in players.keys()])}')
+
+        guilds_count = sum(1 for guild in self.bot.guilds if guild.voice_client is not None)
+
+        await ctx.send(f'目前共有 {str(len(players))} (players) 個伺服器正在播放音樂\n音汐正在 {guilds_count} 個頻道裡面\nServers: {", ".join([self.bot.get_guild(id).name for id in players.keys()])}')
         player: Player = players.get(ctx.guild.id)
         if not player: return
         await send_info_embed(player, ctx)

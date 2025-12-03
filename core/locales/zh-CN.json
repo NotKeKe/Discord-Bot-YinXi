@@ -775,6 +775,7 @@
         "send_add_to_custom_list_success": "已成功将歌曲添加到自定义歌单 `({list_name})` 中。",
         "send_delete_custom_list_success": "已成功删除自定义歌单 `({list_name})`。",
         "send_delete_custom_list_cancelled": "已取消删除自定义歌单 `({list_name})`。",
-        "send_play_custom_list_already_playing_left_first": "要先让我离开，才能播你的自定播放清单窝~"
+        "send_play_custom_list_already_playing_left_first": "要先让我离开，才能播你的自定播放清单窝~",
+        "send_play_not_in_guild": "你必须在服务器中才能播放音乐。"
     }
 }

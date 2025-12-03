@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from discord.utils import MISSING
 import re
 from pytubefix import Search
 from datetime import timedelta
@@ -155,10 +156,18 @@ async def leave(ctx: commands.Context):
 async def send(ctx: commands.Context | discord.Interaction, text: str = None, embed: discord.Embed = None, view: discord.ui.View = None, ephemeral: bool = False):
     '''Same as discord.py send function but support interaction'''
     if isinstance(ctx, commands.Context):
-        await ctx.send(text, embed=embed, view=view, ephemeral=ephemeral)
+        msg = await ctx.send(text, embed=embed, view=view, ephemeral=ephemeral)
     elif isinstance(ctx, discord.Interaction):
-        await ctx.response.send_message(text, embed=embed, view=view, ephemeral=ephemeral)
+        if not view:
+            view = MISSING
+        if not embed:
+            embed = MISSING
+        msg = await ctx.response.send_message(text, embed=embed, view=view, ephemeral=ephemeral)
     else: raise ValueError('Invalid context type')
+
+    if view and view is not MISSING:
+        await view.wait()
+        await msg.edit(view=None)
 
 async def send_info_embed(player: 'Player', ctx: commands.Context | discord.Interaction, index: int = None, if_send: bool = True):
     '''Ensure index is index not id of song'''

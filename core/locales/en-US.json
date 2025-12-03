@@ -774,6 +774,7 @@
         "send_add_to_custom_list_success": "Successfully added song to custom playlist `({list_name})`.",
         "send_delete_custom_list_success": "Successfully deleted custom playlist `({list_name})`.",
         "send_delete_custom_list_cancelled": "Deletion of custom playlist `({list_name})` has been cancelled.",
-        "send_play_custom_list_already_playing_left_first": "You must leave first before you can play your custom playlist."
+        "send_play_custom_list_already_playing_left_first": "You must leave first before you can play your custom playlist.",
+        "send_play_not_in_guild": "You must be in a guild to play music."
     }
 }
