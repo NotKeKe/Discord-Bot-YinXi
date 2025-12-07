@@ -109,11 +109,13 @@ class MusicControlButtons(View):
             await interation.response.defer(ephemeral=True, thinking=True)
             result = await self.player.search_lyrics()
 
-            file = File(io.BytesIO(result.encode()), filename='lyrics.txt')
             if len(result) > 2000:
+                file = File(io.BytesIO(result.encode()), filename='lyrics.txt')
                 result = result[:1996] + '...'
+            else:
+                file = None
 
-            await interation.followup.send(result, file=file, ephemeral=True)
+            await interation.followup.send(result, **({'file': file} if file else {}), ephemeral=True)
         except Exception as e:
             await self.button_error(interation, e)
 

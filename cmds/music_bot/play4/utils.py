@@ -5,11 +5,11 @@ import re
 from pytubefix import Search
 from datetime import timedelta
 import urllib.parse
-from concurrent.futures import ProcessPoolExecutor
-import os
+from urllib.parse import urlparse, parse_qs
 from typing import TYPE_CHECKING
-from asyncio import Semaphore
+import asyncio
 import httpx
+import time
 # import scrapetube
 
 from core.functions import create_basic_embed
@@ -166,8 +166,12 @@ async def send(ctx: commands.Context | discord.Interaction, text: str = None, em
     else: raise ValueError('Invalid context type')
 
     if view and view is not MISSING:
-        await view.wait()
-        await msg.edit(view=None)
+        async def wait_view(view: discord.ui.View, msg: discord.Message):
+            await view.wait()
+            await msg.edit(view=None)
+        
+        assert isinstance(msg, discord.Message)
+        asyncio.create_task(wait_view(view, msg))
 
 async def send_info_embed(player: 'Player', ctx: commands.Context | discord.Interaction, index: int = None, if_send: bool = True):
     '''Ensure index is index not id of song'''

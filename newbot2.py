@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands, tasks
-from pretty_help import PrettyHelp
+# from pretty_help import PrettyHelp
 import json
 import os
 from dotenv import load_dotenv

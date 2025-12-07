@@ -62,8 +62,9 @@ class Player:
     
     def __del__(self):
         try: 
-            self.update_progress_bar_task.cancel()
-            del self.update_progress_bar_task
+            if self.update_progress_bar_task:
+                self.update_progress_bar_task.cancel()
+                del self.update_progress_bar_task
             if self.playlist_load_task:
                 self.playlist_load_task.cancel()
                 del self.playlist_load_task
@@ -95,11 +96,12 @@ class Player:
         first_result = await self.add(utils.video_id_to_url(video_ids[0]), self.ctx)
 
         # 創建一個 task，用於在背景新增其他歌曲
-        async def task():
-            for video_id in video_ids[1:]:
-                await self.add(utils.video_id_to_url(video_id), self.ctx, 2)
+        if len(video_ids) > 1:
+            async def task():
+                for video_id in video_ids[1:]:
+                    await self.add(utils.video_id_to_url(video_id), self.ctx, 2)
 
-        self.playlist_load_task = asyncio.create_task(task())
+            self.playlist_load_task = asyncio.create_task(task())
 
         return first_result
 
@@ -352,7 +354,7 @@ class Player:
         """
         current = self.passed_time
         paused = self.paused
-        total = self.duration_int
+        total = self.duration_int or 0
 
         if total <= 0:
             return "□" * bar_length

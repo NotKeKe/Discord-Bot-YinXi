@@ -8,6 +8,7 @@ import sqlite3
 import os
 import sys
 import uvicorn
+from pathlib import Path
 
 # 獲取當前腳本的目錄 (/app/api_server)
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -53,6 +54,8 @@ async def get_tools():
 
 @app.get('/api/image/')
 async def get_image_from_path(path: str = Query(..., min_length=5)):
+    path = Path(path).resolve()
+
     if os.path.isfile(path) and path.startswith(BASE_DIR):
         return FileResponse(path)
     else:

@@ -127,15 +127,17 @@ class CustomListPlayer:
         self.new_doc = new_doc
 
     async def add_songs_to_player(self):
-        await self.player.add(self.songs[0], self.ctx)
-        await self.player.add(self.songs[1], self.ctx)
-
         # 先讓兩首歌出去後，剩下的歌用背景任務的方式新增，避免使用者等待過久
-        async def task():
-            for song in self.songs[2:]:
-                await self.player.add(song, self.ctx, 2)
+        await self.player.add(self.songs[0], self.ctx)
+        if len(self.songs) > 1:
+            await self.player.add(self.songs[1], self.ctx)
+            
+        if len(self.songs) > 2:
+            async def task():
+                for song in self.songs[2:]:
+                    await self.player.add(song, self.ctx, 2)
 
-        asyncio.create_task(task())
+            asyncio.create_task(task())
 
     def change_loop_status(self):
         self.player.loop(self.new_doc.get('loop_status') or 'None')

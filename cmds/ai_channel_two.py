@@ -58,7 +58,7 @@ class AIChannelTwo(Cog_Extension):
         self.db = self.db_client[db_key]
 
     async def cog_load(self):
-        print(f'已載入{__name__}')
+        print(f'已載入「{__name__}」')
 
     async def cog_unload(self):
         if self.db_client:

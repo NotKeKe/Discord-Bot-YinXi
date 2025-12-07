@@ -238,7 +238,7 @@ class TestTemp(Cog_Extension):
     async def check_playwright_connect(self, ctx: commands.Context):
         from core.playwright import contexts
         await ctx.send(contexts)
-
+        
     # async def on_select(interaction: discord.Interaction):
     # game_count = sb.get_current_player_counts()
 
