@@ -3,11 +3,11 @@ from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands
 import logging
-from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
 import openai
 
-from core.functions import MONGO_URL, create_basic_embed, UnixNow
+from core.functions import create_basic_embed, UnixNow
+from core.mongodb import MongoDB_DB
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated
 from cmds.ai_chat.chat.chat import Chat
@@ -24,15 +24,10 @@ db_key = 'aichat_chat_history'
 class AIChat(Cog_Extension):
     def __init__(self, bot):
         super().__init__(bot)
-        self.db_client = AsyncIOMotorClient(MONGO_URL)
-        self.db = self.db_client[db_key]
+        self.db = MongoDB_DB.aichat_chat_history
 
     async def cog_load(self):
         print(f'已載入「{__name__}」')
-        
-    async def cog_unload(self):
-        if self.db_client:
-            self.db_client.close()
 
     @commands.Cog.listener()
     async def on_ready(self):

@@ -23,6 +23,7 @@ from core.functions import thread_pool, read_json, create_basic_embed, download_
 from core.translator import locale_str, load_translated
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY, testing_guildID
 from core.playwright import get_context, get_page
+from core.classes import Cog_Extension
 
 youtube_download_base_url = None
 
@@ -63,21 +64,20 @@ class select_autocomplete:
 
 
 
-class ApiCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        self.update_alive.start()
-
+class ApiCog(Cog_Extension):
     class utils:
         @staticmethod
         def stringToDatetime(string: str) -> datetime:
             '''datetime.strptime(string, "%Y-%m-%d T%H:%M:%SZ")'''
             converted_datetime = datetime.strptime(string, "%Y-%m-%dT%H:%M:%SZ")
             return converted_datetime
-
-    @commands.Cog.listener()
-    async def on_ready(self):
+        
+    async def cog_load(self):
         print(f'已載入「{__name__}」')
+        self.update_alive.start()
+
+    async def cog_unload(self):
+        self.update_alive.stop()
     
     @commands.hybrid_command(name=locale_str('joke'), description=locale_str('joke'), aliases=['jokes'])
     async def joke(self, ctx: commands.Context):

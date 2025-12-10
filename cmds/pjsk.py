@@ -104,10 +104,13 @@ class PJSK(commands.Cog):
         self.db = db
         self.collection = collection
         self.send_channels_collection = self.db['notif_channels']
-        self.update_pjsk_songs.start()
 
     async def cog_load(self):
         print(f'已載入「{__name__}」')
+        self.update_pjsk_songs.start()
+
+    async def cog_unload(self):
+        self.update_pjsk_songs.cancel()
 
     @commands.hybrid_command(name=locale_str('pjsk_new_song'), description=locale_str('pjsk_new_song'))
     async def new_song(self, ctx: commands.Context):

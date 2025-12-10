@@ -18,15 +18,19 @@ from cmds.AIsTwo.vector import chat_human as vt_chat_human
 from vector_data import vector
 
 from core.functions import KeJCID, thread_pool, create_basic_embed, UnixNow, download_image, translate, testing_guildID, OLLAMA_IP
+from core.classes import Cog_Extension
 
 save_to_preferences = Preference.save_to_preferences
 
 numbers = defaultdict(lambda: defaultdict(list))
 
-class AITwo(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
+class AITwo(Cog_Extension):
+    async def cog_load(self):
         self.weather_task.start()
+        print(f'已載入「{__name__}」')
+
+    async def cog_unload(self):
+        self.weather_task.cancel()
 
     async def get_weather_llm(self, location: str) -> discord.Embed:
         think, result = await thread_pool(base_zhipu_chat, f'請你幫我從搜尋{location}今天整天的完整天氣預報 以及整周的完整天氣預報 (須包含溫度 降雨機率 體感溫度 濕度 以及總結)',
@@ -37,10 +41,9 @@ class AITwo(commands.Cog):
         eb = create_basic_embed(location, result or think, discord.Color.random(), '天氣預報')
         eb.set_footer(text='更新時間')
         return eb
-
+    
     @commands.Cog.listener()
     async def on_ready(self):
-        print(f'已載入「{__name__}」')
         await safe_get_ollama_models()
 
     # @commands.hybrid_command(name='chat_two', description='Chat with AI model')

@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 
 from core.functions import read_json, write_json, create_basic_embed, math_round
 from core.translator import locale_str, load_translated
+from core.classes import Cog_Extension
 
 PATH = './cmds/data.json/counting.json'
 
@@ -13,13 +14,9 @@ example_data = {
     }
 }
 
-class Counting(commands.Cog):
+class Counting(Cog_Extension):
     data = None
     is_update = False
-
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        self.storage_data_task.start()
 
     @classmethod
     def initdata(cls):
@@ -37,9 +34,15 @@ class Counting(commands.Cog):
         write_json(cls.data, PATH)
         cls.is_update = False
 
+    async def cog_load(self):
+        print(f'已載入「{__name__}」')
+        self.storage_data_task.start()
+
+    async def cog_unload(self):
+        self.storage_data_task.cancel()
+
     @commands.Cog.listener()
     async def on_ready(self):
-        print(f'已載入「{__name__}」')
         self.initdata()
 
     @commands.Cog.listener()

@@ -157,15 +157,16 @@ class CambridgeChannel(Cog_Extension):
         return self._client
 
     async def cog_load(self):
+        print(f'已載入「{__name__}」')
         self.get_client()
         self.check_used.start()
         self.daily_test.start()
 
     async def cog_unload(self):
-        if self._client is None: return
-        await self._client.aclose()
-        self.check_used.stop()
-        self.daily_test.stop()
+        if self._client is not None:
+            await self._client.aclose()
+        self.check_used.cancel()
+        self.daily_test.cancel()
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):

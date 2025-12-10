@@ -144,11 +144,13 @@ class ChannelHistories:
         except: traceback.print_exc()
 
 class ChannelHistory(Cog_Extension):
-    @commands.Cog.listener()
-    async def on_ready(self):
+    async def cog_load(self):
         print(f'已載入「{__name__}」')
         os.makedirs(PATH, exist_ok=True)
         self.rm_file.start()
+
+    async def cog_unload(self):
+        self.rm_file.cancel()
 
     @commands.hybrid_command(name=locale_str('output_chat_history'), description=locale_str('output_chat_history'))
     @app_commands.choices(file_type=[app_commands.Choice(name=t, value=t) for t in ('json', 'txt')])

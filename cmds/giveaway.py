@@ -127,9 +127,6 @@ class Giveaway(Cog_Extension):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'已載入「{__name__}」')
-
-    @commands.Cog.listener()
-    async def on_ready(self):
         data = read_json(path)
         if not data: return
         for message_id in data:

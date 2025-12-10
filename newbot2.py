@@ -15,7 +15,7 @@ from core.functions import math_round, current_time, testing_guildID, create_bas
 from core.translator import i18n, MockInteraction
 from core.setup_log import setup_logging, StreamToLogger
 from cmds.AIsTwo.others.decide import ActivitySelector
-from core.classes import set_bot
+from core.classes import set_bot, Cog_Extension
 
 # get env
 load_dotenv()
@@ -115,15 +115,15 @@ async def on_message(message):
         # 處理伺服器中的指令
         await bot.process_commands(message)
 
-class UpdateStatus(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        self.update_status.start()
-
-    @commands.Cog.listener()
-    async def on_ready(self):
+class UpdateStatus(Cog_Extension):
+    async def cog_load(self):
         print(f'已載入「UpdateStatus」')
+        self.update_status.start()
         self.change_activity.start()
+
+    async def cog_unload(self):
+        self.update_status.cancel()
+        self.change_activity.cancel()
 
     @commands.command()
     async def 改變狀態(self, ctx: commands.Context, activity_code: int = 1):
@@ -168,6 +168,11 @@ class UpdateStatus(commands.Cog):
             await self.bot.change_presence(activity=activity)
         except Exception as e:
             print(f'無法更新狀態，原因: {e}')
+
+    @change_activity.before_loop
+    async def change_activity_before_loop(self):
+        await self.bot.wait_until_ready()
+        await asyncio.sleep(1)
         
     @update_status.before_loop
     async def before_task(self):

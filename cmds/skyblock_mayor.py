@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 import asyncio
 import re
 from dotenv import load_dotenv
+
 from cmds.skyblock_commands_foldor import skyblock_commands
+from core.classes import Cog_Extension
 
 # get env
 load_dotenv()
@@ -43,14 +45,13 @@ def remove_events_channel(channelID):
 
     return True
 
-class skyblock_mayor(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+class skyblock_mayor(Cog_Extension):
+    async def cog_load(self):
+        print(f'已載入「{__name__}」')
         self.update_embed_task.start()
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print(f'已載入「{__name__}」')
+    async def cog_unload(self):
+        self.update_embed_task.cancel()
 
     @commands.hybrid_command(aliases=['start_mayor'], name='開始mayor更新', description="Start Update Skyblock's mayor info.")
     @commands.has_permissions(administrator=True)

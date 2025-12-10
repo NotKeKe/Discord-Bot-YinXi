@@ -147,6 +147,9 @@ class SubYT(Cog_Extension):
         logger.info(f'已載入「{__name__}」')
         self.update_sub_yt.start()
 
+    async def cog_unload(self):
+        self.update_sub_yt.cancel()
+
     @commands.hybrid_command(name=locale_str('sub_yt'), description=locale_str('sub_yt'))
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.describe(url=locale_str('sub_yt_url'))

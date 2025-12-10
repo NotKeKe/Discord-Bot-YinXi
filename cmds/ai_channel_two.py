@@ -2,12 +2,12 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import logging
-from motor.motor_asyncio import AsyncIOMotorClient
 import openai
 import traceback
 from io import BytesIO
 
-from core.functions import MONGO_URL, create_basic_embed, current_time, get_attachment, split_str_by_len_and_backtick, UnixNow
+from core.functions import create_basic_embed, current_time, get_attachment, split_str_by_len_and_backtick, UnixNow
+from core.mongodb import MongoDB_DB
 from core.classes import Cog_Extension, get_bot
 from core.translator import locale_str, load_translated
 from cmds.ai_chat.on_msg import ai_channel_chat, chat_human_chat
@@ -54,15 +54,10 @@ async def to_history(channel: discord.TextChannel, limit: int = 10):
 class AIChannelTwo(Cog_Extension):
     def __init__(self, bot):
         super().__init__(bot)
-        self.db_client = AsyncIOMotorClient(MONGO_URL)
-        self.db = self.db_client[db_key]
+        self.db = MongoDB_DB.aichannel_chat_history
 
     async def cog_load(self):
         print(f'已載入「{__name__}」')
-
-    async def cog_unload(self):
-        if self.db_client:
-            self.db_client.close()
 
     @commands.Cog.listener()
     async def on_message(self, msg: discord.Message):
@@ -78,7 +73,7 @@ class AIChannelTwo(Cog_Extension):
             ctx = await self.bot.get_context(msg)
 
             if ctx.guild:
-                db = self.db_client['chat_human_setting']
+                db = MongoDB_DB.chat_human_setting
                 collection = db[str(ctx.channel.id)]
 
                 init_data = await collection.find_one({'_id': 'chat_human_setting'})
@@ -257,7 +252,7 @@ class AIChannelTwo(Cog_Extension):
                 provider, model = split_provider_model(model)
 
                 async def check_model():
-                    db = self.db_client['aichat_available_models']
+                    db = MongoDB_DB.aichat_available_models
                     collection = db['models']
 
                     _id = 'model_setting'
@@ -316,7 +311,7 @@ class AIChannelTwo(Cog_Extension):
     async def set_chat_human(self, ctx: commands.Context):
         try:
             async with ctx.typing():
-                db = self.db_client['chat_human_setting']
+                db = MongoDB_DB.chat_human_setting
                 collection = db[str(ctx.channel.id)]
 
                 channel_exist = await collection.find_one({'_id': 'chat_human_setting'})
@@ -341,7 +336,7 @@ class AIChannelTwo(Cog_Extension):
     async def cancel_chat_human(self, ctx: commands.Context):
         try:
             async with ctx.typing():
-                db = self.db_client['chat_human_setting']
+                db = MongoDB_DB.chat_human_setting
                 collection = db[str(ctx.channel.id)]
 
                 if not (await collection.find_one({'_id': 'chat_human_setting'})):

@@ -30,6 +30,9 @@ class Music(Cog_Extension):
         print(f'已載入「{__name__}」')
         self.check_left_channel.start()
 
+    async def cog_unload(self):
+        self.check_left_channel.cancel()
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, exception: commands.errors.CommandError):
         if isinstance(exception, commands.CommandInvokeError):

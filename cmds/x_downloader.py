@@ -187,6 +187,7 @@ class XDownloader(Cog_Extension):
 
     async def cog_unload(self):
         await x_downloader.clean_broswer()
+        self.check_used.cancel()
 
     @commands.hybrid_command()
     async def x_download(self, ctx: commands.Context, url: str, type: Literal['image', 'video']):
