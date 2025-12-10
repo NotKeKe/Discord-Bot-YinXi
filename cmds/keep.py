@@ -1,5 +1,9 @@
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import (
+    app_commands, 
+    Interaction, 
+    errors as dc_errors
+)
 from discord.app_commands import Choice
 import asyncio
 import orjson
@@ -11,6 +15,7 @@ from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMe
 import traceback
 from motor.motor_asyncio import AsyncIOMotorCollection
 from textwrap import dedent
+import logging
 
 from core.classes import Cog_Extension, get_bot
 from core.functions import create_basic_embed, current_time, is_testing_guild, mongo_db_client, UnixToReadable
@@ -20,6 +25,7 @@ from cmds.ai_chat.utils.config import base_url_options
 
 reminder_tasks = {}
 bot = get_bot()
+logger = logging.getLogger(__name__)
 
 DB_KEY = 'keep'
 DB = mongo_db_client[DB_KEY]
@@ -145,7 +151,19 @@ class RunKeep:
 
 async def keepMessage(collection: AsyncIOMotorCollection, channel, user, event: str, delay: float, uuid: str):
     await asyncio.sleep(delay)
-    await channel.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
+
+    try:
+        await channel.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
+    except dc_errors.Forbidden:
+        try:
+            await user.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
+        except dc_errors.Forbidden:
+            ...
+        except Exception as e:
+            logger.error(f'Cannot send keep message with DM: {e}', exc_info=True)
+    except Exception as e:
+        logger.error(f'Cannot send keep message with channel: {e}', exc_info=True)
+
     reminder_tasks.pop(uuid)
 
     collection.find_one_and_delete({
@@ -172,7 +190,17 @@ async def create_KeepTask():
                 event = e['event']
                 u = e['uuid']
 
-                channel = await bot.fetch_channel(int(channelID))
+                try:
+                    channel = bot.get_channel(int(channelID)) or await bot.fetch_channel(int(channelID))
+                except dc_errors.NotFound: # 找不到
+                    await collection.delete_one({
+                        'uuid': u,
+                        'channelID': channelID
+                    })
+                    continue
+                except Exception as e:
+                    logger.error(f'Unexpected error: {str(e)}', exc_info=True)
+                    continue
 
                 task = bot.loop.create_task(keepMessage(collection, channel, user, event, delaySecond, u)) 
                 

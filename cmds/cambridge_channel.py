@@ -295,6 +295,8 @@ class CambridgeChannel(Cog_Extension):
         for col in (await db.list_collection_names()):
             try:
                 if col == 'channels': continue
+                meta = await db[col].find_one({'type': 'meta'})
+                if meta and not meta.get('daily_test'): continue
                 user_id = int(col)
                 user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
                 embed, view, question = await gener_daily_test(user_id)

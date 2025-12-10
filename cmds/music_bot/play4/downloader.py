@@ -6,6 +6,7 @@ import asyncio
 from concurrent.futures import ProcessPoolExecutor
 import logging
 import uuid
+import requests
 
 from cmds.music_bot.play4 import utils
 from core.functions import math_round, secondToReadable, redis_client
@@ -26,9 +27,19 @@ def extract_info_yt_dlp(video_url: str):
     
 def extract_info_pytube(video_url: str):
     yt = YouTube(video_url)
+    video_id = get_video_id(video_url)
+    thumbnail_url = f'https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg'
+
+    # try requests the higher quality thumbnail url (i dont know why pytubefix will pass maxresdefault thumbnail url)
+    try: 
+        resp = requests.head(thumbnail_url)
+        resp.raise_for_status()
+    except:
+        thumbnail_url = yt.thumbnail_url
+
     return {
         "audio_url": yt.streams.filter(only_audio=True).order_by('abr').desc().first().url,
-        "thumbnail_url": yt.thumbnail_url,
+        "thumbnail_url": thumbnail_url,
         "title": yt.title,
         "duration": yt.length,
     }
