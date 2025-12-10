@@ -135,6 +135,8 @@ class Load(Cog_Extension):
         if str(ctx.author.id) != KeJCID: return
 
         message = await ctx.send('嘗試重啟bot...')
+        from core.close_event import close_event
+        await close_event()
 
         if type == 'pm2':
             os.system('pm2 restart DiscordBot')

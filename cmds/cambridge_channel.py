@@ -299,6 +299,7 @@ class CambridgeChannel(Cog_Extension):
                 if meta and not meta.get('daily_test'): continue
                 user_id = int(col)
                 user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
+                if user.bot: continue # having no idea how it happens
                 embed, view, question = await gener_daily_test(user_id)
 
                 try:

@@ -101,42 +101,6 @@ async def on_connect():
     if not close_context_task:
         close_context_task = asyncio.create_task(_close_context())
 
-@bot.event
-async def on_disconnect():
-    try:
-        from core.playwright import (
-            p, browser, contexts, 
-            close_context_task, close_browser_task
-        )
-
-        for context in contexts:
-            await context.close()
-        contexts = {}
-        if browser:
-            await browser.close()
-        if p:
-            await p.stop()
-
-        try:
-            tasks = []
-            if close_context_task:
-                close_context_task.cancel()
-                tasks.append(close_context_task)
-                close_context_task = None
-            if close_browser_task:
-                close_browser_task.cancel()
-                tasks.append(close_browser_task)
-                close_browser_task = None
-            if tasks:
-                await asyncio.gather(*tasks)
-        except asyncio.CancelledError:
-            pass
-
-
-        root_logger.info('已關閉 global playwright')
-    except:
-        root_logger.error('無法關閉 global playwright', exc_info=True)
-
 #讓私訊也能被處理
 @bot.event
 async def on_message(message):
@@ -233,16 +197,20 @@ async def load():
     
         
 async def main():
-    async with bot:
-        await load()
-        await load_another()
-        print(f'開啟共花費了: {math_round(time.time() - start_time, 2)}')
-        await bot.start(TOKEN)
+    try:
+        async with bot:
+            await load()
+            await load_another()
+            print(f'開啟共花費了: {math_round(time.time() - start_time, 2)}')
+            await bot.start(TOKEN)
+    except KeyboardInterrupt:
+        from core.close_event import close_event
+        await close_event()
+        raise # re raise
+
 
 if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        from core.functions import mongo_db_client
-        if mongo_db_client:
-            mongo_db_client.close()
+        root_logger.info('Bot shutdown.')

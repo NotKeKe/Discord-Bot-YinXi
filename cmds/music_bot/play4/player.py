@@ -289,7 +289,7 @@ class Player:
             self.current_index = (self.current_index + 1) % len(self.list)
         # single 不需要改變索引
 
-        print('play_next  {}  index: {}'.format(current_time(), self.current_index))
+        # print('play_next  {}  index: {}'.format(current_time(), self.current_index))
         
         # 添加短暫延遲避免重疊請求
         await asyncio.sleep(0.2)
