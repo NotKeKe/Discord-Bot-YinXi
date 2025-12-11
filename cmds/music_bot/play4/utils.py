@@ -162,15 +162,16 @@ async def send(ctx: commands.Context | discord.Interaction, text: str = None, em
             view = MISSING
         if not embed:
             embed = MISSING
-        msg = await ctx.response.send_message(text, embed=embed, view=view, ephemeral=ephemeral)
+        inter_msg = await ctx.response.send_message(text, embed=embed, view=view, ephemeral=ephemeral)
+        msg = await ctx.channel.fetch_message(inter_msg.id)
     else: raise ValueError('Invalid context type')
 
-    if view and view is not MISSING:
+    if view and view is not MISSING and msg:
         async def wait_view(view: discord.ui.View, msg: discord.Message):
             await view.wait()
             await msg.edit(view=None)
         
-        asyncio.create_task(wait_view(view, msg)) # type: ignore
+        asyncio.create_task(wait_view(view, msg))
 
 async def send_info_embed(player: 'Player', ctx: commands.Context | discord.Interaction, index: int = None, if_send: bool = True):
     '''Ensure index is index not id of song'''

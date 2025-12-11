@@ -93,14 +93,6 @@ async def on_command_error(ctx: commands.Context, error):
 async def on_ready():
     print('我上線了窩\n')
 
-@bot.event
-async def on_connect():
-    from core.playwright import close_browser_task, close_context_task, _close_context, _close_browser
-    if not close_browser_task:
-        close_browser_task = asyncio.create_task(_close_browser())
-    if not close_context_task:
-        close_context_task = asyncio.create_task(_close_context())
-
 #讓私訊也能被處理
 @bot.event
 async def on_message(message):

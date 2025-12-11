@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 p: Optional[Playwright] = None
 browser: Optional[Browser] = None
 
+
+close_context_task: Optional[asyncio.Task] = None
+close_browser_task: Optional[asyncio.Task] = None
+
 contexts: dict[BrowserContext, dict[str, Any]] = {}
 
 UA_TYPE = Literal['normal', 'yinxi']
@@ -37,7 +41,7 @@ async def _get_p() -> Playwright:
     return p
 
 async def _get_browser() -> Browser:
-    global browser, p
+    global browser, p, close_browser_task, close_context_task
     if not (browser and browser.is_connected()):
         try:
             if p:
@@ -48,6 +52,10 @@ async def _get_browser() -> Browser:
             ...
         p = await _get_p()
         browser = await p.chromium.launch(headless=True)
+
+        close_context_task = asyncio.create_task(_close_context())
+        close_browser_task = asyncio.create_task(_close_browser())
+
     return browser
 
 async def get_context(ua_type: UA_TYPE = 'yinxi', cookie_file: str | Path = '', purpose: str = 'Unknown') -> BrowserContext:
@@ -127,6 +135,3 @@ async def _close_browser():
                     logger.info('Closed global playwright')
     except asyncio.CancelledError:
         pass
-
-close_context_task: Optional[asyncio.Task] = asyncio.create_task(_close_context())
-close_browser_task: Optional[asyncio.Task] = asyncio.create_task(_close_browser())
