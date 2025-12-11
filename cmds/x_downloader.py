@@ -29,7 +29,7 @@ class Donwloader:
 
         self.last_used: datetime = datetime.now()
 
-    async def init_broswer(self):
+    async def init_browser(self):
         if self.context and self.browser and self.playwright: return logger.debug('Already initialized')
         p = await async_playwright().start()
         browser = await p.chromium.launch(headless=True)
@@ -50,25 +50,25 @@ class Donwloader:
             raise ValueError('Unknown cookie file')
         
         self.playwright = p
-        self.broswer = browser
+        self.browser = browser
         self.context = context
 
-    async def clean_broswer(self):
-        if not (self.context or self.broswer or self.playwright): return # 三者都為 none
+    async def clean_browser(self):
+        if not (self.context or self.browser or self.playwright): return # 三者都為 none
 
         if self.context:
             await self.context.close()
-        if self.broswer:
-            await self.broswer.close()
+        if self.browser:
+            await self.browser.close()
         if self.playwright:
             await self.playwright.stop()
 
         del self.context
-        del self.broswer
+        del self.browser
         del self.playwright
 
         self.context = None
-        self.broswer = None
+        self.browser = None
         self.playwright = None
 
         logger.info("Cleaned x_downloader's browser")
@@ -153,7 +153,7 @@ class Donwloader:
         self.last_used = datetime.now()
         try:
             try:
-                await self.init_broswer()
+                await self.init_browser()
                 page = await self.context.new_page()
             except:
                 page = None
@@ -182,11 +182,10 @@ x_downloader = Donwloader()
 class XDownloader(Cog_Extension):
     async def cog_load(self):
         logger.info(f'已載入「{__name__}」')
-        await x_downloader.init_broswer()
         self.check_used.start()
 
     async def cog_unload(self):
-        await x_downloader.clean_broswer()
+        await x_downloader.clean_browser()
         self.check_used.cancel()
 
     @commands.hybrid_command()
@@ -200,7 +199,7 @@ class XDownloader(Cog_Extension):
     @tasks.loop(minutes=2)
     async def check_used(self):
         if (datetime.now() - x_downloader.last_used).total_seconds() > 60: # 一分鐘未被使用
-            await x_downloader.clean_broswer()
+            await x_downloader.clean_browser()
 
     @check_used.before_loop
     async def check_used_before_loop(self):
