@@ -15,8 +15,41 @@ export class DisplayManager {
         this.statusDot = document.getElementById('status-dot');
         this.statusPing = document.getElementById('status-ping');
 
+        // Autoplay Button (Replaces Overlay)
+        this.autoplayBtn = document.getElementById('autoplay-btn');
+
         this.activeSubtitleId = null;
+        console.log("DisplayManager initialized (v3.1 - Instant Scroll Fix)");
     }
+
+    // --- Autoplay Interaction Handling ---
+    showAutoplayRequest(onInteractCallback) {
+        if (!this.autoplayBtn) {
+            console.warn("Autoplay button element missing");
+            if (onInteractCallback) onInteractCallback();
+            return;
+        }
+
+        // Show the button
+        this.autoplayBtn.classList.remove('hidden');
+
+        // Handle click
+        this.autoplayBtn.onclick = () => {
+            console.log("Autoplay button clicked");
+            this.autoplayBtn.classList.add('hidden');
+            if (onInteractCallback) onInteractCallback();
+
+            // Remove handler to prevent double firing or memory leaks
+            this.autoplayBtn.onclick = null;
+        };
+    }
+
+    hideAutoplayRequest() {
+            if (this.autoplayBtn) {
+                this.autoplayBtn.classList.add('hidden');
+            }
+        }
+        // ---------------------------------
 
     reset() {
         this.activeSubtitleId = null;
@@ -48,6 +81,9 @@ export class DisplayManager {
     }
 
     renderSubtitles(subtitles) {
+        // CRITICAL: Reset active ID so the logic knows to re-apply styles to the new DOM elements
+        this.activeSubtitleId = null;
+
         this.subtitleList.innerHTML = subtitles.map((sub, index) => `
             <div id="sub-${index}" 
                  class="group w-full max-w-2xl p-6 rounded-2xl transition-all duration-500 border border-transparent pointer-events-none select-none"
@@ -78,10 +114,6 @@ export class DisplayManager {
         let percentage = 0;
 
         if (duration === Infinity) {
-            // For live streams without known duration, we can't show a true progress bar.
-            // We can either pulse it or keep it at 100% or 0%.
-            // If we have subtitles, we usually pass the subtitle end time as 'duration' in script.js,
-            // so this block executes mainly if NO subtitles and NO duration (pure live audio).
             percentage = 100;
             this.progressFill.classList.add('animate-pulse');
         } else {
@@ -94,41 +126,54 @@ export class DisplayManager {
         this.progressFill.style.width = `${percentage}%`;
     }
 
-    highlightSubtitle(subtitles, currentTime) {
+    /**
+     * Highlights the current subtitle.
+     * @param {Array} subtitles - The subtitle data array.
+     * @param {Number} currentTime - Current audio time.
+     * @param {Boolean} immediate - If true, scrolls instantly without animation (fix for language switch jump).
+     */
+    highlightSubtitle(subtitles, currentTime, immediate = false) {
         const idx = subtitles.findIndex(s => currentTime >= s.startTime && currentTime <= s.endTime);
 
-        if (idx !== -1 && idx !== this.activeSubtitleId) {
-            this.updateActiveSubtitle(idx);
+        // Force update if immediate is requested, even if index hasn't changed (because DOM might be new)
+        if (idx !== -1 && (idx !== this.activeSubtitleId || immediate)) {
+            this.updateActiveSubtitle(idx, immediate);
         } else if (idx === -1 && this.activeSubtitleId !== null) {
             this.clearActiveSubtitle();
         }
     }
 
-    updateActiveSubtitle(index) {
-        this.clearActiveSubtitle();
+    updateActiveSubtitle(index, immediate = false) {
+        // If simply switching highlight, clear old one first
+        if (!immediate) {
+            this.clearActiveSubtitle();
+        } else {
+            // If immediate (new DOM), just ensure ID logic is clean, 
+            // no need to remove classes from old DOM elements that don't exist
+            if (this.activeSubtitleId !== index) this.activeSubtitleId = null;
+        }
 
         this.activeSubtitleId = index;
         const el = document.getElementById(`sub-${index}`);
         if (el) {
-            // 1. Container Styles (Active)
+            // Apply Styles
             el.classList.add('bg-slate-800/80', 'border-blue-500/30', 'scale-105', 'shadow-xl');
-
-            // 2. Text Styles
             const textEl = el.querySelector('.sub-text');
             textEl.classList.remove('text-slate-500');
             textEl.classList.add('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-blue-200', 'to-white', 'font-bold');
-
-            // 3. Timestamp Styles
             const timeEl = el.querySelector('.timestamp-badge');
             timeEl.classList.remove('bg-slate-800', 'text-slate-400');
             timeEl.classList.add('bg-blue-500', 'text-white');
-
-            // 4. Indicator
             const indicator = el.querySelector('.active-indicator');
             indicator.classList.remove('hidden');
 
-            // Scroll into view
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // SCROLL LOGIC
+            // Use 'auto' behavior for immediate jumps (prevents seeing top of list)
+            // Use 'smooth' for normal playback progression
+            el.scrollIntoView({
+                behavior: immediate ? 'auto' : 'smooth',
+                block: 'center'
+            });
         }
     }
 
@@ -136,20 +181,13 @@ export class DisplayManager {
         if (this.activeSubtitleId !== null) {
             const el = document.getElementById(`sub-${this.activeSubtitleId}`);
             if (el) {
-                // 1. Revert Container
                 el.classList.remove('bg-slate-800/80', 'border-blue-500/30', 'scale-105', 'shadow-xl');
-
-                // 2. Revert Text
                 const textEl = el.querySelector('.sub-text');
                 textEl.classList.add('text-slate-500');
                 textEl.classList.remove('text-transparent', 'bg-clip-text', 'bg-gradient-to-r', 'from-blue-200', 'to-white', 'font-bold');
-
-                // 3. Revert Timestamp
                 const timeEl = el.querySelector('.timestamp-badge');
                 timeEl.classList.add('bg-slate-800', 'text-slate-400');
                 timeEl.classList.remove('bg-blue-500', 'text-white');
-
-                // 4. Hide Indicator
                 const indicator = el.querySelector('.active-indicator');
                 indicator.classList.add('hidden');
             }

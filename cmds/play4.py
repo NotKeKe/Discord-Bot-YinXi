@@ -378,6 +378,15 @@ class Music(Cog_Extension):
         if not player: return
         await send_info_embed(player, ctx)
 
+    @commands.command(name='curr_player')
+    async def curr_player(self, ctx: commands.Context):
+        if str(ctx.author.id) != KeJCID: return
+        player: Player = players.get(ctx.guild.id)
+        if not player: return await ctx.send('no player', ephemeral=True)
+        
+        items = [f'{key}: {value}' for key, value in player.__dict__]
+        await ctx.send('\n'.join(items))
+
     @commands.command(name='clear_players')
     async def clear_players(self, ctx: commands.Context):
         if str(ctx.author.id) != KeJCID: return

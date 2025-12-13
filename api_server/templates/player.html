@@ -34,13 +34,27 @@
                     <span class="text-xs text-blue-400 font-mono tracking-wider">DISPLAY NODE</span>
                 </div>
             </div>
-            <!-- Connection Status Indicator -->
-            <div class="flex items-center gap-2">
-                <span class="relative flex h-3 w-3">
-                  <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <span id="status-text" class="text-xs text-slate-400">Syncing</span>
+
+            <div class="flex items-center gap-4">
+                <!-- Language Selector -->
+                <div class="relative">
+                    <select id="language-select" class="appearance-none bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 pr-8 cursor-pointer hover:bg-slate-700 transition-colors">
+                        <option value="original" selected>Original</option>
+                        <!-- Options will be populated by JS -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                </div>
+
+                <!-- Connection Status Indicator -->
+                <div class="flex items-center gap-2 pl-2 border-l border-slate-700">
+                    <span class="relative flex h-3 w-3">
+                      <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                    <span id="status-text" class="text-xs text-slate-400 hidden sm:inline">Syncing</span>
+                </div>
             </div>
         </div>
     </header>
@@ -66,7 +80,17 @@
 
             <!-- Status / Controls Bar (Read Only except Volume) -->
             <div class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 p-6 z-50 shadow-2xl">
-                <div class="max-w-4xl mx-auto flex flex-col gap-4">
+                <!-- Added 'relative' to parent container for button positioning -->
+                <div class="max-w-4xl mx-auto flex flex-col gap-4 relative">
+
+                    <!-- Autoplay Button (Moved inside here) -->
+                    <!-- Absolute position, centered horizontally, just below progress bar (top-9) -->
+                    <button id="autoplay-btn" class="hidden absolute left-1/2 -translate-x-1/2 top-9 z-[60] bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-1.5 px-6 rounded-full shadow-lg transition-colors flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        <span>Start Audio</span>
+                    </button>
 
                     <!-- Progress (Read Only) -->
                     <div class="flex items-center gap-4 w-full">

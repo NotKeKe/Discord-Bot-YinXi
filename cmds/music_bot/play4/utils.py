@@ -147,9 +147,13 @@ async def leave(ctx: commands.Context):
     from cmds.play4 import players, custom_list_players, join_channel_time
     await ctx.guild.voice_client.disconnect()
     if ctx.guild.id in players:
+        player = players[ctx.guild.id]
         del players[ctx.guild.id]
+        del player
     if ctx.guild.id in custom_list_players:
+        custom_list_player = custom_list_players[ctx.guild.id]
         del custom_list_players[ctx.guild.id]
+        del custom_list_player
     if ctx.guild.id in join_channel_time:
         del join_channel_time[ctx.guild.id]
 

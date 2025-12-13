@@ -8,6 +8,7 @@ import logging
 import uuid
 import requests
 from collections import defaultdict
+import orjson
 
 from cmds.music_bot.play4 import utils
 from core.functions import math_round, secondToReadable, redis_client
@@ -100,7 +101,7 @@ class RedisTemp:
             # 確認 audio url 可用，不用特別刪除，因為後面在搜尋一次時，就會覆蓋掉原本的 key
             if (await check_audio_url_alive(audio_url)):
                 logger.info(f'Song {video_url} found from redis')
-                return d | {'duration_int': int(d['duration_int'])}
+                return d | {'duration_int': int(d['duration_int']), 'subtitles': orjson.loads(d['subtitles'])}
             
         # find from mongodb
         db = MongoDB_DB.music
@@ -108,10 +109,10 @@ class RedisTemp:
         doc = await collection.find_one({'video_id': video_id})
         if doc and (await check_audio_url_alive(doc.get('audio_url', ''))):
             logger.info(f'Song {video_url} found from mongodb')
-            return doc
+            return doc | {'duration_int': int(doc['duration_int']), 'subtitles': orjson.loads(doc['subtitles'])}
 
     @classmethod
-    async def upload(cls, title, video_url, audio_url, thumbnail_url, duration, duration_int):
+    async def upload(cls, title, video_url, audio_url, thumbnail_url, duration, duration_int, subtitles = {}):
         video_id = get_video_id(video_url)
         if not video_id: return
 
@@ -124,7 +125,8 @@ class RedisTemp:
             'audio_url': audio_url,
             'thumbnail_url': thumbnail_url,
             'duration': duration,
-            'duration_int': duration_int
+            'duration_int': duration_int,
+            'subtitles': orjson.dumps(subtitles).decode()
         }
 
         await redis_client.hset(key, mapping=data)
@@ -147,7 +149,7 @@ class Downloader:
         self.thumbnail_url = None
         self.duration = None
         self.duration_int = None
-        self.subtitle = None
+        self.subtitles = None
 
         self.start_time = datetime.now()
         self.process_time = 0
@@ -155,7 +157,7 @@ class Downloader:
 
     def get_info(self) -> tuple:
         '''return (title, video_url, audio_url, thumbnail_url, duration)'''
-        return (self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int, self.subtitle)
+        return (self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int, self.subtitles)
 
     async def get_url(self):
         if utils.is_url(self.query):
@@ -183,12 +185,12 @@ class Downloader:
         self.title = result["title"]
         self.duration = secondToReadable(result["duration"])
         self.duration_int = result["duration"]
-        self.subtitle = result["subtitles"]
+        self.subtitles = result["subtitles"]
 
         self.process_time = math_round((datetime.now() - self.start_time).total_seconds(), 0)
 
         # add to redis
-        func = RedisTemp.upload(self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int)
+        func = RedisTemp.upload(self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int, self.subtitles)
         asyncio.create_task(func)
 
     async def run(self):

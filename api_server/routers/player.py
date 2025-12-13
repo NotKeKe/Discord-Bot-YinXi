@@ -5,10 +5,15 @@ from typing import Dict
 from httpx import AsyncClient, Limits
 import logging
 from pathlib import Path
+from collections import defaultdict
+import orjson
+import httpx
 
-from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Header
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+
+from src.url import audio_url_to_token, token_to_audio_url
 
 router = APIRouter(
     prefix="/player",
@@ -36,7 +41,7 @@ class SessionState:
         self.title = "Waiting for Signal..."
         self.subtitle = ""
         self.audio_url = ""
-        self.srt_content = ""
+        self.srts: dict[str, list] = defaultdict(list)
         self.current_time = 0
         self.is_paused = False
         self.duration: int = 0
@@ -51,7 +56,7 @@ def get_or_create_session(guild_id: str) -> SessionState:
 # --- Routes ---
 
 @router.get("/check_song")
-async def check_song(guild_id: str):
+async def check_song(guild_id: str, lang: str = 'original'):
     """
     前端 JS 每秒輪詢的接口。
     必須帶上 ?guild_id=... 參數。
@@ -62,15 +67,80 @@ async def check_song(guild_id: str):
         return JSONResponse(status_code=404, content={"message": "Session not found"})
     
     session = sessions[guild_id]
+    
+    # get target srt
+    if lang in session.srts:
+        target_srt = session.srts[lang]
+    elif len(session.srts) > 0:
+        # find first lang
+        target_srt = session.srts[list(session.srts.keys())[0]]
+    else:
+        target_srt = ''
+
+    # get stream token
+    token = audio_url_to_token(session.audio_url, session.guild_id)
+    audio_url = f'/player/stream/{token}'
+
     return {
         "uuid": session.uuid,
         "title": session.title,
         "subtitle": session.subtitle,
-        "audio_url": session.audio_url,
-        "srt_content": session.srt_content,
+        "audio_url": audio_url,
+        "srt_content": target_srt,
+        'languages': list(session.srts.keys()),
         'current_time': session.current_time,
         'is_paused': session.is_paused
     }
+
+@router.get("/stream/{token}")
+async def stream(
+    token: str, 
+    range: str = Header(None)  # 獲取前端瀏覽器發送的 Range header
+):
+    audio_url = token_to_audio_url(token)
+    req_headers = {}
+    if range:
+        req_headers["Range"] = range
+    
+    client = httpx.AsyncClient()
+    
+    # 建構請求，注意要用 stream=True
+    req = client.build_request("GET", audio_url, headers=req_headers)
+    
+    # 發送請求獲取響應頭 (此時還沒下載 body)
+    r = await client.send(req, stream=True)
+    
+    # 4. 準備回傳給前端的 Headers
+    # 這些 Header 告訴瀏覽器這是一個部分內容，以及檔案多大，這讓進度條可以運作
+    resp_headers = {
+        "Accept-Ranges": "bytes", # 告訴瀏覽器我們支援跳轉
+        "Content-Type": r.headers.get("Content-Type", "audio/mpeg"),
+    }
+    
+    if "Content-Length" in r.headers:
+        resp_headers["Content-Length"] = r.headers["Content-Length"]
+    
+    if "Content-Range" in r.headers:
+        resp_headers["Content-Range"] = r.headers["Content-Range"]
+
+    # 5. 定義串流生成器
+    # 當 FastAPI 傳輸完畢後，確保關閉 httpx client
+    async def content_iterator():
+        try:
+            async for chunk in r.aiter_bytes(chunk_size=8192):
+                yield chunk
+        finally:
+            await r.aclose()
+            await client.aclose()
+
+    # 6. 回傳 StreamingResponse
+    # 如果有 Range，狀態碼通常是 206 (Partial Content)，否則 200
+    return StreamingResponse(
+        content_iterator(),
+        status_code=r.status_code,
+        headers=resp_headers,
+        media_type=r.headers.get("Content-Type", "audio/mpeg")
+    )
 
 @router.get("/{guild_id}_{page_uuid}", response_class=HTMLResponse)
 async def player_page(request: Request, guild_id: str, page_uuid: str):
@@ -95,7 +165,7 @@ async def update_song(
     guild_id: str = Form(...),
     title: str = Form(None),
     audio_url: str = Form(...),
-    srt: dict = Form(None),
+    srts: str = Form(None), # type: ignore
     duration: int = Form(...),
     current_time: int = Form(...),
     is_paused: bool = Form(...),
@@ -105,8 +175,13 @@ async def update_song(
     必須提供 guild_id。
     """
     if guild_id not in sessions:
-        parmas_str = f'guild_id: {guild_id}, title: {title}, audio_url: {audio_url}, srt: {srt}, duration: {duration}, current_time: {current_time}, is_paused: {is_paused}'
+        parmas_str = f'guild_id: {guild_id}, title: {title}, audio_url: {audio_url}, srt: {srts}, duration: {duration}, current_time: {current_time}, is_paused: {is_paused}'
         raise HTTPException(status_code=404, detail=f"Session not found, with params: {parmas_str}")
+    
+    try:
+        srts: dict[str, list] = orjson.loads(srts)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid srts json format")
     
     session = get_or_create_session(guild_id)
         
@@ -117,8 +192,8 @@ async def update_song(
 
     if title:
         session.title = title
-    if srt:
-        session.srt_content = srt
+    if srts:
+        session.srts = srts
 
     return {"message": "Song updated successfully"}
 
@@ -127,7 +202,7 @@ async def upload_song(
     guild_id: str = Form(...),
     title: str = Form(None),
     audio_url: str = Form(...),
-    srt: dict = Form(None),
+    srts: str = Form(None), # type: ignore
     duration: int = Form(...),
 ):
     """
@@ -135,11 +210,16 @@ async def upload_song(
     必須提供 guild_id。
     """
     try:
+        try:
+            srts: dict[str, list] = orjson.loads(srts)
+        except:
+            raise HTTPException(status_code=400, detail="Invalid srts json format")
+
         session = get_or_create_session(guild_id)
         
         # 1. 更新 UUID (觸發前端重整)
         session.uuid = str(uuid.uuid4())
-        logger.info(f'Created a uuid: {session.uuid}')
+        logger.info(f'Created a uuid: {session.uuid} for guild_id: {guild_id}')
         
         # 2. 更新文字資訊
         if title:
@@ -149,8 +229,8 @@ async def upload_song(
         session.duration = duration
 
         # 4. 處理 SRT
-        if srt:
-            session.srt_content = srt
+        if srts:
+            session.srts = srts
 
         return {
             "status": "success", 

@@ -5,9 +5,7 @@ import asyncio
 import traceback
 from typing import Literal
 from httpx import AsyncClient, Limits
-import io
-import re
-import uuid
+import orjson
 
 from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.downloader import Downloader
@@ -95,9 +93,9 @@ class Player:
         self.downloading = True
         downloader = Downloader(self.query, priority)
         await downloader.run()
-        title, video_url, audio_url, thumbnail_url, duration, duration_int, subtitle = downloader.get_info()
+        title, video_url, audio_url, thumbnail_url, duration, duration_int, subtitles = downloader.get_info()
         self.downloading = False
-        return title, video_url, audio_url, thumbnail_url, duration, duration_int, subtitle
+        return title, video_url, audio_url, thumbnail_url, duration, duration_int, subtitles
     
     async def add_playlist(self, playlist_id: str):
         # 取得 playlist 的所有 video id
@@ -129,7 +127,7 @@ class Player:
         if not utils.get_video_id(query) and play_list_id: # 代表使用者傳入一個 playlist，而非帶有 playlist 的 video
             return await self.add_playlist(play_list_id)
 
-        title, video_url, audio_url, thumbnail_url, duration, duration_int, subtitle = await self.download(priority)
+        title, video_url, audio_url, thumbnail_url, duration, duration_int, subtitles = await self.download(priority)
         self.list.append({
             'title': title,
             'video_url': video_url,
@@ -138,9 +136,9 @@ class Player:
             'duration': duration,
             'duration_int': duration_int,
             'user': ctx.author,
-            'subtitle': subtitle
+            'subtitles': subtitles
         })
-        return len(self.list), title, video_url, audio_url, thumbnail_url, duration, subtitle
+        return len(self.list), title, video_url, audio_url, thumbnail_url, duration, subtitles
     
     async def play(self):
         self.init_bar()
@@ -206,40 +204,29 @@ class Player:
             await self.ctx.send((await self.translator.get_translate('send_player_play_error', self.locale)).format(e=str(e)))
 
     async def upload_to_api(self, audio_url: str):
-        subtitle_url = self.list[self.current_index].get('subtitle', '')
-        subtitle = ''
-        if subtitle_url:
-            resp = await self.httpx_client.get(subtitle_url)
-            if resp.status_code == 200 and resp.text:
-                subtitle = resp.text
-
         # post to api
-        resp = await self.httpx_client.post(
+        srts = self.list[self.current_index].get('subtitles', {})
+        await self.httpx_client.post(
             f'http://api_server:3000/player/upload_song',
             data={
                 'guild_id': self.ctx.guild.id,
                 'title': self.list[self.current_index]['title'],
                 'audio_url': audio_url,
                 'duration': self.duration_int,
-                **({'srt': subtitle} if subtitle else {})
+                'srts': orjson.dumps(srts).decode()
             },
         )
-        if resp.status_code == 200:
-            _json = resp.json()
-            print(_json['guild_id'], _json['current_uuid'])
-        else:
-            print(resp.status_code, resp.text)
-
     async def update_to_api(self):
         while True:
             await asyncio.sleep(3)
+            srts = self.list[self.current_index].get('subtitles', {})
             resp = await self.httpx_client.post(
                 f'http://api_server:3000/player/update_song',
                 data={
                     'guild_id': self.ctx.guild.id,
                     'title': self.list[self.current_index]['title'],
                     'audio_url': self.list[self.current_index]['audio_url'],
-                    'srt': self.list[self.current_index].get('subtitle', {}),
+                    'srts': orjson.dumps(srts).decode(),
                     'duration': self.duration_int,
                     'current_time': self.passed_time,
                     'is_paused': self.voice_client.is_paused(),
