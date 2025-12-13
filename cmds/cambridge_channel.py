@@ -180,11 +180,14 @@ class CambridgeChannel(Cog_Extension):
 
         try:
             results = await search(content, self.get_client())
-        except:
-            traceback.print_exc()
+            if not results: raise Exception('no_result')
+        except Exception as e:
+            if str(e) != 'no_result': # no_result = normal end | != no_result = code error
+                traceback.print_exc()
+            await msg.add_reaction('❌')
             return
+    
         
-        if not results: return
         audio_io = ''
         if results[0].get('audio_io'):
             audio_io = results[0]['audio_io']

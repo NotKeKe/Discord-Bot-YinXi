@@ -163,7 +163,7 @@ async def send(ctx: commands.Context | discord.Interaction, text: str = None, em
         if not embed:
             embed = MISSING
         inter_msg = await ctx.response.send_message(text, embed=embed, view=view, ephemeral=ephemeral)
-        msg = await ctx.channel.fetch_message(inter_msg.id)
+        msg = await ctx.channel.fetch_message(inter_msg.message_id)
     else: raise ValueError('Invalid context type')
 
     if view and view is not MISSING and msg:
