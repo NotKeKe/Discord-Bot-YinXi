@@ -7,7 +7,7 @@ from typing import Optional, Union
 import traceback
 
 from core.classes import Cog_Extension
-from core.functions import embed_link, read_json, write_json, create_basic_embed
+from core.functions import read_json, write_json, create_basic_embed
 from core.translator import locale_str, load_translated
 
 PATH = './cmds/data.json/guild_join.json'
@@ -60,7 +60,7 @@ class OnJoinLeave(Cog_Extension):
             ''''''
             
             embed=discord.Embed(title=eb_data.get('title'),  color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name=eb_data.get('author'), icon_url=embed_link)
+            embed.set_author(name=eb_data.get('author'))
             for field in eb_data.get('fields', []):
                 embed.add_field(name=field.get('name'), value=field.get('value'), inline=field.get('inline', False))
             await channel.send(embed=embed)

@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands, tasks
 from datetime import datetime, timedelta
 import asyncio
-import os
-from dotenv import load_dotenv
 
 from cmds.skyblock_commands_foldor import skyblock_events
 from core.classes import Cog_Extension
@@ -12,8 +10,6 @@ def get_dict() -> dict:
     events = skyblock_events.show_next_events()
     return events
 
-load_dotenv()
-embed_link = os.getenv('embed_default_link')
 
 class skyblockEvents(Cog_Extension):
 
@@ -36,7 +32,7 @@ class skyblockEvents(Cog_Extension):
         events = get_dict()
 
         embed=discord.Embed(title="Events", color=discord.Color.blue(), timestamp=datetime.now())
-        embed.set_author(name="取得skyblock活動", icon_url=embed_link)
+        embed.set_author(name="取得skyblock活動")
         for event in events:
             embed.add_field(name=event, value=f"開始時間: {events[event]['Start']}\n結束時間: {events[event]['End']}", inline=False)
 

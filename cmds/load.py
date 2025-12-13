@@ -17,7 +17,6 @@ from core.functions import testing_guildID, is_testing_guild
 
 # get env
 load_dotenv()
-embed_link = os.getenv('embed_default_link')
 KeJCID = os.getenv('KeJC_ID')
 
 async def load_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[Choice[str]]:
@@ -69,7 +68,7 @@ class Load(Cog_Extension):
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令"); return
 
         embed=discord.Embed(color=discord.Color.blue(), timestamp= datetime.now())
-        embed.set_author(name="Reload All commands", icon_url=embed_link)
+        embed.set_author(name="Reload All commands")
         message = await ctx.send(embed=embed, ephemeral=True)
         for filename in os.listdir('./cmds'):
             try:
@@ -103,7 +102,7 @@ class Load(Cog_Extension):
         if str(ctx.author.id) != KeJCID: await ctx.send("你沒有權限使用該指令", ephemeral=True); return
         
         embed=discord.Embed(color=discord.Color.blue(), timestamp= datetime.now())
-        embed.set_author(name="Reload All commands and Sync", icon_url=embed_link)
+        embed.set_author(name="Reload All commands and Sync")
         message = await ctx.send(embed=embed, ephemeral=True)
     
         error = []

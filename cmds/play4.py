@@ -56,6 +56,10 @@ class Music(Cog_Extension):
             elif before.channel is not None and after.channel is None: # 離開語音頻道
                 if guild_id in join_channel_time:
                     del join_channel_time[guild_id]
+                if guild_id in players:
+                    del players[guild_id]
+                if guild_id in custom_list_players:
+                    del custom_list_players[guild_id]
             elif before.channel is not None and after.channel is not None: # 切換語音頻道
                 join_channel_time[guild_id] = datetime.now()
         else: # 普通使用者 or 其他 bot

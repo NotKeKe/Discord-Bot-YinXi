@@ -24,5 +24,3 @@ RUN pip install --no-cache-dir playwright \
     && playwright install
 
 COPY . .
-
-EXPOSE 3000

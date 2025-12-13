@@ -14,7 +14,6 @@ from so_func import c_function
 # get env
 load_dotenv()
 KeJC_ID = int(os.getenv('KeJC_ID'))
-embed_link = os.getenv('embed_default_link')
 api_key = os.getenv('tmp_hypixel_api_key')
 
 sb = skyblock_commands.Skyblock(api_key=api_key)

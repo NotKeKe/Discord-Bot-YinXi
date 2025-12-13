@@ -24,7 +24,7 @@ services:
   api_server:
     build: 
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-api
     command: uv run api_server/server.py
     container_name: yinxi-dc-api-server
     ports:

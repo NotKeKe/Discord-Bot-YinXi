@@ -17,7 +17,6 @@ from cmds.skyblock_commands_foldor import skyblock_commands, skyblock_events
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
-embed_link = os.getenv('embed_default_link')
 api_key = os.getenv('tmp_hypixel_api_key')
 
 current_directory = os.getcwd()
@@ -87,7 +86,7 @@ class skyblock_main(Cog_Extension):
                 return
 
             embed=discord.Embed(title="Player Name", description=sb.get_player_name(username), color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name="玩家狀態", url=None, icon_url=embed_link)
+            embed.set_author(name="玩家狀態", url=None)
             embed.set_thumbnail(url=f'https://mc-heads.net/avatar/{username}')
             embed.add_field(name="狀態", value=a["session"]["online"], inline=True)
             embed.add_field(name="註: ", value="資訊是從hypixel-api得來的，可能不準確")
@@ -109,7 +108,7 @@ class skyblock_main(Cog_Extension):
             
             # file = discord.File("./image/discord_embed_author.png")
             embed=discord.Embed(title="Player Name", description=sb.get_player_name(username), color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name="取得公會名稱", url=None, icon_url=embed_link)
+            embed.set_author(name="取得公會名稱", url=None)
             embed.set_thumbnail(url=f'https://mc-heads.net/avatar/{username}')
             embed.add_field(name="公會名稱", value=f'**{a["guild"]["name"]}**', inline=False)
             # embed.set_footer(text="footer")
@@ -137,7 +136,7 @@ class skyblock_main(Cog_Extension):
                 cleaned_minister_perks_info = remove_color_codes(minister_perk_info)
 
             embed=discord.Embed(title=mayor, description=output, color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name="取得現在的skyblock市長 以及副市長", url=None, icon_url=embed_link)
+            embed.set_author(name="取得現在的skyblock市長 以及副市長", url=None)
             # embed.set_thumbnail(url=f'https://mc-heads.net/avatar/{username}')
             if minister is not None:
                 embed.add_field(name=minister, value=f'{minister_info}\n- {cleaned_minister_perks_info}', inline=False)
@@ -154,7 +153,7 @@ class skyblock_main(Cog_Extension):
             await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=True, ephemeral=False)
 
         embed=discord.Embed(title="Events", color=discord.Color.blue(), timestamp=datetime.now())
-        embed.set_author(name="取得skyblock活動", icon_url=embed_link)
+        embed.set_author(name="取得skyblock活動")
         embed.add_field(name=event, value=f"**Skyblock Year**: {events['sb_year']}", inline=False)
         for event in events:
             embed.add_field(name=event, value=f"開始時間: {events[event]['Start']}\n結束時間: {events[event]['End']}", inline=False)
@@ -203,7 +202,7 @@ class skyblock_main(Cog_Extension):
                 return
             
             embed=discord.Embed(color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name="hypixel 遊戲遊玩人數", icon_url=embed_link)
+            embed.set_author(name="hypixel 遊戲遊玩人數")
             if game is None:
                 embed.add_field(name="總人數", value=game_count['playerCount'], inline=False)
             else:
@@ -226,7 +225,7 @@ class skyblock_main(Cog_Extension):
                 return
 
             embed=discord.Embed(title="Player Name", description=sb.get_player_name(username), color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name="取得玩家的auction", url=None, icon_url=embed_link)
+            embed.set_author(name="取得玩家的auction", url=None)
             embed.set_thumbnail(url=f'https://mc-heads.net/avatar/{username}')
 
             for i in range(len(a["auctions"])):

@@ -17,7 +17,6 @@ from core.translator import locale_str, load_translated
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
-embed_link = os.getenv('embed_default_link')
 
 with open('setting.json', "r") as f:
     jdata = json.load(f)
@@ -156,7 +155,7 @@ class Bot_Info_and_Help(Cog_Extension):
             cogs_list = ", ".join(sorted([cogname for cogname in self.bot.cogs]))
 
             embed = discord.Embed(title=' ', description=" ", color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name=eb_data.get('author'), url=None, icon_url=embed_link)
+            embed.set_author(name=eb_data.get('author'), url=None)
             
             for field in eb_data.get('fields', []):
                 name = field.get('name')

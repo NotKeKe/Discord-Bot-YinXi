@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 import aiohttp
 import motor.motor_asyncio
 
-from core.functions import read_json, thread_pool, embed_link, KeJCID, create_basic_embed, MONGO_URL, split_str_by_len_and_backtick
+from core.functions import read_json, thread_pool, KeJCID, create_basic_embed, MONGO_URL, split_str_by_len_and_backtick
 
 # get env
 load_dotenv()
@@ -69,7 +69,7 @@ class TestTemp(Cog_Extension):
     async def embedtest(self, ctx):
         try:
             embed=discord.Embed(title="title", description="description", color=0xff0000, timestamp=datetime.now())
-            embed.set_author(name="name", url="https://discord.gg/MhtxWJu", icon_url=embed_link)
+            embed.set_author(name="name", url="https://discord.gg/MhtxWJu")
             embed.set_thumbnail(url="https://cdn.discordapp.com/avatars/584213384409382953/4438fe5d2f91ddd873407e759ff23116.png?size=512")
             embed.add_field(name="field", value="- value", inline=False)
             embed.set_footer(text="footer")
@@ -250,7 +250,7 @@ class TestTemp(Cog_Extension):
     # result = interaction.data["label"][0]
     # await interaction.response.send_message(result)
     # embed=discord.Embed(title="title", description="description", color=discord.Color.blue(), timestamp=datetime.now())
-    # embed.set_author(name="hypixel 遊戲遊玩人數", icon_url=embed_link)
+    # embed.set_author(name="hypixel 遊戲遊玩人數")
     # embed.add_field(name="總人數", value=game_count['playerCount'], inline=False)
     # embed.add_field(name=result, value=game_count['games'][result]['players'], inline=False)
 
@@ -328,7 +328,7 @@ class TestTemp(Cog_Extension):
     #     try:
             
     #         # embed=discord.Embed(title="title", description="description", color=discord.Color.blue(), timestamp=datetime.now())
-    #         # embed.set_author(name="hypixel 遊戲遊玩人數", icon_url=embed_link)
+    #         # embed.set_author(name="hypixel 遊戲遊玩人數")
     #         # embed.add_field(name="總人數", value=game_count['playerCount'], inline=False)
     #         # for game in game_count['games']:
     #         #     embed.add_field(name=game, value=game_count['games'][game]['players'], inline=False)

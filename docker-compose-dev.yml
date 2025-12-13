@@ -22,11 +22,13 @@ services:
   api_server:
     build: 
       context: .
-      dockerfile: Dockerfile-dev
-    command: uv run api_server/server.py
+      dockerfile: Dockerfile-api
+    command: uv run main.py
     container_name: yinxi-dc-api-server
     volumes:
-      - .:/app
+      - ./api_server:/app
+    expose:
+      - "3000"
     ports:
       - "3000:3000"
     restart: unless-stopped

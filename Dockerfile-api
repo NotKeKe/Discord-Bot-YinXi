@@ -1,0 +1,16 @@
+FROM python:3.13.5-slim
+
+# 時間設定
+RUN ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime \
+    && echo "Asia/Taipei" > /etc/timezone
+
+# 安裝 uv
+RUN pip install uv --no-cache-dir
+
+WORKDIR /app
+
+COPY ./api_server .
+
+RUN uv sync
+
+EXPOSE 3000

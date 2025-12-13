@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SubtitleSync (Display Node)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Backend Context Injection -->
+    <script>
+        // These variables are injected by the FastAPI Jinja2 template engine
+        // The default values are placeholders in case the file is opened directly
+        window.SERVER_CONTEXT = {
+            guild_id: "{{ guild_id }}",
+            // You can add more context variables here if needed
+        };
+    </script>
+</head>
+
+<body class="bg-slate-900 text-slate-100 font-inter min-h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="p-6 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-100">SubtitleSync</h1>
+                    <span class="text-xs text-blue-400 font-mono tracking-wider">DISPLAY NODE</span>
+                </div>
+            </div>
+            <!-- Connection Status Indicator -->
+            <div class="flex items-center gap-2">
+                <span class="relative flex h-3 w-3">
+                  <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span id="status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span id="status-text" class="text-xs text-slate-400">Syncing</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl mx-auto w-full p-4 md:p-8 flex flex-col justify-center">
+
+        <!-- Player Display -->
+        <div class="space-y-6 w-full">
+            <div class="text-center mb-6">
+                <h2 id="song-title" class="text-2xl md:text-3xl font-bold text-white mb-2">Waiting for Signal...</h2>
+                <p id="song-subtitle" class="text-lg text-slate-400">System Ready</p>
+            </div>
+
+            <!-- Subtitle Container -->
+            <div id="subtitle-container" class="h-[50vh] overflow-y-auto custom-scrollbar bg-slate-900/30 rounded-3xl border border-slate-800 relative scroll-smooth shadow-2xl backdrop-blur-sm">
+                <div id="subtitle-list" class="p-8 space-y-6 pb-48 flex flex-col items-center text-center">
+                    <!-- Subtitles will be injected here via JS -->
+                </div>
+            </div>
+
+            <!-- Hidden Audio Element -->
+            <audio id="audio-player"></audio>
+
+            <!-- Status / Controls Bar (Read Only except Volume) -->
+            <div class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 p-6 z-50 shadow-2xl">
+                <div class="max-w-4xl mx-auto flex flex-col gap-4">
+
+                    <!-- Progress (Read Only) -->
+                    <div class="flex items-center gap-4 w-full">
+                        <span id="time-current" class="text-sm text-slate-400 font-mono w-12 text-right">00:00</span>
+                        <!-- pointer-events-none makes it read-only for user -->
+                        <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden relative">
+                            <div id="progress-fill" class="h-full bg-gradient-to-r from-blue-500 to-purple-500 w-0 transition-all duration-300 ease-linear"></div>
+                        </div>
+                        <span id="time-total" class="text-sm text-slate-400 font-mono w-12">00:00</span>
+                    </div>
+
+                    <!-- Bottom Row: Volume Only -->
+                    <div class="flex items-center justify-end">
+                        <div class="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" class="w-24 h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Load Main Script (Must be type="module") -->
+    <script type="module" src="/static/script.js"></script>
+</body>
+
+</html>

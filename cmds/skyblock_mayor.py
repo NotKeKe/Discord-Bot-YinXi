@@ -14,7 +14,6 @@ from core.classes import Cog_Extension
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
-embed_link = os.getenv('embed_default_link')
 api_key = os.getenv('tmp_hypixel_api_key')
 
 current_directory = os.getcwd()
@@ -88,7 +87,7 @@ class skyblock_mayor(Cog_Extension):
                     cleaned_minister_perks_info = remove_color_codes(minister_perk_info)
 
                 embed=discord.Embed(title=mayor, description=output, color=discord.Color.blue(), timestamp=datetime.now())
-                embed.set_author(name="取得現在的skyblock市長 以及副市長", url=None, icon_url=embed_link)
+                embed.set_author(name="取得現在的skyblock市長 以及副市長", url=None)
                 # embed.set_thumbnail(url=f'https://mc-heads.net/avatar/{username}')
                 if minister is not None:
                     embed.add_field(name=minister, value=f'{minister_info}\n- {cleaned_minister_perks_info}', inline=False)
@@ -135,7 +134,7 @@ class skyblock_mayor(Cog_Extension):
                 cleaned_minister_perks_info = remove_color_codes(minister_perk_info)
 
             embed=discord.Embed(title=mayor, description=output, color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name="取得現在的skyblock市長 以及副市長", url=None, icon_url=embed_link)
+            embed.set_author(name="取得現在的skyblock市長 以及副市長", url=None)
             # embed.set_thumbnail(url=f'https://mc-heads.net/avatar/{username}')
             if minister is not None:
                 embed.add_field(name=minister, value=f'{minister_info}\n- {cleaned_minister_perks_info}', inline=False)

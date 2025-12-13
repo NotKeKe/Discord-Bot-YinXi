@@ -21,20 +21,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# embed_link = os.getenv('embed_default_link')
 yinxi_base_url = os.getenv('yinxi_base_url') # 這是我網域的基礎連結 https://yinxi.wales.com.tw
-def get_embed_link() -> str:
-    # 取得自己的圖片，並使用連結獲得
-    path = f'./image/self.png'
-    absolute_path = os.path.abspath(path)
-
-    base_url = f'{yinxi_base_url}/api/image/?path='
-    base_url += absolute_path
-    return base_url
 
 BASE_DIR = os.path.abspath(os.path.dirname(__name__))
 
-embed_link = get_embed_link()
 KeJCID = os.getenv('KeJC_ID')
 TempHypixelApiKey = os.getenv('tmp_hypixel_api_key')
 NewsApiKEY = os.getenv("news_api_KEY")
@@ -99,7 +89,7 @@ def create_basic_embed(title = None, description = None, color = discord.Color.b
     '''
 
     embed=discord.Embed(title=title if title is not None else None, description=description, color=color, timestamp=datetime.now() if time else None)
-    if 功能 is not None: embed.set_author(name=功能, icon_url=embed_link)
+    if 功能 is not None: embed.set_author(name=功能)
     return embed
 
 def UnixNow() -> int:

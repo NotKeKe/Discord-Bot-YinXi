@@ -23,7 +23,6 @@ from core.translator import locale_str, load_translated
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
-embed_link = os.getenv('embed_default_link')
 
 
 #setting.json
@@ -54,7 +53,7 @@ class Main(Cog_Extension):
             ''''''
             guild_owner = await self.bot.fetch_user(int(ctx.guild.owner_id))
             embed=discord.Embed(title=title.format(owner_mention=guild_owner.mention), color=discord.Color.blue(), timestamp=datetime.now())
-            embed.set_author(name=author_name, icon_url=embed_link)
+            embed.set_author(name=author_name)
             embed.add_field(name=field_name, value=ctx.guild.owner_id, inline=False)
             await ctx.send(embed=embed)
 

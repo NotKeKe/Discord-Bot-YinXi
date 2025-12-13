@@ -20,5 +20,3 @@ COPY pyproject.toml ./
 RUN uv sync
 
 COPY . .
-
-EXPOSE 3000

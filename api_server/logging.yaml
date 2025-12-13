@@ -1,0 +1,23 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+  default:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: default
+    level: INFO
+  file:
+    class: logging.handlers.TimedRotatingFileHandler
+    formatter: default
+    filename: logs/bot.log
+    when: D
+    interval: 1
+    backupCount: 10
+    encoding: utf-8
+loggers:
+  uvicorn:
+    handlers: [console, file]
+    level: INFO
+    propagate: False

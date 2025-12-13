@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 import logging
 import uuid
 import requests
+from collections import defaultdict
 
 from cmds.music_bot.play4 import utils
 from core.functions import math_round, secondToReadable, redis_client
@@ -18,11 +19,23 @@ logger = logging.getLogger(__name__)
 def extract_info_yt_dlp(video_url: str):
     with yt_dlp.YoutubeDL(utils.YTDL_OPTIONS) as ydl:
         info = ydl.extract_info(video_url, download=False)
+
+        # get subtitle
+        subtitles = defaultdict(list)
+        if 'subtitles' in info:
+            for lang, subs in info['subtitles'].items():
+                for sub in subs:
+                    ext = sub['ext']
+                    if ext != 'srt': continue 
+                    subtitles[lang].append(sub['url']) # must be srt
+                    # print(f"語言: {lang}, 格式: {sub['ext']}, URL: {sub['url']}")
+
         return {
             "audio_url": info.get("url"),
             "thumbnail_url": info.get("thumbnail"),
             "title": info.get("title"),
             "duration": info.get("duration"),
+            'subtitles': subtitles
         }
     
 def extract_info_pytube(video_url: str):
@@ -37,11 +50,25 @@ def extract_info_pytube(video_url: str):
     except:
         thumbnail_url = yt.thumbnail_url
 
+    # get subtitle
+    subtitles = defaultdict(list)
+    for caption in yt.captions:
+        lang = caption.code
+        srt = caption.generate_srt_captions()
+
+        # clean
+        srt = re.sub(r'<font[^>]*>', '', srt)  
+        srt = re.sub(r'</font>', '', srt)  
+        srt = re.sub(r'<[^>]+>', '', srt)  
+
+        subtitles[lang] = srt
+
     return {
         "audio_url": yt.streams.filter(only_audio=True).order_by('abr').desc().first().url,
         "thumbnail_url": thumbnail_url,
         "title": yt.title,
         "duration": yt.length,
+        'subtitles': subtitles
     }
 
 async def extract_info(video_url: str) -> dict:
@@ -120,6 +147,7 @@ class Downloader:
         self.thumbnail_url = None
         self.duration = None
         self.duration_int = None
+        self.subtitle = None
 
         self.start_time = datetime.now()
         self.process_time = 0
@@ -127,7 +155,7 @@ class Downloader:
 
     def get_info(self) -> tuple:
         '''return (title, video_url, audio_url, thumbnail_url, duration)'''
-        return (self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int)
+        return (self.title, self.video_url, self.audio_url, self.thumbnail_url, self.duration, self.duration_int, self.subtitle)
 
     async def get_url(self):
         if utils.is_url(self.query):
@@ -155,6 +183,7 @@ class Downloader:
         self.title = result["title"]
         self.duration = secondToReadable(result["duration"])
         self.duration_int = result["duration"]
+        self.subtitle = result["subtitles"]
 
         self.process_time = math_round((datetime.now() - self.start_time).total_seconds(), 0)
 

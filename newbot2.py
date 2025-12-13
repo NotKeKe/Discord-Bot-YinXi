@@ -21,7 +21,6 @@ from core.classes import set_bot, Cog_Extension
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
-embed_link = os.getenv('embed_default_link')
 online_time = None
 start_time = time.time()
 

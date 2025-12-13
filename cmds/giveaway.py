@@ -11,9 +11,6 @@ from core.functions import read_json, write_json
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated
 
-load_dotenv()
-embed_link = os.getenv('embed_default_link')
-
 path = './cmds/data.json/giveaway.json'
 
 # {
