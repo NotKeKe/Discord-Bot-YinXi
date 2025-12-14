@@ -1,8 +1,9 @@
 import { parseSRT } from './utils.js';
 import { DisplayManager } from './ui.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialization
+function initApp() {
+    console.log("[App] Initializing...");
+
     const audio = document.getElementById('audio-player');
     const langSelect = document.getElementById('language-select');
     const display = new DisplayManager();
@@ -27,10 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // App State
-    let currentUUID = null;
+    let currentSessionID = null;
     let currentSrtContent = "";
     let subtitles = [];
     let currentLang = langSelect ? langSelect.value : 'original';
+
+    // Sync Offset (in seconds). Positive = Delay Subtitles. Negative = Advance Subtitles.
+    let subtitleOffset = 0.0;
 
     if (!GUILD_ID || GUILD_ID.includes("{{")) {
         console.error("No Guild ID found. Polling disabled.");
@@ -45,27 +49,47 @@ document.addEventListener('DOMContentLoaded', () => {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
             console.log("Language changed to:", currentLang);
-            // Immediately fetch with new language
             fetchData();
         });
     }
 
     // Volume
-    display.volumeSlider.addEventListener('input', (e) => {
-        const vol = parseFloat(e.target.value);
-        audio.volume = vol;
-    });
+    if (display.volumeSlider) {
+        display.volumeSlider.addEventListener('input', (e) => {
+            const vol = parseFloat(e.target.value);
+            audio.volume = vol;
+        });
+    }
+
+    // NEW: Sync Control Listeners via DisplayManager
+    display.bindSyncControls(
+        () => { // Decrease offset (Minus)
+            subtitleOffset -= 0.1;
+            subtitleOffset = Math.round(subtitleOffset * 10) / 10;
+            console.log("[Sync] Decrease ->", subtitleOffset);
+            display.updateOffsetDisplay(subtitleOffset);
+
+            const adjustedTime = audio.currentTime - subtitleOffset;
+            display.highlightSubtitle(subtitles, adjustedTime, false);
+        },
+        () => { // Increase offset (Plus)
+            subtitleOffset += 0.1;
+            subtitleOffset = Math.round(subtitleOffset * 10) / 10;
+            console.log("[Sync] Increase ->", subtitleOffset);
+            display.updateOffsetDisplay(subtitleOffset);
+
+            const adjustedTime = audio.currentTime - subtitleOffset;
+            display.highlightSubtitle(subtitles, adjustedTime, false);
+        }
+    );
 
     // Stream Buffering Handlers
     audio.addEventListener('waiting', () => {
-        console.log('[Stream] Buffering...');
         display.setBuffering(true);
     });
 
     audio.addEventListener('playing', () => {
-        console.log('[Stream] Playing');
         display.setBuffering(false);
-        // Ensure overlay is hidden if it started playing naturally
         if (typeof display.hideAutoplayRequest === 'function') {
             display.hideAutoplayRequest();
         }
@@ -89,8 +113,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         display.updateProgress(ct, d);
+
+        // Apply Offset logic
+        const adjustedTime = ct - subtitleOffset;
+
         // Normal playback: use default smooth scroll (false)
-        display.highlightSubtitle(subtitles, ct, false);
+        display.highlightSubtitle(subtitles, adjustedTime, false);
     };
 
     audio.addEventListener('timeupdate', handleProgress);
@@ -100,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchData() {
         try {
-            // Append language parameter
             const response = await fetch(`/player/check_song?guild_id=${GUILD_ID}&lang=${currentLang}`);
 
             if (response.ok) {
@@ -115,23 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startPolling() {
-        // Poll server every 5 seconds
-        setInterval(fetchData, 5000);
+        setInterval(fetchData, 10000);
     }
 
-    // Helper to update dropdown options without losing selection if possible
     function updateLanguageList(availableLanguages) {
         if (!langSelect) return;
         if (!availableLanguages || !Array.isArray(availableLanguages)) return;
 
-        // Current selection
         const previousSelection = langSelect.value;
-
-        // Check if options are already correct (simple optimization)
         const currentOptions = Array.from(langSelect.options).map(o => o.value);
         const newOptionsSet = new Set(['original', ...availableLanguages]);
 
-        // If length matches and every option matches, skip DOM update
         if (currentOptions.length === newOptionsSet.size &&
             currentOptions.every(opt => newOptionsSet.has(opt))) {
             return;
@@ -140,29 +161,25 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Updating language list:", availableLanguages);
         langSelect.innerHTML = '';
 
-        // Always add Original first
         const originalOpt = document.createElement('option');
         originalOpt.value = 'original';
         originalOpt.textContent = 'Original';
         langSelect.appendChild(originalOpt);
 
-        // Add others
         availableLanguages.forEach(lang => {
-            if (lang === 'original') return; // Skip duplicate
+            if (lang === 'original') return;
             const opt = document.createElement('option');
             opt.value = lang;
-            // Capitalize first letter for display
             opt.textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
             langSelect.appendChild(opt);
         });
 
-        // Restore selection or default to original
         if (newOptionsSet.has(previousSelection)) {
             langSelect.value = previousSelection;
         } else {
             console.log(`Previous language ${previousSelection} not available, switching to original.`);
             langSelect.value = 'original';
-            currentLang = 'original'; // Update state
+            currentLang = 'original';
         }
     }
 
@@ -171,58 +188,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let isNewSong = false;
 
-        // CASE A: NEW SONG (UUID changed)
-        if (data.uuid !== currentUUID) {
-            console.log("New song detected:", data.uuid);
-            currentUUID = data.uuid;
-            isNewSong = true; // Mark as new so we skip sync logic this turn
-            currentSrtContent = ""; // Reset SRT cache to force render
+        // CASE A: NEW SONG (SessionID changed)
+        if (data.session_id !== currentSessionID) {
+            console.log("New song detected:", data.session_id);
+            currentSessionID = data.session_id;
+            isNewSong = true;
+            currentSrtContent = "";
+            subtitles = [];
+
+            // Reset Offset on new song
+            subtitleOffset = 0.0;
+            display.updateOffsetDisplay(0);
 
             // Reset UI
             display.reset();
             display.updateMetadata(data.title, data.subtitle);
 
-            // Update Language Dropdown if provided by backend
+            // Force Reset Language Selector to 'Original'
+            if (langSelect) {
+                langSelect.innerHTML = '<option value="original" selected>Original</option>';
+                langSelect.value = 'original';
+                currentLang = 'original';
+            }
+
             if (data.languages) {
                 updateLanguageList(data.languages);
             }
 
-            // Load Audio Stream
             if (data.audio_url) {
                 console.log("[Stream] Loading URL:", data.audio_url);
                 audio.src = data.audio_url;
                 audio.load();
 
-                // Attempt play immediately
                 const playPromise = audio.play();
 
                 if (playPromise !== undefined) {
                     playPromise.catch(e => {
                         console.warn("Auto-play blocked initially:", e.name);
-                        // If blocked by browser policy, show overlay
                         if (e.name === 'NotAllowedError' || e.name === 'NotSupportedError') {
                             if (typeof display.showAutoplayRequest === 'function') {
                                 display.showAutoplayRequest(() => {
-                                    // On user click
                                     audio.play().catch(err => console.error("Play failed even after click:", err));
                                 });
                             } else {
-                                // Fallback if JS cache is stale and method missing
-                                console.error("DisplayManager missing showAutoplayRequest. Please hard refresh.");
-                                alert("Please tap the screen to enable audio playback.");
-                                const unlockAudio = () => {
-                                    audio.play();
-                                    document.removeEventListener('click', unlockAudio);
-                                };
-                                document.addEventListener('click', unlockAudio);
+                                console.error("DisplayManager missing showAutoplayRequest.");
                             }
                         }
                     });
                 }
             }
-        }
-        // If same song, still check if languages list updated
-        else if (data.languages) {
+        } else if (data.languages) {
             updateLanguageList(data.languages);
         }
 
@@ -235,9 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 subtitles = parseSRT(data.srt_content);
                 display.renderSubtitles(subtitles);
 
-                // CRITICAL FIX: Pass 'true' (immediate) because we just replaced the DOM.
-                // This prevents the "scroll from top" animation which looks like a jump back in time.
-                display.highlightSubtitle(subtitles, audio.currentTime, true);
+                const adjustedTime = audio.currentTime - subtitleOffset;
+                display.highlightSubtitle(subtitles, adjustedTime, true);
             } else {
                 subtitles = [];
                 display.setWaitingState();
@@ -245,7 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // CASE C: Sync & Playback State
-        // CRITICAL FIX: Do NOT run this if we just initialized a new song (isNewSong = true).
         if (!isNewSong) {
             const serverTime = data.current_time;
             if (typeof serverTime === 'number') {
@@ -266,10 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     audio.pause();
                 }
             } else {
-                // If server implies PLAY, and we are paused, try to resume
                 if (audio.paused && audio.readyState >= 2) {
                     const playPromise = audio.play();
-                    // Catch errors here too
                     if (playPromise !== undefined) {
                         playPromise.catch(e => {
                             if (e.name === 'NotAllowedError') {
@@ -284,6 +295,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Start
+    // Start polling immediately
     startPolling();
-});
+    // Fetch once on load
+    fetchData();
+}
+
+// Module scripts are deferred by default, DOM is usually ready.
+// If not, we can check readyState, but direct execution is often fine for modules at end of body.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+} else {
+    initApp();
+}

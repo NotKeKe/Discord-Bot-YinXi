@@ -384,8 +384,10 @@ class Music(Cog_Extension):
         player: Player = players.get(ctx.guild.id)
         if not player: return await ctx.send('no player', ephemeral=True)
         
-        items = [f'{key}: {value}' for key, value in player.__dict__]
-        await ctx.send('\n'.join(items))
+        from pathlib import Path
+        with open(Path(__file__).parent / 'test.txt', 'r', encoding='utf-8') as f:
+            f.write(player.__dict__)
+        await ctx.send('Done')
 
     @commands.command(name='clear_players')
     async def clear_players(self, ctx: commands.Context):

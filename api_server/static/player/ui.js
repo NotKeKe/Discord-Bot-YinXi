@@ -10,6 +10,11 @@ export class DisplayManager {
         this.songSubtitleEl = document.getElementById('song-subtitle');
         this.volumeSlider = document.getElementById('volume-slider');
 
+        // Sync Offset Controls
+        this.offsetMinus = document.getElementById('offset-minus');
+        this.offsetPlus = document.getElementById('offset-plus');
+        this.offsetDisplay = document.getElementById('offset-display');
+
         // Status indicator in header
         this.statusText = document.getElementById('status-text');
         this.statusDot = document.getElementById('status-dot');
@@ -19,7 +24,69 @@ export class DisplayManager {
         this.autoplayBtn = document.getElementById('autoplay-btn');
 
         this.activeSubtitleId = null;
-        console.log("DisplayManager initialized (v3.1 - Instant Scroll Fix)");
+        console.log("DisplayManager initialized");
+    }
+
+    /**
+     * Binds click/long-press handlers to the Sync Offset buttons.
+     * @param {Function} onMinus - Handler for minus button
+     * @param {Function} onPlus - Handler for plus button
+     */
+    bindSyncControls(onMinus, onPlus) {
+        if (!this.offsetMinus || !this.offsetPlus) {
+            console.error("Sync controls not found in DOM.");
+            return;
+        }
+
+        const addLongPressListener = (btn, action) => {
+            let timeoutId = null;
+            let intervalId = null;
+
+            const stop = (e) => {
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                    timeoutId = null;
+                }
+                if (intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                }
+            };
+
+            const start = (e) => {
+                // Prevent default behavior to stop text selection or context menu on mobile
+                if (e.cancelable) e.preventDefault();
+
+                // Clear any existing timers to be safe
+                stop();
+
+                // Trigger immediately once
+                action();
+
+                // Wait 500ms before starting continuous fire
+                timeoutId = setTimeout(() => {
+                    // Fire every 100ms
+                    intervalId = setInterval(() => {
+                        action();
+                    }, 100);
+                }, 500);
+            };
+
+            // Touch events (Mobile)
+            btn.addEventListener('touchstart', start, { passive: false });
+            btn.addEventListener('touchend', stop);
+            btn.addEventListener('touchcancel', stop);
+
+            // Mouse events (Desktop)
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', stop);
+            btn.addEventListener('mouseleave', stop);
+        };
+
+        addLongPressListener(this.offsetMinus, onMinus);
+        addLongPressListener(this.offsetPlus, onPlus);
+
+        console.log("Sync controls bound successfully with long-press support.");
     }
 
     // --- Autoplay Interaction Handling ---
@@ -30,33 +97,44 @@ export class DisplayManager {
             return;
         }
 
-        // Show the button
         this.autoplayBtn.classList.remove('hidden');
 
-        // Handle click
         this.autoplayBtn.onclick = () => {
             console.log("Autoplay button clicked");
             this.autoplayBtn.classList.add('hidden');
             if (onInteractCallback) onInteractCallback();
-
-            // Remove handler to prevent double firing or memory leaks
             this.autoplayBtn.onclick = null;
         };
     }
 
     hideAutoplayRequest() {
-            if (this.autoplayBtn) {
-                this.autoplayBtn.classList.add('hidden');
-            }
+        if (this.autoplayBtn) {
+            this.autoplayBtn.classList.add('hidden');
         }
-        // ---------------------------------
+    }
 
     reset() {
         this.activeSubtitleId = null;
         this.timeCurrent.textContent = "00:00";
         this.progressFill.style.width = "0%";
         this.subtitleList.innerHTML = '';
+        this.updateOffsetDisplay(0); // Reset offset display
         this.setBuffering(false);
+    }
+
+    updateOffsetDisplay(seconds) {
+        if (!this.offsetDisplay) return;
+
+        const sign = seconds > 0 ? '+' : '';
+        this.offsetDisplay.textContent = `${sign}${seconds.toFixed(1)}s`;
+
+        if (seconds === 0) {
+            this.offsetDisplay.classList.remove('text-yellow-400', 'text-emerald-400');
+            this.offsetDisplay.classList.add('text-blue-300');
+        } else {
+            this.offsetDisplay.classList.remove('text-blue-300');
+            this.offsetDisplay.classList.add('text-yellow-400');
+        }
     }
 
     setWaitingState() {
@@ -81,7 +159,6 @@ export class DisplayManager {
     }
 
     renderSubtitles(subtitles) {
-        // CRITICAL: Reset active ID so the logic knows to re-apply styles to the new DOM elements
         this.activeSubtitleId = null;
 
         this.subtitleList.innerHTML = subtitles.map((sub, index) => `
@@ -106,13 +183,10 @@ export class DisplayManager {
     }
 
     updateProgress(currentTime, duration) {
-        // Update Time Display
         this.timeCurrent.textContent = formatTime(currentTime);
         this.timeTotal.textContent = formatTime(duration);
 
-        // Handle Progress Bar Logic
         let percentage = 0;
-
         if (duration === Infinity) {
             percentage = 100;
             this.progressFill.classList.add('animate-pulse');
@@ -126,16 +200,9 @@ export class DisplayManager {
         this.progressFill.style.width = `${percentage}%`;
     }
 
-    /**
-     * Highlights the current subtitle.
-     * @param {Array} subtitles - The subtitle data array.
-     * @param {Number} currentTime - Current audio time.
-     * @param {Boolean} immediate - If true, scrolls instantly without animation (fix for language switch jump).
-     */
     highlightSubtitle(subtitles, currentTime, immediate = false) {
         const idx = subtitles.findIndex(s => currentTime >= s.startTime && currentTime <= s.endTime);
 
-        // Force update if immediate is requested, even if index hasn't changed (because DOM might be new)
         if (idx !== -1 && (idx !== this.activeSubtitleId || immediate)) {
             this.updateActiveSubtitle(idx, immediate);
         } else if (idx === -1 && this.activeSubtitleId !== null) {
@@ -144,19 +211,15 @@ export class DisplayManager {
     }
 
     updateActiveSubtitle(index, immediate = false) {
-        // If simply switching highlight, clear old one first
         if (!immediate) {
             this.clearActiveSubtitle();
         } else {
-            // If immediate (new DOM), just ensure ID logic is clean, 
-            // no need to remove classes from old DOM elements that don't exist
             if (this.activeSubtitleId !== index) this.activeSubtitleId = null;
         }
 
         this.activeSubtitleId = index;
         const el = document.getElementById(`sub-${index}`);
         if (el) {
-            // Apply Styles
             el.classList.add('bg-slate-800/80', 'border-blue-500/30', 'scale-105', 'shadow-xl');
             const textEl = el.querySelector('.sub-text');
             textEl.classList.remove('text-slate-500');
@@ -167,9 +230,6 @@ export class DisplayManager {
             const indicator = el.querySelector('.active-indicator');
             indicator.classList.remove('hidden');
 
-            // SCROLL LOGIC
-            // Use 'auto' behavior for immediate jumps (prevents seeing top of list)
-            // Use 'smooth' for normal playback progression
             el.scrollIntoView({
                 behavior: immediate ? 'auto' : 'smooth',
                 block: 'center'

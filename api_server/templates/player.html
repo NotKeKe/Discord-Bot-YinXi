@@ -27,11 +27,11 @@
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="bg-blue-600 p-2 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/></svg>
+                    <img src="/assets/botself.png" , alt="yinxi" , width="50" , height="50">
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-100">SubtitleSync</h1>
-                    <span class="text-xs text-blue-400 font-mono tracking-wider">DISPLAY NODE</span>
+                    <h1 class="text-xl font-bold text-slate-100">Player - Subtitle</h1>
+                    <span class="text-xs text-blue-400 font-mono tracking-wider">LET'S PLAYYYYYYY!!!</span>
                 </div>
             </div>
 
@@ -78,14 +78,13 @@
             <!-- Hidden Audio Element -->
             <audio id="audio-player"></audio>
 
-            <!-- Status / Controls Bar (Read Only except Volume) -->
-            <div class="fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 p-6 z-50 shadow-2xl">
+            <!-- Status / Controls Bar (Read Only except Volume/Sync) -->
+            <div class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-6 z-[100] shadow-2xl">
                 <!-- Added 'relative' to parent container for button positioning -->
                 <div class="max-w-4xl mx-auto flex flex-col gap-4 relative">
 
-                    <!-- Autoplay Button (Moved inside here) -->
-                    <!-- Absolute position, centered horizontally, just below progress bar (top-9) -->
-                    <button id="autoplay-btn" class="hidden absolute left-1/2 -translate-x-1/2 top-9 z-[60] bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-1.5 px-6 rounded-full shadow-lg transition-colors flex items-center gap-2">
+                    <!-- Autoplay Button -->
+                    <button id="autoplay-btn" class="hidden absolute left-1/2 -translate-x-1/2 top-9 z-[120] bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-1.5 px-6 rounded-full shadow-lg transition-colors flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                             <path d="M8 5v14l11-7z"/>
                         </svg>
@@ -95,15 +94,32 @@
                     <!-- Progress (Read Only) -->
                     <div class="flex items-center gap-4 w-full">
                         <span id="time-current" class="text-sm text-slate-400 font-mono w-12 text-right">00:00</span>
-                        <!-- pointer-events-none makes it read-only for user -->
                         <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden relative">
                             <div id="progress-fill" class="h-full bg-gradient-to-r from-blue-500 to-purple-500 w-0 transition-all duration-300 ease-linear"></div>
                         </div>
                         <span id="time-total" class="text-sm text-slate-400 font-mono w-12">00:00</span>
                     </div>
 
-                    <!-- Bottom Row: Volume Only -->
-                    <div class="flex items-center justify-end">
+                    <!-- Bottom Row: Sync & Volume -->
+                    <div class="flex flex-wrap items-center justify-between sm:justify-end gap-4">
+
+                        <!-- Sync Offset Controls -->
+                        <div class="flex items-center gap-3 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700 select-none">
+                            <span class="text-[10px] uppercase text-slate-500 font-bold tracking-wider mr-1">Sync</span>
+
+                            <!-- Bigger, Rounder Buttons with Z-Index fix -->
+                            <button id="offset-minus" type="button" class="relative z-[110] pointer-events-auto flex items-center justify-center w-8 h-8 rounded-full bg-slate-700/50 hover:bg-slate-600 hover:text-white transition-all active:scale-95 text-slate-300 border border-slate-600/50 cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+
+                            <span id="offset-display" class="text-xs font-mono text-blue-300 w-12 text-center">0.0s</span>
+
+                            <button id="offset-plus" type="button" class="relative z-[110] pointer-events-auto flex items-center justify-center w-8 h-8 rounded-full bg-slate-700/50 hover:bg-slate-600 hover:text-white transition-all active:scale-95 text-slate-300 border border-slate-600/50 cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                        </div>
+
+                        <!-- Volume Controls -->
                         <div class="flex items-center gap-3 bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
                             <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" class="w-24 h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-blue-500">

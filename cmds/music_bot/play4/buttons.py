@@ -1,4 +1,4 @@
-from discord import Interaction, SelectOption, Message, errors, File
+from discord import Interaction, SelectOption, Message, errors, File, ButtonStyle
 from discord.ui import View, button, select, Button
 import traceback
 import io
@@ -7,6 +7,7 @@ from cmds.music_bot.play4.player import Player
 from cmds.music_bot.play4.utils import send_info_embed, create_basic_embed
 from cmds.music_bot.play4.lyrics import search_lyrics
 from core.classes import get_bot
+from core.functions import yinxi_base_url
 
 
 class MusicControlButtons(View):
@@ -15,6 +16,9 @@ class MusicControlButtons(View):
         self.player = player
         self.translator = player.translator
         self.locale = player.locale
+
+        url_button = Button(label='URL', emoji='🔗', style=ButtonStyle.link, url=f'{yinxi_base_url}/player/{player.guild.id}_{player._uuid}')
+        self.add_item(url_button)
 
     async def button_error(self, inter: Interaction, exception):
         if isinstance(exception, errors.Forbidden):

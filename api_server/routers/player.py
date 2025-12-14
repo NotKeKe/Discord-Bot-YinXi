@@ -1,6 +1,6 @@
 import os
-import uuid
 import shutil
+from uuid import uuid4
 from typing import Dict
 from httpx import AsyncClient, Limits
 import logging
@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from src.url import audio_url_to_token, token_to_audio_url
+from src.utils import check_vaild_uuid
 
 router = APIRouter(
     prefix="/player",
@@ -35,9 +36,10 @@ templates = Jinja2Templates(directory="templates")
 # 3. Session 狀態管理 (Multi-tenant)
 # 結構: { "guild_id_123": { "uuid": "...", "title": "...", ... } }
 class SessionState:
-    def __init__(self, guild_id: str):
+    def __init__(self, guild_id: str, uuid: str):
         self.guild_id = guild_id
-        self.uuid = str(uuid.uuid4())
+        self.uuid = uuid
+        self.session_id = str(uuid4())
         self.title = "Waiting for Signal..."
         self.subtitle = ""
         self.audio_url = ""
@@ -48,15 +50,22 @@ class SessionState:
 
 sessions: Dict[str, SessionState] = {}
 
-def get_or_create_session(guild_id: str) -> SessionState:
+async def get_or_create_session(guild_id: str, uuid: str) -> SessionState | None:
+    check = await check_vaild_uuid(guild_id, uuid)
+    if not check: return
+
     if guild_id not in sessions:
-        sessions[guild_id] = SessionState(guild_id)
-    return sessions[guild_id]
+        sessions[guild_id] = SessionState(guild_id, uuid)
+    
+    session = sessions[guild_id]
+    if session.uuid != uuid: return # 不合法的 uuid, 請求的 uuid != 該 session 有的 uuid
+
+    return session
 
 # --- Routes ---
 
 @router.get("/check_song")
-async def check_song(guild_id: str, lang: str = 'original'):
+async def check_song(guild_id: str, lang: str = 'original', session_id: str = ''):
     """
     前端 JS 每秒輪詢的接口。
     必須帶上 ?guild_id=... 參數。
@@ -67,6 +76,8 @@ async def check_song(guild_id: str, lang: str = 'original'):
         return JSONResponse(status_code=404, content={"message": "Session not found"})
     
     session = sessions[guild_id]
+    if session_id and session.session_id != session_id:
+        return JSONResponse(status_code=404, content={"message": "Session not found"})
     
     # get target srt
     if lang in session.srts:
@@ -82,7 +93,8 @@ async def check_song(guild_id: str, lang: str = 'original'):
     audio_url = f'/player/stream/{token}'
 
     return {
-        "uuid": session.uuid,
+        # "uuid": session.uuid,
+        'session_id': session.session_id,
         "title": session.title,
         "subtitle": session.subtitle,
         "audio_url": audio_url,
@@ -154,6 +166,10 @@ async def player_page(request: Request, guild_id: str, page_uuid: str):
 
     if guild_id not in sessions:
         raise HTTPException(status_code=404, detail=f"Session not found, guild_id: {guild_id}")
+    
+    session = sessions[guild_id]
+    if session.uuid != page_uuid:
+        raise HTTPException(status_code=404, detail=f"Invalid page_uuid, guild_id: {guild_id}")
 
     return templates.TemplateResponse("player.html", {
         "request": request, 
@@ -163,9 +179,10 @@ async def player_page(request: Request, guild_id: str, page_uuid: str):
 @router.post('/update_song')
 async def update_song(
     guild_id: str = Form(...),
+    uuid: str = Form(...),
     title: str = Form(None),
     audio_url: str = Form(...),
-    srts: str = Form(None), # type: ignore
+    srts: str = Form(''), # type: ignore
     duration: int = Form(...),
     current_time: int = Form(...),
     is_paused: bool = Form(...),
@@ -183,23 +200,24 @@ async def update_song(
     except:
         raise HTTPException(status_code=400, detail="Invalid srts json format")
     
-    session = get_or_create_session(guild_id)
+    session = await get_or_create_session(guild_id, uuid)
+    if not session: raise HTTPException(status_code=400, detail="Invalid uuid")
         
     session.audio_url = audio_url
     session.duration = duration
     session.current_time = current_time
     session.is_paused = is_paused
+    session.srts = srts
 
     if title:
         session.title = title
-    if srts:
-        session.srts = srts
 
     return {"message": "Song updated successfully"}
 
 @router.post("/upload_song")
 async def upload_song(
     guild_id: str = Form(...),
+    uuid: str = Form(...),
     title: str = Form(None),
     audio_url: str = Form(...),
     srts: str = Form(None), # type: ignore
@@ -215,11 +233,12 @@ async def upload_song(
         except:
             raise HTTPException(status_code=400, detail="Invalid srts json format")
 
-        session = get_or_create_session(guild_id)
+        session = await get_or_create_session(guild_id, uuid)
+        if not session: raise HTTPException(status_code=400, detail="Invalid uuid")
         
-        # 1. 更新 UUID (觸發前端重整)
-        session.uuid = str(uuid.uuid4())
-        logger.info(f'Created a uuid: {session.uuid} for guild_id: {guild_id}')
+        # 1. 更新 Session ID (觸發前端重整)
+        session.session_id = str(uuid4())
+        logger.info(f'Created a session: {session.session_id} for guild_id: {guild_id}')
         
         # 2. 更新文字資訊
         if title:
@@ -237,8 +256,25 @@ async def upload_song(
             "guild_id": guild_id,
             "current_uuid": session.uuid
         }
+    except HTTPException: ...
     except:
         logger.error('upload_song error', exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+    
+@router.post("/delete_song")
+async def delete_song(
+    guild_id: str = Form(...), 
+    uuid: str = Form(...)
+):
+    if guild_id not in sessions:
+        raise HTTPException(status_code=404, detail=f"Session not found, guild_id: {guild_id}")
+    
+    session = sessions[guild_id]
+    if session.uuid != uuid:
+        raise HTTPException(status_code=404, detail=f"Invalid uuid, guild_id: {guild_id}")
+    
+    del sessions[guild_id]
+    return {"message": "Song deleted successfully"}
 
 @router.get("/test")
 async def test():

@@ -88,7 +88,8 @@ class MockInteraction:
         self.channel = ctx.channel
         self.client = ctx.bot
         self.bot = ctx.bot
-        # self.locale: discord.Locale = discord.Locale.taiwan_chinese # 或是從伺服器設定讀取
+        ctx.guild.preferred_locale
+        self.locale: discord.Locale = ctx.guild.preferred_locale or discord.Locale.taiwan_chinese # 或是從伺服器設定讀取
 
     def is_expired(self) -> bool:
         """

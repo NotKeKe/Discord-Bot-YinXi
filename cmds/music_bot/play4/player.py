@@ -6,6 +6,7 @@ import traceback
 from typing import Literal
 from httpx import AsyncClient, Limits
 import orjson
+import uuid
 
 from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.downloader import Downloader
@@ -54,30 +55,50 @@ class Player:
         # 進度條
         self.init_bar()
 
-        # 使用者輸入 playlist，載入歌曲的 task
+        # Tasks
+        self.update_progress_bar_task: asyncio.Task | None = None
         self.playlist_load_task: asyncio.Task | None = None
         self.add_to_api_task: asyncio.Task | None = None
         self.update_to_api_task: asyncio.Task | None = None
+        self.clean_up_task: asyncio.Task | None = None
 
         # api
         _limit = Limits(max_keepalive_connections=2, max_connections=2)
         self.httpx_client = AsyncClient(limits=_limit)
+        self._uuid = str(uuid.uuid4())
     
     def __del__(self):
+        if not self.clean_up_task:
+            asyncio.create_task(self._cleanup())
+
+    async def _cleanup(self):
         try: 
+            print(f'Clean up for player: {self.ctx.guild.id}:{self._uuid}')
+            tasks = []
             if self.update_progress_bar_task:
                 self.update_progress_bar_task.cancel()
-                del self.update_progress_bar_task
+                tasks.append(self.update_progress_bar_task)
             if self.playlist_load_task:
                 self.playlist_load_task.cancel()
-                del self.playlist_load_task
+                tasks.append(self.playlist_load_task)
             if self.add_to_api_task:
                 self.add_to_api_task.cancel()
-                del self.add_to_api_task
+                tasks.append(self.add_to_api_task)
             if self.update_to_api_task:
                 self.update_to_api_task.cancel()
-                del self.update_to_api_task
-        except: ...
+                tasks.append(self.update_to_api_task)
+
+            tasks.extend([
+                redis_client.srem('musics_player_ids', f'{self.ctx.guild.id}:{self._uuid}'),
+                self.httpx_client.post(url='http://api_server:3000/player/delete_song', data={'guild_id': self.ctx.guild.id, 'uuid': self._uuid}),
+                self.httpx_client.aclose()
+            ])
+
+            await asyncio.gather(*tasks)
+        except asyncio.CancelledError:
+            ...
+        except:
+            traceback.print_exc()
 
     def init_bar(self):
         self.duration_int = None
@@ -161,6 +182,8 @@ class Player:
         # 確保連接狀態
         if not self.voice_client or not self.voice_client.is_connected(): 
             print('未連接到語音頻道')
+            self.clean_up_task = asyncio.create_task(self._cleanup())
+            await self.clean_up_task
             return
             
         # 停止當前播放並等待完成
@@ -206,35 +229,42 @@ class Player:
     async def upload_to_api(self, audio_url: str):
         # post to api
         srts = self.list[self.current_index].get('subtitles', {})
+        await redis_client.sadd('musics_player_ids', f'{self.ctx.guild.id}:{self._uuid}')
         await self.httpx_client.post(
             f'http://api_server:3000/player/upload_song',
             data={
                 'guild_id': self.ctx.guild.id,
+                'uuid': self._uuid,
                 'title': self.list[self.current_index]['title'],
                 'audio_url': audio_url,
-                'duration': self.duration_int,
+                'duration': self.list[self.current_index]['duration_int'],
                 'srts': orjson.dumps(srts).decode()
             },
         )
     async def update_to_api(self):
         while True:
             await asyncio.sleep(3)
+            if self.add_to_api_task and not self.add_to_api_task.done(): continue
+
             srts = self.list[self.current_index].get('subtitles', {})
             resp = await self.httpx_client.post(
                 f'http://api_server:3000/player/update_song',
                 data={
                     'guild_id': self.ctx.guild.id,
+                    'uuid': self._uuid,
                     'title': self.list[self.current_index]['title'],
                     'audio_url': self.list[self.current_index]['audio_url'],
                     'srts': orjson.dumps(srts).decode(),
-                    'duration': self.duration_int,
+                    'duration': self.list[self.current_index]['duration_int'],
                     'current_time': self.passed_time,
                     'is_paused': self.voice_client.is_paused(),
                 }
             )
 
-            if resp.status_code != 200:
-                print(resp.status_code, resp.text)
+            if resp.status_code == 200: continue
+            print(resp.status_code, resp.text)
+
+            if resp.status_code == 400: break
 
     def _change_prefer_loop(self):
         if self.loop_status not in loop_option: return 'Invalid loop type'
@@ -444,22 +474,6 @@ class Player:
                     break
 
             await asyncio.sleep(1)
-            
-    def cleanup(self):
-        """釋放資源並取消所有任務"""
-        # 取消進度條更新任務
-        if self.update_progress_bar_task and not self.update_progress_bar_task.cancelled():
-            self.update_progress_bar_task.cancel()
-            
-        # 確保斷開語音連接
-        if self.voice_client and self.voice_client.is_connected():
-            self.voice_client.stop()
-            # 實際斷開會在外部調用disconnect()
-            
-        # 釋放引用，幫助垃圾回收
-        self.ctx = None
-        self.voice_client = None
-        self.bot = None
 
     async def search_lyrics(self) -> str:
         query = self.list[self.current_index].get('title')
