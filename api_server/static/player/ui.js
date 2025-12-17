@@ -122,6 +122,36 @@ export class DisplayManager {
         this.setBuffering(false);
     }
 
+    // NEW: Handle 404 / Stopped state
+    showStoppedState() {
+        console.log("[UI] Showing Stopped State");
+        this.activeSubtitleId = null;
+        this.timeCurrent.textContent = "--:--";
+        this.timeTotal.textContent = "--:--";
+        this.progressFill.style.width = "0%";
+
+        // Force update Metadata
+        this.songTitleEl.textContent = "Waiting for Signal...";
+        this.songSubtitleEl.textContent = "System Idle";
+
+        // Visual indicator in list area
+        this.subtitleList.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-50">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <p>Waiting for music to start...</p>
+            </div>
+        `;
+
+        // Update Header Status to Disconnected/Idle
+        if (this.statusText) this.statusText.textContent = "Idle";
+        if (this.statusDot) this.statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-slate-600";
+        if (this.statusPing) this.statusPing.classList.add('hidden');
+    }
+
     updateOffsetDisplay(seconds) {
         if (!this.offsetDisplay) return;
 
@@ -146,10 +176,12 @@ export class DisplayManager {
             this.statusText.textContent = "Buffering...";
             this.statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-yellow-500";
             this.statusPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75";
+            this.statusPing.classList.remove('hidden');
         } else {
             this.statusText.textContent = "Syncing";
             this.statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-emerald-500";
             this.statusPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+            this.statusPing.classList.remove('hidden');
         }
     }
 

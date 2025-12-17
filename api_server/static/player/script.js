@@ -99,8 +99,18 @@ function initApp() {
         display.setBuffering(false);
     });
 
+    // GAPLESS PLAYBACK LOGIC: 
+    // Just fetch immediately once when the song ends. No loop.
+    audio.addEventListener('ended', () => {
+        console.log("[Stream] Track ended. Fetching next song immediately...");
+        fetchData();
+    });
+
     // Audio Progress & Visuals
     const handleProgress = () => {
+        // If stopped, do nothing
+        if (currentSessionID === null) return;
+
         const ct = audio.currentTime;
         let d = audio.duration;
 
@@ -128,13 +138,26 @@ function initApp() {
 
     async function fetchData() {
         try {
-            const response = await fetch(`/player/check_song?guild_id=${GUILD_ID}&lang=${currentLang}`);
-
+            const response = await fetch(`/player/check_song?guild_id=${GUILD_ID}&session_id=${currentSessionID || ''}&lang=${currentLang}`);
             if (response.ok) {
                 const data = await response.json();
                 updateSong(data);
             } else if (response.status === 404) {
-                console.log("Waiting for session to be created...");
+                // FORCE STOP LOGIC
+                // We execute this unconditionally if 404 is returned, to ensure UI is always in sync.
+                if (currentSessionID !== null) {
+                    console.log("Session ended (404). Stopping playback.");
+                }
+
+                // Ensure audio is stopped and source cleared
+                if (!audio.paused || audio.getAttribute('src')) {
+                    audio.pause();
+                    audio.removeAttribute('src');
+                    audio.load();
+                }
+
+                // Explicitly update UI
+                display.showStoppedState();
             }
         } catch (err) {
             // Ignore network errors
@@ -142,6 +165,7 @@ function initApp() {
     }
 
     function startPolling() {
+        // Poll every 10 seconds
         setInterval(fetchData, 10000);
     }
 
@@ -217,6 +241,7 @@ function initApp() {
 
             if (data.audio_url) {
                 console.log("[Stream] Loading URL:", data.audio_url);
+                // Keep audio source logic as requested (Direct URL from provided context)
                 audio.src = data.audio_url;
                 audio.load();
 

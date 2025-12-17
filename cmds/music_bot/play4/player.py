@@ -88,11 +88,14 @@ class Player:
                 self.update_to_api_task.cancel()
                 tasks.append(self.update_to_api_task)
 
-            tasks.extend([
-                redis_client.srem('musics_player_ids', f'{self.ctx.guild.id}:{self._uuid}'),
-                self.httpx_client.post(url='http://api_server:3000/player/delete_song', data={'guild_id': self.ctx.guild.id, 'uuid': self._uuid}),
-                self.httpx_client.aclose()
-            ])
+            async def delete_song():
+                await redis_client.srem('musics_player_ids', f'{self.ctx.guild.id}:{self._uuid}') # type: ignore
+                resp = await self.httpx_client.post(url='http://api_server:3000/player/delete_song', data={'guild_id': self.ctx.guild.id, 'uuid': self._uuid})
+                if resp.status_code != 200:
+                    print(resp.status_code, resp.text)
+                await self.httpx_client.aclose()
+
+            tasks.append(delete_song())
 
             await asyncio.gather(*tasks)
         except asyncio.CancelledError:
