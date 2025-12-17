@@ -1,11 +1,13 @@
 from discord import Interaction, SelectOption, Message, errors, File, ButtonStyle
 from discord.ui import View, button, select, Button
+from discord.ext.commands import Context
 import traceback
 import io
 
-from cmds.music_bot.play4.player import Player
-from cmds.music_bot.play4.utils import send_info_embed, create_basic_embed
-from cmds.music_bot.play4.lyrics import search_lyrics
+from .player import Player
+from .utils import send_info_embed, create_basic_embed
+from .lyrics import search_lyrics
+from .modals import SleepTimerModal
 from core.classes import get_bot
 from core.functions import yinxi_base_url
 
@@ -63,6 +65,7 @@ class MusicControlButtons(View):
         try:
             from cmds.play4 import players
             
+            if not interaction.guild: return
             if not interaction.user.voice.channel: return await interaction.response.send_message(await self.translator.get_translate('send_button_not_in_voice', self.locale))
             if not interaction.guild.voice_client: return await interaction.response.send_message(await self.translator.get_translate('send_button_bot_not_in_voice', self.locale))
 
@@ -127,6 +130,13 @@ class MusicControlButtons(View):
     async def volume_callback(self, interaction: Interaction, button: Button):
         try:
             await interaction.response.send_message(view=VolumeControlButtons(self.player), ephemeral=True)
+        except Exception as e:
+            await self.button_error(interaction, e)
+
+    @button(label='睡眠計時器', emoji='🛌')
+    async def sleep_callback(self, interaction: Interaction, button: Button):
+        try:
+            await interaction.response.send_modal(SleepTimerModal(self.player.ctx))
         except Exception as e:
             await self.button_error(interaction, e)
 

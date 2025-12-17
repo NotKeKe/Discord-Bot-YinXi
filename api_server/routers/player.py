@@ -14,7 +14,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from src.url import audio_url_to_token, token_to_audio_url
-from src.utils import check_vaild_uuid
+from src.utils import check_vaild_uuid, check_vaild_PLAY_WEBSITE_KEY
 
 router = APIRouter(
     prefix="/player",
@@ -263,19 +263,27 @@ async def upload_song(
     
 @router.post("/delete_song")
 async def delete_song(
+    request: Request,
     guild_id: str = Form(...), 
-    uuid: str = Form(...)
+    uuid: str = Form(None),
 ):
     if guild_id not in sessions:
         raise HTTPException(status_code=404, detail=f"Session not found, guild_id: {guild_id}")
+        
+    key = request.headers.get('x-api-key')
     
     session = sessions[guild_id]
-    if session.uuid != uuid:
+    if session.uuid != uuid and not key:
         raise HTTPException(status_code=404, detail=f"Invalid uuid, guild_id: {guild_id}")
+    
+    if not key: raise HTTPException(status_code=404, detail=f"Invalid uuid, guild_id: {guild_id}")
+
+    if not check_vaild_PLAY_WEBSITE_KEY(key):
+        raise HTTPException(status_code=404, detail=f"Invalid KEY, guild_id: {guild_id}")
     
     del sessions[guild_id]
     return {"message": "Song deleted successfully"}
 
-@router.get("/test")
-async def test():
-    return sessions
+# @router.get("/test")
+# async def test():
+#     return sessions

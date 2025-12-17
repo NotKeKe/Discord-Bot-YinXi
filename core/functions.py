@@ -32,6 +32,7 @@ nasaApiKEY = os.getenv("nasa_api_KEY")
 unsplashKEY = os.getenv('unsplash_api_access_KEY')
 GIPHYKEY = os.getenv('GIPHY_KEY')
 GENIUS_ACCESS_TOKEN = os.getenv('GENIUS_ACCESS_TOKEN')
+PLAY_WEBSITE_KEY = os.getenv('PLAY_WEBSITE_KEY', '') # a admin key for wales.com.tw/player
 
 # mongo db
 MONGO_USER = quote_plus(os.getenv('MONGO_USER'))

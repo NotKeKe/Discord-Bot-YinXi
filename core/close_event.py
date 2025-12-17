@@ -47,5 +47,29 @@ async def close_event():
     except:
         logger.error('Cannot close global playwright', exc_info=True)
 
+    try:
+        from cmds.music_bot.play4.modals import sleeping_tasks
+
+        count = 0
+        for task in sleeping_tasks:
+            task.cancel()
+            count += 1
+
+        if count:
+            await asyncio.gather(*sleeping_tasks)
+        logger.info(f'Closed `{count}` SleepTimer tasks')
+    except asyncio.CancelledError: ...
+    except:
+        logger.error('Cannot close SleepTimer tasks', exc_info=True)
+
+    try:
+        from cmds.play4 import players
+        for player in players.values():
+            await player._cleanup()
+        players.clear()
+        logger.info('Closed players')
+    except:
+        logger.info('Cannot close players', exc_info=True)
+
     try: await bot.close()
     except: logger.error('Cannot close bot', exc_info=True)

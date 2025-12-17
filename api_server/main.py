@@ -27,6 +27,10 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {'request': request})
 
+@app.get('/robots.txt', response_class=FileResponse)
+async def robots_txt():
+    return FileResponse('robots.txt')
+
 @app.get('/discord', response_class=RedirectResponse)
 async def direct_to_discord_server():
     return RedirectResponse('https://discord.gg/MhtxWJu')

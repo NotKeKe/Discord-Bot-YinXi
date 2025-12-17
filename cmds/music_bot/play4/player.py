@@ -264,7 +264,7 @@ class Player:
             if resp.status_code == 200: continue
             print(resp.status_code, resp.text)
 
-            if resp.status_code == 400: break
+            if resp.status_code in (400, 404): break
 
     def _change_prefer_loop(self):
         if self.loop_status not in loop_option: return 'Invalid loop type'

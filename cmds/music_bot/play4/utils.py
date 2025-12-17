@@ -140,10 +140,21 @@ def query_search(query: str) -> tuple:
         return (title, video_url, length)
     else: return None
 
-async def leave(ctx: commands.Context):
-    '''leave the voice channel and delete the player object from players dict'''
-    if not ctx.author.voice or not ctx.guild.voice_client: await ctx.send('疑? 是你還是我不在語音頻道裡面啊'); return False
-    if ctx.author.voice.channel != ctx.guild.voice_client.channel: await ctx.send('疑? 我們好像在不同的頻道裡面欸'); return False
+async def leave(ctx: commands.Context, return_value: bool = True) -> bool | None:
+    """Leave the voice channel and delete the player object from players dict
+
+    Args:
+        ctx (commands.Context): _description_
+        return_value (bool, optional): 判斷使用者是否在語音頻道，關閉此選項可避免再次傳送訊息給使用者. Defaults to True.
+
+    Returns:
+        bool | None: 使用者是否在語音頻道內
+    """    
+    if return_value:
+        if not ctx.guild: await ctx.send('疑? 我不在伺服器裡面 你是怎麼叫我的'); return False
+        if not ctx.author.voice or not ctx.guild.voice_client: await ctx.send('疑? 是你還是我不在語音頻道裡面啊'); return False
+        if ctx.author.voice.channel != ctx.guild.voice_client.channel: await ctx.send('疑? 我們好像在不同的頻道裡面欸'); return False
+
     from cmds.play4 import players, custom_list_players, join_channel_time
     await ctx.guild.voice_client.disconnect()
     if ctx.guild.id in players:

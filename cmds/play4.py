@@ -5,6 +5,7 @@ from discord.app_commands import Choice
 from discord.ext import commands, tasks
 import traceback
 import copy
+from httpx import AsyncClient
 
 from cmds.music_bot.play4.player import Player, loop_option
 from cmds.music_bot.play4.utils import send_info_embed, check_and_get_player
@@ -15,7 +16,7 @@ from cmds.music_bot.play4.play_list import add_to_custom_list, CustomListPlayer,
 from cmds.music_bot.play4.autocomplete import *
 
 from core.classes import Cog_Extension
-from core.functions import KeJCID, create_basic_embed
+from core.functions import KeJCID, create_basic_embed, PLAY_WEBSITE_KEY
 from core.translator import locale_str, load_translated
 
 players: dict[int, Player] = {}
@@ -366,6 +367,27 @@ class Music(Cog_Extension):
             eb = create_basic_embed(title, color=ctx.author.color)
             eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await ctx.send(embed=eb, view=view)
+
+    @commands.hybrid_command(name=locale_str('clear_play_web'), description=locale_str('clear_play_web'))
+    async def clear_play_web(self, ctx: commands.Context):
+        async with ctx.typing():
+            if not ctx.guild: return
+            
+            try:
+                # await redis_client.srem('musics_player_ids', f'{ctx.guild.id}:{player._uuid}') # type: ignore , having no idea how to delete
+                async with AsyncClient(headers={'x-api-key': PLAY_WEBSITE_KEY}) as client:
+                    resp = await client.post(
+                        'http://api_server:3000/player/delete_song',
+                        data={'guild_id': ctx.guild.id}
+                    )
+
+                if resp.status_code != 200:
+                    await ctx.send((await ctx.interaction.translate('send_clear_play_web_error')).format(err=f'{resp.status_code} {resp.text}'))
+                else:
+                    await ctx.send(await ctx.interaction.translate('send_clear_play_web_success'))
+            except Exception as e:
+                await ctx.send((await ctx.interaction.translate('send_clear_play_web_error')).format(err=e))
+                traceback.print_exc()
 
     @commands.command(name='show_players')
     async def show_players(self, ctx: commands.Context):

@@ -85,7 +85,8 @@
         "play_custom_list": "播放自订播放清单",
         "add_custom_list": "加入自订播放清单",
         "delete_custom_list": "删除自订播放清单",
-        "show_custom_list": "列出自订播放清单的歌曲"
+        "show_custom_list": "列出自订播放清单的歌曲",
+        "clear_play_web": "清除播放网站"
     },
     "description": {
         "translate": "翻译一些文字",
@@ -173,7 +174,8 @@
         "play_custom_list": "播放自订的播放清单，可使用 /add_custom_list 加入歌曲。",
         "add_custom_list": "将歌曲加入进自订的播放清单",
         "delete_custom_list": "删除所选的整个自订播放清单",
-        "show_custom_list": "显示单个自订播放清单内的全部歌曲"
+        "show_custom_list": "显示单个自订播放清单内的全部歌曲",
+        "clear_play_web": "当你不能通过 `nowplaying` 中的 URL 按钮进入播放网站时，先使用此指令"
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
@@ -776,6 +778,9 @@
         "send_delete_custom_list_success": "已成功删除自定义歌单 `({list_name})`。",
         "send_delete_custom_list_cancelled": "已取消删除自定义歌单 `({list_name})`。",
         "send_play_custom_list_already_playing_left_first": "要先让我离开，才能播你的自定播放清单窝~",
-        "send_play_not_in_guild": "你必须在服务器中才能播放音乐。"
+        "send_play_not_in_guild": "你必须在服务器中才能播放音乐。",
+        "send_clear_play_web_success": "已成功从 API 删除播放器",
+        "send_clear_play_web_error": "从 API 删除 player 失败：`{err}`"
+
     }
 }

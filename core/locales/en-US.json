@@ -85,7 +85,8 @@
         "play_custom_list": "play_custom_list",
         "add_custom_list": "add_custom_list",
         "delete_custom_list": "delete_custom_list",
-        "show_custom_list": "show_custom_list"
+        "show_custom_list": "show_custom_list",
+        "clear_play_web": "clear_play_website"
     },
     "description": {
         "translate": "Translate some text",
@@ -173,7 +174,8 @@
         "play_custom_list": "Play a custom playlist, you can use /add_custom_list to add songs.",
         "add_custom_list": "Add songs to a custom playlist",
         "delete_custom_list": "Delete the entire selected custom playlist",
-        "show_custom_list": "Show all songs in a single custom playlist"
+        "show_custom_list": "Show all songs in a single custom playlist",
+        "clear_play_web": "Clear the player's web uuid from the API, when you cannot enter the web from `nowplaying` button."
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -775,6 +777,8 @@
         "send_delete_custom_list_success": "Successfully deleted custom playlist `({list_name})`.",
         "send_delete_custom_list_cancelled": "Deletion of custom playlist `({list_name})` has been cancelled.",
         "send_play_custom_list_already_playing_left_first": "You must leave first before you can play your custom playlist.",
-        "send_play_not_in_guild": "You must be in a guild to play music."
+        "send_play_not_in_guild": "You must be in a guild to play music.",
+        "send_clear_play_web_success": "Successfully deleted player from API.",
+        "send_clear_play_web_error": "Failed to delete player from API: `{err}`"
     }
 }
