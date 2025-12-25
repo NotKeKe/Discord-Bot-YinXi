@@ -5,7 +5,7 @@ import asyncio
 
 from .utils import leave
 
-sleeping_tasks: list[asyncio.Task] = []
+sleeping_tasks: dict[int, asyncio.Task] = {}
 
 async def sleep_task(ctx: commands.Context, inter: Interaction, sleep_time: int):
     """...
@@ -35,6 +35,10 @@ class SleepTimerModal(Modal, title="睡眠計時器"):
             await inter.response.send_message("Please enter a valid number", ephemeral=True)
             return
 
-        sleeping_tasks.append(asyncio.create_task(sleep_task(self.ctx, inter, self.sleep_time)))
+        assert inter.guild
+        ori_task = sleeping_tasks.get(inter.guild.id)
+        if ori_task: ori_task.cancel()
 
+        sleeping_tasks[inter.guild.id] = (asyncio.create_task(sleep_task(self.ctx, inter, self.sleep_time)))
+        
         await inter.response.send_message(f"The music will stop after {self.sleep_time} minutes", ephemeral=True)

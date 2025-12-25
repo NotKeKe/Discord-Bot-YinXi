@@ -6,7 +6,7 @@ import aiohttp
 import logging
 from collections import defaultdict
 from typing import Any
-from pymongo import InsertOne
+from pymongo import UpdateOne
 from textwrap import dedent
 from datetime import datetime
 import asyncio
@@ -264,7 +264,10 @@ class PJSK(commands.Cog):
 
     @tasks.loop(hours=1)
     async def update_pjsk_songs(self):
+        updated = []
+        '''有更新的數據'''
         results = []
+        '''要傳送到 dc channel 的數據'''
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://sekai-world.github.io/sekai-master-db-diff/musics.json') as resp:
@@ -278,17 +281,16 @@ class PJSK(commands.Cog):
                 music_video_urls = {item["musicId"]: item for item in (await resp.json())}
 
             async with session.get('https://sekai-world.github.io/sekai-master-db-diff/musicTags.json') as resp:
-                music_tags = defaultdict(list)
+                music_tags: dict[str, list[str]] = defaultdict(list)
                 for item in (await resp.json()):
                     music_tags[item["musicId"]].append(item.get('musicTag'))
 
         for music in musics:
             # 歌曲id, 名稱
             music_id = music.get('id')
-            if (await self.collection.find_one({'musicId': music_id})): continue
 
             song_name = music.get('title')
-            publish_at: int = music.get('publishedAt')
+            publish_at: int = music.get('publishedAt') # type: ignore
             music_difficulty = { # {append: {lvl: 32, noteCount: 1131}]
                 music_diff.get('musicDifficulty'): {
                     'level': music_diff.get('playLevel'), 
@@ -301,7 +303,7 @@ class PJSK(commands.Cog):
                 diff: f"https://storage.sekai.best/sekai-music-charts/jp/{str(music_id).zfill(4)}/{diff}.png"
                 for diff in music_difficulty.keys()
             }
-            music_tag: list[str] = music_tags.get(music_id)
+            music_tag: list[str] = music_tags.get(music_id) # type: ignore
 
             # 歌曲作詞, 作曲, 編曲
             lyricist = music.get('lyricist')
@@ -312,7 +314,7 @@ class PJSK(commands.Cog):
             image_assetbundle_name = music.get('assetbundleName')
             image_url = f"https://storage.sekai.best/sekai-jp-assets/music/jacket/{image_assetbundle_name}/{image_assetbundle_name}.webp"
 
-            results.append({
+            item = {
                 'musicId': music_id, # 歌曲ID
                 'songName': song_name, # 歌曲名稱
                 'musicDifficulty': music_difficulty, # 歌曲難度: dict[難度, dict[lvl | noteCount, int]]
@@ -325,38 +327,49 @@ class PJSK(commands.Cog):
                 'lyricist': lyricist, # 作詞
                 'composer': composer, # 作曲
                 'arranger': arranger, # 編曲
-            })
+            }
+
+            find_one_result = await self.collection.find_one({'musicId': music_id})
+
+            if not (find_one_result):
+                results.append(item)
+
+            if find_one_result and find_one_result | {'_id': ''} == item | {'_id': ''}: return
+            updated.append(item)
         
         if not results: return
-    
-        async for item in self.send_channels_collection.find():
-            channelID: int = item.get('channelID')
-            channel = self.bot.get_channel(channelID)
+        else: # 有新歌曲才發送 channel 通知
+            async for item in self.send_channels_collection.find():
+                channelID: int = item.get('channelID')
+                channel = self.bot.get_channel(channelID)
 
-            lang = channel.guild.preferred_locale.value
+                lang = channel.guild.preferred_locale.value if hasattr(channel, 'guild') and channel.guild else None # type: ignore
 
-            '''i18n'''
-            eb_text = load_translated(await self.bot.tree.translator.get_translate('embed_pjsk_global_full_info', lang))[0]
-            footer = eb_text.get('footer')
-            descrip = eb_text.get('description')
-            ''''''
+                '''i18n'''
+                eb_text = load_translated(await self.bot.tree.translator.get_translate('embed_pjsk_global_full_info', lang))[0] # type: ignore
+                footer = eb_text.get('footer')
+                descrip = eb_text.get('description')
+                ''''''
 
-            for r in results:
-                send_descrip = []
-                get_descrip_of_info_embed(r, send_descrip, descrip) # 可能遇到語言不同的問題 descrip 就會不一樣
+                for r in results:
+                    send_descrip = []
+                    get_descrip_of_info_embed(r, send_descrip, descrip) # 可能遇到語言不同的問題 descrip 就會不一樣
 
-                embed = create_basic_embed()
+                    embed = create_basic_embed()
 
-                embed.description = '\n\n'.join(send_descrip)
-                embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
-                embed.set_footer(text=footer)
+                    embed.description = '\n\n'.join(send_descrip)
+                    embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
+                    embed.set_footer(text=footer)
 
-                await channel.send(embed=embed)
+                    await channel.send(embed=embed) # type: ignore
         
         
-        await self.collection.bulk_write([InsertOne(r) for r in results])
+        await self.collection.bulk_write([
+            UpdateOne({"musicId": r.get('musicId')}, {"$set": r}, upsert=True) 
+            for r in updated if r.get('musicId')
+        ])
         await self.collection.update_one({'type': 'TOP_STATS'}, {'$set': {'updateAt': datetime.now().timestamp()}}, upsert=True)
-        logger.info(f'Updated pjsk data with {len(results)} results')
+        logger.info(f'Updated pjsk data with {len(updated)} results')
 
     @update_pjsk_songs.before_loop
     async def update_pjsk_songs_before_loop(self):

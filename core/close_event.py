@@ -51,12 +51,12 @@ async def close_event():
         from cmds.music_bot.play4.modals import sleeping_tasks
 
         count = 0
-        for task in sleeping_tasks:
+        for task in sleeping_tasks.copy().values():
             task.cancel()
             count += 1
 
         if count:
-            await asyncio.gather(*sleeping_tasks)
+            await asyncio.gather(*sleeping_tasks.values())
         logger.info(f'Closed `{count}` SleepTimer tasks')
     except asyncio.CancelledError: ...
     except:
