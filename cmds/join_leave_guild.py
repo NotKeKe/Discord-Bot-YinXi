@@ -2,8 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from datetime import datetime, timedelta
-import typing
-from typing import Optional, Union
+from typing import List
 import traceback
 
 from core.classes import Cog_Extension
@@ -16,8 +15,9 @@ example = {
     'ctx.guild.id': {'joinChannel': 'ctx.guild.system_channel.id', 'leaveChannel': 'ctx.channel.id'}
 }
 
-async def channel_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+async def channel_autocomplete(interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
     try:
+        if not interaction.guild: return []
         channels = interaction.guild.channels
         channels = [cn.name for cn in channels]
 
@@ -25,10 +25,12 @@ async def channel_autocomplete(interaction: discord.Interaction, current: str) -
             channels = [channel for channel in channels if current.lower().strip() in channel.lower()]
 
         return [app_commands.Choice(name=channel, value=channel) for channel in channels][:25]
-    except: traceback.print_exc()
+    except: 
+        traceback.print_exc()
+        return []
 
 class OnJoinLeave(Cog_Extension):
-    data = None
+    data: dict = {}
 
     @classmethod
     def init_data(cls):
@@ -50,7 +52,11 @@ class OnJoinLeave(Cog_Extension):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         try:
-            channel = guild.system_channel if guild.system_channel.permissions_for(guild.me).send_messages else (channel for channel in guild.text_channels if channel.permissions_for(guild.me).send_messages)
+            if guild.system_channel and guild.system_channel.permissions_for(guild.me).send_messages:
+                channel = guild.system_channel
+            else:
+                channel = (chl for chl in guild.text_channels if chl.permissions_for(guild.me).send_messages)
+
             if channel is None: return
             '''i18n'''
             locale = guild.preferred_locale.value if guild.preferred_locale else 'zh-TW'
@@ -79,7 +85,7 @@ class OnJoinLeave(Cog_Extension):
             channelID = data[guildID]['joinChannel']
             chn = await self.bot.fetch_channel(channelID)
 
-            if chn:
+            if chn and hasattr(chn, 'guild') and chn.guild:
                 locale = chn.guild.preferred_locale.value if chn.guild else 'zh-TW'
                 translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
                 send_str = translations.get('components', {}).get('send_on_member_join', '{member_name}')
@@ -98,7 +104,7 @@ class OnJoinLeave(Cog_Extension):
             channelID = data[guildID]['leaveChannel']
             chn = await self.bot.fetch_channel(channelID)
 
-            if chn:
+            if chn and hasattr(chn, 'guild') and chn.guild:
                 locale = chn.guild.preferred_locale.value if chn.guild else 'zh-TW'
                 translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
                 send_str = translations.get('components', {}).get('send_on_member_remove', '{member_name}')
@@ -110,6 +116,7 @@ class OnJoinLeave(Cog_Extension):
     @commands.has_permissions(administrator=True)
     @app_commands.autocomplete(join_channel=channel_autocomplete, leave_channel=channel_autocomplete)
     async def set_join_leave_message(self, ctx: commands.Context, join_channel: str=None, leave_channel: str=None):
+        if not ctx.guild: return await ctx.send('You are not in a server.')
         self.init_data()
         data = self.__class__.data
         guildID = str(ctx.guild.id)
@@ -187,6 +194,7 @@ class OnJoinLeave(Cog_Extension):
     async def delete_spam_messages(self, ctx: commands.Context, hours: int, user: discord.User):
         async with ctx.typing(ephemeral=True):
             try:
+                if not ctx.guild: return await ctx.send('You are not in a server.')
                 if not ctx.guild.me.guild_permissions.manage_messages: return await ctx.send(await ctx.interaction.translate('send_delete_spam_messages_no_permission'), ephemeral=True)
 
                 count = 0
