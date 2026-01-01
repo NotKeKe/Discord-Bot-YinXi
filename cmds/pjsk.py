@@ -264,9 +264,9 @@ class PJSK(commands.Cog):
 
     @tasks.loop(hours=1)
     async def update_pjsk_songs(self):
-        updated = []
+        updated_to_db = []
         '''有更新的數據'''
-        results = []
+        send_to_dc = []
         '''要傳送到 dc channel 的數據'''
 
         async with aiohttp.ClientSession() as session:
@@ -331,45 +331,51 @@ class PJSK(commands.Cog):
 
             find_one_result = await self.collection.find_one({'musicId': music_id})
 
+            # 有新歌就傳到 dc
             if not (find_one_result):
-                results.append(item)
+                send_to_dc.append(item)
 
-            if find_one_result and find_one_result | {'_id': ''} == item | {'_id': ''}: return
-            updated.append(item)
+            # 有改變就更新到 db
+            if find_one_result and ( (find_one_result | {'_id': ''}) == (item | {'_id': ''}) ): continue
+            updated_to_db.append(item)
         
-        if not results: return
-        else: # 有新歌曲才發送 channel 通知
-            async for item in self.send_channels_collection.find():
-                channelID: int = item.get('channelID')
-                channel = self.bot.get_channel(channelID)
+        if send_to_dc:
+            async for item in self.send_channels_collection.find(): # 取得要發送倒的 channel id
+                try:
+                    channelID: int = item.get('channelID')
+                    channel = self.bot.get_channel(channelID)
 
-                lang = channel.guild.preferred_locale.value if hasattr(channel, 'guild') and channel.guild else None # type: ignore
+                    lang = channel.guild.preferred_locale.value if hasattr(channel, 'guild') and channel.guild else None # type: ignore
 
-                '''i18n'''
-                eb_text = load_translated(await self.bot.tree.translator.get_translate('embed_pjsk_global_full_info', lang))[0] # type: ignore
-                footer = eb_text.get('footer')
-                descrip = eb_text.get('description')
-                ''''''
+                    '''i18n'''
+                    eb_text = load_translated(await self.bot.tree.translator.get_translate('embed_pjsk_global_full_info', lang))[0] # type: ignore
+                    footer = eb_text.get('footer')
+                    descrip = eb_text.get('description')
+                    ''''''
 
-                for r in results:
-                    send_descrip = []
-                    get_descrip_of_info_embed(r, send_descrip, descrip) # 可能遇到語言不同的問題 descrip 就會不一樣
+                    for r in send_to_dc:
+                        send_descrip = []
+                        get_descrip_of_info_embed(r, send_descrip, descrip) # 可能遇到語言不同的問題 descrip 就會不一樣
 
-                    embed = create_basic_embed()
+                        embed = create_basic_embed()
 
-                    embed.description = '\n\n'.join(send_descrip)
-                    embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
-                    embed.set_footer(text=footer)
+                        embed.description = '\n\n'.join(send_descrip)
+                        embed.set_author(name='sekai.best', url=sekai_best_url, icon_url=sekai_best_icon_url)
+                        embed.set_footer(text=footer)
 
-                    await channel.send(embed=embed) # type: ignore
-        
-        
+                        await channel.send(embed=embed) # type: ignore
+                except discord.Forbidden:
+                    logger.warning(f'Cannot send pjsk new song to channel `{channelID}`')
+                except:
+                    logger.error('Cannot send pjsk new song to channel', exc_info=True)
+
+        # to db        
         await self.collection.bulk_write([
             UpdateOne({"musicId": r.get('musicId')}, {"$set": r}, upsert=True) 
-            for r in updated if r.get('musicId')
+            for r in updated_to_db if r.get('musicId')
         ])
         await self.collection.update_one({'type': 'TOP_STATS'}, {'$set': {'updateAt': datetime.now().timestamp()}}, upsert=True)
-        logger.info(f'Updated pjsk data with {len(updated)} results')
+        logger.info(f'Updated pjsk data with {len(updated_to_db)} results')
 
     @update_pjsk_songs.before_loop
     async def update_pjsk_songs_before_loop(self):
