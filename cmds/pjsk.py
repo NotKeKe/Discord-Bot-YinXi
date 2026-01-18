@@ -373,7 +373,7 @@ class PJSK(commands.Cog):
         await self.collection.bulk_write([
             UpdateOne({"musicId": r.get('musicId')}, {"$set": r}, upsert=True) 
             for r in updated_to_db if r.get('musicId')
-        ])
+        ]) if updated_to_db else None
         await self.collection.update_one({'type': 'TOP_STATS'}, {'$set': {'updateAt': datetime.now().timestamp()}}, upsert=True)
         logger.info(f'Updated pjsk data with {len(updated_to_db)} results')
 
