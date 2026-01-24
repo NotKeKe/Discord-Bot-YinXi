@@ -64,8 +64,18 @@ def extract_info_pytube(video_url: str):
 
         subtitles[lang] = srt
 
+    audio = yt.streams.filter(only_audio=True).filter(
+        custom_filter_functions=[  
+        lambda stream: not (  
+            (stream.mime_type and 'mpegURL' in stream.mime_type) or  
+            (stream.url and stream.url.endswith('.m3u8'))  
+        )  
+    ]).order_by('abr').desc().first()
+    # if not audio:
+    #     audio = yt.streams.filter(only_audio=True).order_by('abr').desc().first()
+
     return {
-        "audio_url": yt.streams.filter(only_audio=True).order_by('abr').desc().first().url,
+        "audio_url": audio.url if audio else '',
         "thumbnail_url": thumbnail_url,
         "title": yt.title,
         "duration": yt.length,
@@ -75,11 +85,19 @@ def extract_info_pytube(video_url: str):
 async def extract_info(video_url: str) -> dict:
     loop = asyncio.get_running_loop()
     with ProcessPoolExecutor() as executor:
-        result = await loop.run_in_executor(executor, extract_info_yt_dlp, video_url)
+        try:
+            result = await loop.run_in_executor(executor, extract_info_yt_dlp, video_url)
+        except:
+            logger.info('yt-dlp failed, cause some err')
+            result = {'audio_url': ''}
 
         # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多進程 但為了統一 我還是用了)
-        if not (await check_audio_url_alive(result["audio_url"])): 
+        if not result["audio_url"] or not (await check_audio_url_alive(result["audio_url"])) or 'm3u8' in result["audio_url"]: 
+            logger.info('yt-dlp returned a failed audio_url, using pytubefix')
             result = await loop.run_in_executor(executor, extract_info_pytube, video_url)
+
+    if not (await check_audio_url_alive(result["audio_url"])): 
+        raise Exception(f'Audio url is not available. | video_url: {video_url} | audio_url: {result["audio_url"]}')
 
     return result
 

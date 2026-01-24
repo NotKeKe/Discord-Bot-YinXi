@@ -42,7 +42,7 @@ QUEUE = MyPriorityQueue()
 # }
 
 YTDL_OPTIONS = {
-    'format': 'bestaudio[protocol^=http]/bestaudio/best',  # 選擇最佳音質
+    'format': 'bestaudio[protocol^=http][protocol!*=m3u8]/bestaudio[protocol!*=m3u8]',  # 選擇最佳音質
     'noplaylist': True,          # 如果輸入是播放清單，只下載當前影片
     'quiet': True,               # 禁止在 console 輸出大量訊息
     'no_warnings': True,         # 禁止輸出警告
