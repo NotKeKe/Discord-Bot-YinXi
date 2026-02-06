@@ -10,10 +10,13 @@ import asyncio
 from discord.ext import commands
 import functools
 from typing import Union, Tuple
+import logging
 
 from cmds.AIsTwo.utils import to_assistant_message, to_system_message, to_user_message, get_thinking, clean_text, image_url_to_base64, is_vision_model, get_pref, get_user_data
 from core.functions import BASE_OLLAMA_URL
 from core.classes import get_bot
+
+logger = logging.getLogger(__name__)
 
 openrouter_KEY = os.getenv('openrouter_KEY')
 zhipu_KEY = os.getenv('zhipuAI_KEY')
@@ -410,15 +413,20 @@ def base_openai_chat(prompt:str, model:str = None, temperature:float = None, his
 
         # print(system + messages)
 
-        completion = client.chat.completions.create(
-            model=model,
-            messages=system + messages,
-            max_completion_tokens=max_tokens,
-            temperature=temperature,
-            top_p=top_p,
-            stream=True,
-            timeout=timeout, 
-        )
+        try:
+            completion = client.chat.completions.create(
+                model=model,
+                messages=system + messages,
+                max_completion_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                stream=True,
+                timeout=timeout, 
+            )
+        except Exception as e:
+            logger.error(f'Error while calling old base_chat {f'| ctx_user_id: {ctx.author.id} | ' if ctx else ''}provider_url : {client.base_url} | model: {model} \n', exc_info=True)
+            return '', 'Error, please try again later.'
+
 
         result = []
         think = []

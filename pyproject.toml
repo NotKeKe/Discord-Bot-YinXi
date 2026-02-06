@@ -43,3 +43,13 @@ dependencies = [
     "zai-sdk>=0.0.2",
     "zhipuai==2.1.5.20250421",
 ]
+
+[tool.pyright]
+exclude = [
+    "**/node_modules",
+    "**/.*",
+    "**/__pycache__",
+    "**/.venv",
+    "**/api_server",
+    "**/useless",
+]

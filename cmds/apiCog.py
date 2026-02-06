@@ -9,6 +9,7 @@ import traceback
 from datetime import datetime
 from deep_translator import GoogleTranslator
 import typing
+from typing import Optional
 import os
 import asyncio
 import time
@@ -262,7 +263,7 @@ class ApiCog(Cog_Extension):
 
     @commands.hybrid_command(name=locale_str('unsplash_image'), description=locale_str('unsplash_image'), aliases=['photo', 'image', '看圖'])
     @app_commands.describe(query=locale_str('unsplash_image_query'), num=locale_str('unsplash_image_num'))
-    async def unsplash_image(self, ctx: commands.Context, query: str=None, num: int=1):
+    async def unsplash_image(self, ctx: commands.Context, query: Optional[str] = None, num: int = 1):
         async with ctx.typing():
             urls = []
             async with aiohttp.ClientSession() as session:
@@ -281,6 +282,19 @@ class ApiCog(Cog_Extension):
             result = '\n'.join(urls)
             if not result:
                 result = await ctx.interaction.translate('send_unsplash_no_results')
+
+            # 針對 discord 的字數限制
+            if len(str(result)) >= 2000:
+                curr = ''
+
+                for r in urls:
+                    if len(curr + r + '\n') >= 2000:
+                        await ctx.send(curr)
+                        curr = ''
+                    curr += r + '\n'
+
+                result = curr
+
             await ctx.send(result)
 
     @commands.hybrid_command(name=locale_str('get_gifs'), description=locale_str('get_gifs'), aliases=['gif'])

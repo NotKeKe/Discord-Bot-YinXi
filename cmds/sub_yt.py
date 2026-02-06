@@ -116,9 +116,16 @@ async def get_upload_date(url: str) -> datetime | None:
 
     try:
         result = await asyncio.to_thread(_get_upload_date, url)
-    except:
-        import traceback
-        traceback.print_exc()
+    except Exception as e:
+        err_msg = str(e).lower()
+
+        if (
+            'members-only' in err_msg or 'members only' in err_msg
+            or 'private video' in err_msg
+        ):
+            return
+
+        logger.error(f'Error while get upload date of {url}: ', exc_info=True)
         return
 
     if not result: return
