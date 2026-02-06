@@ -21,6 +21,9 @@ async def fetch_models():
             'glm-4.5-flash',
             'glm-z1-flash',
             'glm-4-flash-250414',
+            'glm-4.7-flash',
+            'glm-4.6v-flash',
+            'glm-4.1v-thinking-flash'
         ]
         # logger.info(f'zhipu: {zhipu_models}')
     except Exception as e:

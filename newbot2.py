@@ -121,12 +121,16 @@ class UpdateStatus(Cog_Extension):
         async with ctx.typing():
             try:
                 if ctx.author.id != KeJC_ID: return
+                if not ctx.guild:
+                    return await ctx.send('你只能在 server 中運行該命令')
+                
                 # activity changing
                 # from cmds.AIsTwo.others.decide import ActivitySelector
-                activity = await thread_pool(ActivitySelector.activity_select, activity_code)
+                activity = await ActivitySelector.activity_select(activity_code)
                 await self.bot.change_presence(activity=activity)
 
                 # user
+                assert self.bot.user
                 user = await ctx.guild.fetch_member(self.bot.user.id) or ctx.guild.get_member(self.bot.user.id)
                 if not user: return await ctx.send('Cannot get user', ephemeral=True)
 
@@ -134,11 +138,11 @@ class UpdateStatus(Cog_Extension):
                 if not user.activity: 
                     await ctx.send("Cannot fetch user's activity, trying to `get` bot", ephemeral=True)
                     user = ctx.guild.get_member(self.bot.user.id)
-                    if not user.activity: return await ctx.send("Cannot get user's activity", ephemeral=True)
+                    if not user or not user.activity: return await ctx.send("Cannot get user's activity", ephemeral=True)
 
                 await ctx.send(f'Successfully changed user activity to `{user.activity.name}`', ephemeral=True)
             finally:
-                if ctx.guild.me.guild_permissions.manage_messages:
+                if ctx.guild and ctx.guild.me.guild_permissions.manage_messages:
                     await ctx.message.delete()
             
     @tasks.loop(minutes=1)
@@ -155,7 +159,7 @@ class UpdateStatus(Cog_Extension):
     async def change_activity(self):
         try:
             # from cmds.AIsTwo.others.decide import ActivitySelector
-            activity = await thread_pool(ActivitySelector.activity_select)
+            activity = await ActivitySelector.activity_select()
             await self.bot.change_presence(activity=activity)
         except Exception as e:
             print(f'無法更新狀態，原因: {e}')

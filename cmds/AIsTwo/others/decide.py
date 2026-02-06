@@ -5,18 +5,23 @@ import orjson
 import requests
 import sqlite3
 import asyncio
+from typing import Optional
+from httpx import AsyncClient
+import aiosqlite
 
 from core.mongodb import MongoDB_DB
 from core.classes import get_bot
 
 from cmds.AIsTwo.base_chat import base_zhipu_chat, true_zhipu, ollama, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
-from core.functions import translate, current_time, read_json, write_json
+from core.functions import translate, current_time, read_json, write_json, async_translate
 # tools
 from cmds.AIsTwo.others.if_tools_needed import get_tool_results
 from cmds.AIsTwo.tool_map import tools_descrip
 from cmds.AIsTwo.others.func import summarize
 from cmds.AIsTwo.tools.sql_create import user_preferences, user_info
+
+from cmds.ai_chat.chat.chat import Chat
 
 # lovelive data
 path = './data/lovelive.db'
@@ -57,113 +62,105 @@ def is_talking_with_me(prompt: str, history: list) -> bool:
 
 class ActivitySelector:
     past_status = []
-    
+
     @classmethod
-    def activity_select(cls, status: int = None):
-        cur_time = current_time()
+    async def activity_select(cls, status: Optional[int] = None) -> Optional[discord.Activity | discord.Game]:
+        curr_time = current_time()
         status = random.randint(1, 3) if not status else status
 
+        # base system prompt
         system_prompt = '''
-        你現在要幫助一個**人**生成一個不重複的他的狀態。
-        輸出規則:
-            - 請輸出**30個字**以內的狀態
-            - **請勿使用markdown格式**
-            - **請勿使用中文標點符號**
-            - 請以他的人物設定作為參照，輸出人性化的狀態訊息。
-            - **如果搜尋結果未提供輸出，則自己想一個正常的狀態。**
-            - **如果搜尋結果失敗，不要告訴使用者自己沒有搜尋到。**
-            - 請使用繁體中文作為輸出。
-            - 不要重複使用相同的status
-        其他:
-            你今天已經用過的status: {status}
-        '''.format(status = cls.past_status)
+你現在要幫助一個**人**生成一個不重複的他的狀態。
+輸出規則:
+    - 請輸出**30個字**以內的狀態
+    - **請勿使用markdown格式**
+    - **請勿使用中文標點符號**
+    - 請以他的人物設定作為參照，輸出人性化的狀態訊息。
+    - **如果搜尋結果未提供輸出，則自己想一個正常的狀態。**
+    - **如果搜尋結果失敗，不要告訴使用者自己沒有搜尋到。**
+    - 請使用繁體中文作為輸出。
+    - 不要重複使用相同的status
+其他:
+    - 你今天已經用過的status:
+        ```json
+        {status}
+        ```
+'''.format(status = orjson.dumps(cls.past_status, option=orjson.OPT_INDENT_2).decode()).strip()
+        model = 'zhipu:glm-z1-flash'
 
-        model = 'qwen-3-32b'
+        match status:
+            # Playing
+            case 1:
+                async with AsyncClient() as client:
+                    resp = await client.get('https://api.lovelive.tools/api/SweetNothings')
+                    # get from api
+                    if resp.status_code == 200:
+                        result = await async_translate(resp.text, 'zh-CN', 'zh-TW')
 
-        # Setting `Playing ` status
-        if status == 1:
-            resp = requests.get('https://api.lovelive.tools/api/SweetNothings')
-            if resp.status_code == 200:
-                result = translate(resp.text, 'zh-CN', 'zh-TW')
-                activity = discord.Game(name=result)
+                        # save to db
+                        try:
+                            async with aiosqlite.connect(path) as db:
+                                async with db.execute("SELECT EXISTS(SELECT 1 FROM data WHERE txt = ?)", (resp.text,)) as cursor:
+                                    row = await cursor.fetchone()
+                                    exists = bool(row[0]) if row else False
 
-                try:
-                    conn = sqlite3.connect(path)
-                    cursor = conn.cursor()
-                    cursor.execute("SELECT EXISTS(SELECT 1 FROM data WHERE txt = ?)", (resp.text,))
-                    exists = cursor.fetchone()[0]
-                    
-                    if not exists:
-                        cursor.execute("INSERT INTO data (txt) VALUES (?)", (resp.text,))
-                        conn.commit()
-                    
-                    conn.close()
-                except: traceback.print_exc()
-            else:
-                system_prompt += '''
-                現在時間為 {time}，你需要根據這個時間去決定你現在的狀態。
-                    - 例如: 在晚上6點 你可能正在約會 或者是自己在家吃飯，早上的時候可能在上學(因為你是一個高中生)。
-                或者 你可以根據現在時間模擬你可能的情緒
-                    - 例如: 早上7:00 你要起床上課 感覺很累
-                    - 或者在上某節課的時候你完全聽不懂 所以覺得不開心
-                '''.format(time = cur_time)
-                
-                result = base_openai_chat(
-                    prompt=f'根據現在的時間，幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，要像Instagram (IG)那種中二文青語氣，最好有比喻，句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力', 
-                    model=model, 
-                    temperature=1, 
-                    system_prompt=system_prompt.strip(), 
-                    is_enable_tools=False, 
-                    top_p=0.9,
-                    no_extra_system_prompt=True
-                )[1]
-                result = translate(result)
-                result = halfToFull(result).replace('。', '\n')
-                cls.past_status.append((f'{cur_time} 正在玩 ' + result))
-                activity = discord.Game(name=result)
-        # Setting `Listening ` status
-        elif status == 2:
-            random_num = random.uniform(0, 1) 
-            if random_num >= 0.5: 
-                async def fetch():
+                                if not exists:
+                                    await db.execute('INSERT INTO data (txt) VALUES (?)', (resp.text,))
+                                    await db.commit()
+                        except:
+                            traceback.print_exc()
+
+                    # or generate from model
+                    else:
+                        client = Chat(model=model, system_prompt=system_prompt)
+                        _, result, _ = await client.chat(
+                            prompt=(
+                                f'現在時間為: {curr_time}，'
+                                '幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，' # ??????
+                                '要像Instagram (IG)那種中二文青語氣，最好有比喻，'
+                                '句子斷裂一點、像心碎在打字。不要使用搜尋功能，你要自己發揮想像力。'
+                            ),
+                            is_enable_tools=False
+                        )
+                        result = halfToFull(result).replace('。', '\n')
+                        cls.past_status.append((f'{curr_time} 正在玩 ' + result))
+
+                    activity = discord.Game(name=result)
+
+            # Listening
+            case 2:
+                random_num = random.uniform(0, 1) 
+
+                # find song from db (pjsk)
+                if random_num >= 0.5: 
                     collection = MongoDB_DB.pjsk['songs']
                     songs = [song.get('songName', '') async for song in collection.find() if 'songName' in song]
-                    return songs
+                    result = random.choice(songs)
                 
-                bot = get_bot()
-                fut = asyncio.run_coroutine_threadsafe(fetch(), bot.loop)
-                songs = fut.result(timeout=30)
-                result = songs[random.randint(0, len(songs)-1)]
-            else:
-                song_type = 'emo'
-                result = base_openai_chat(
-                    prompt=f'基於搜尋，找`一首`有關 `{song_type}` 的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', 
-                    model=model, 
-                    temperature=0.8,
-                    system_prompt=system_prompt, 
-                    is_enable_tools=True,
-                    top_p=0.9,
-                    no_extra_system_prompt=True
-                )[1]
-                result = translate(result)
+                # generate from model (through web_search)
+                else:
+                    client = Chat(model=model, system_prompt=system_prompt)
+
+                    _, result, _ = await client.chat(prompt='基於搜尋，找`一首`有關 `emo` 的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字')
+
+                    result = halfToFull(result).replace('。', '\n')
+                    cls.past_status.append((f'{curr_time} 正在聽 ' + result))
+
+                activity = discord.Activity(type=discord.ActivityType.listening, name=result)
+
+            # Watching
+            case 3:
+                client = Chat(model=model, system_prompt=system_prompt)
+
+                _, result, _ = await client.chat(prompt='基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字')
+
                 result = halfToFull(result).replace('。', '\n')
-            cls.past_status.append((f'{cur_time} 正在聽 ' + result))
-            activity = discord.Activity(type=discord.ActivityType.listening, name=result)
-        # Setting `Watching ` status
-        elif status == 3:
-            result = base_openai_chat(
-                prompt=f'基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字', 
-                model=model, 
-                temperature=0.8,
-                system_prompt=system_prompt, 
-                is_enable_tools=True,
-                top_p=0.9,
-                no_extra_system_prompt=True
-            )[1]
-            result = translate(result)
-            result = halfToFull(result).replace('。', '\n')
-            cls.past_status.append((f'{cur_time} 正在看 ' + result))
-            activity = discord.Activity(type=discord.ActivityType.watching, name=result)
+                cls.past_status.append((f'{curr_time} 正在聽 ' + result))
+
+                activity = discord.Activity(type=discord.ActivityType.watching, name=result)
+            
+            case _:
+                return
 
         return activity
 

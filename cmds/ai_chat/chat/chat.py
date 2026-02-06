@@ -258,7 +258,7 @@ class Chat:
                 tool_choice: str = None,
                 reasoning_effort: str = 'low'
             ) -> Tuple[str, str, list]:
-        '''Return response, think, history'''
+        '''Return think, response, history'''
         if model:
             await self.re_model(model)
         else:
