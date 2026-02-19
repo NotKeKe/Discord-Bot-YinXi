@@ -49,7 +49,10 @@ function initApp() {
         langSelect.addEventListener('change', (e) => {
             currentLang = e.target.value;
             console.log("Language changed to:", currentLang);
-            fetchData();
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ type: 'set_lang', payload: currentLang }));
+            }
         });
     }
 
@@ -102,8 +105,7 @@ function initApp() {
     // GAPLESS PLAYBACK LOGIC: 
     // Just fetch immediately once when the song ends. No loop.
     audio.addEventListener('ended', () => {
-        console.log("[Stream] Track ended. Fetching next song immediately...");
-        fetchData();
+        console.log("[Stream] Track ended. Waiting for server update...");
     });
 
     // Audio Progress & Visuals
@@ -136,37 +138,113 @@ function initApp() {
 
     // --- 3. Main Logic (Fetch & Update) ---
 
-    async function fetchData() {
-        try {
-            const response = await fetch(`/player/check_song?guild_id=${GUILD_ID}&session_id=${currentSessionID || ''}&lang=${currentLang}`);
-            if (response.ok) {
-                const data = await response.json();
-                updateSong(data);
-            } else if (response.status === 404) {
-                // FORCE STOP LOGIC
-                // We execute this unconditionally if 404 is returned, to ensure UI is always in sync.
-                if (currentSessionID !== null) {
-                    console.log("Session ended (404). Stopping playback.");
-                }
+    // --- 3. Main Logic (WebSocket & Update) ---
 
-                // Ensure audio is stopped and source cleared
-                if (!audio.paused || audio.getAttribute('src')) {
-                    audio.pause();
-                    audio.removeAttribute('src');
-                    audio.load();
-                }
-
-                // Explicitly update UI
-                display.showStoppedState();
-            }
-        } catch (err) {
-            // Ignore network errors
+    function stopPlayback() {
+        if (currentSessionID !== null) {
+            console.log("Session ended. Stopping playback.");
         }
+
+        // Ensure audio is stopped and source cleared
+        if (!audio.paused || audio.getAttribute('src')) {
+            audio.pause();
+            audio.removeAttribute('src');
+            audio.load();
+        }
+
+        // Explicitly update UI
+        display.showStoppedState();
+        currentSessionID = null;
     }
 
-    function startPolling() {
-        // Poll every 10 seconds
-        setInterval(fetchData, 10000);
+    let socket = null;
+    let reconnectTimeout = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 10;
+
+    function connectWebSocket() {
+        if (socket) {
+            socket.close();
+            socket = null;
+        }
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const uuid = context.uuid || '';
+        const userId = context.user_id || '';
+        const wsUrl = `${protocol}//${window.location.host}/player/${GUILD_ID}_${uuid}?user_id=${userId}`;
+
+        console.log(`[WS] Connecting to ${wsUrl}... (Attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+            console.log("[WS] Connected.");
+            reconnectAttempts = 0; // Reset attempts on successful connection
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = null;
+            }
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                updateSong(data);
+            } catch (e) {
+                console.error("[WS] Message error:", e);
+            }
+        };
+
+        socket.onclose = () => {
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000); // Exponential backoff
+                console.warn(`[WS] Disconnected. Reconnecting in ${delay / 1000}s...`);
+                reconnectAttempts++;
+                reconnectTimeout = setTimeout(connectWebSocket, delay);
+            } else {
+                console.error("[WS] Max reconnect attempts reached. Please refresh the page manually.");
+                display.updateMetadata("Connection Lost", "Please refresh the page");
+            }
+        };
+
+        socket.onerror = (err) => {
+            console.error("[WS] Error:", err);
+            socket.close();
+        };
+    }
+
+    function syncState(data) {
+        if (!data) return;
+
+        // Sync playback state
+        const serverTime = data.current_time;
+        if (typeof serverTime === 'number') {
+            const localTime = audio.currentTime;
+            const diff = Math.abs(localTime - serverTime);
+            if (diff >= 5) {
+                console.log(`[WS-Sync] Drift ${diff.toFixed(2)}s. Seeking to ${serverTime}s.`);
+                if (Number.isFinite(audio.duration) || (audio.seekable && audio.seekable.length > 0)) {
+                    audio.currentTime = serverTime;
+                }
+            }
+        }
+
+        const shouldBePaused = (data.is_paused === true);
+        if (shouldBePaused) {
+            if (!audio.paused) audio.pause();
+        } else {
+            if (audio.paused && audio.readyState >= 2) {
+                audio.play().catch(e => {
+                    if (e.name === 'NotAllowedError' && typeof display.showAutoplayRequest === 'function') {
+                        display.showAutoplayRequest(() => audio.play());
+                    }
+                });
+            }
+        }
+
+        // Update language list if provided
+        if (data.languages) {
+            updateLanguageList(data.languages);
+        }
     }
 
     function updateLanguageList(availableLanguages) {
@@ -212,11 +290,13 @@ function initApp() {
 
         let isNewSong = false;
 
-        // CASE A: NEW SONG (SessionID changed)
-        if (data.session_id !== currentSessionID) {
-            console.log("New song detected:", data.session_id);
-            currentSessionID = data.session_id;
+        // CASE A: NEW SONG (audio_url changed)
+        const newAudioUrl = data.audio_url ? (window.location.origin + data.audio_url) : null;
+
+        if (newAudioUrl && newAudioUrl !== audio.src) {
+            console.log("New song detected via URL change.");
             isNewSong = true;
+            currentSessionID = data.uuid || data.session_id; // Still keep tracking uuid
             currentSrtContent = "";
             subtitles = [];
 
@@ -228,9 +308,8 @@ function initApp() {
             display.reset();
             display.updateMetadata(data.title, data.subtitle);
 
-            // Force Reset Language Selector to 'Original'
+            // Reset Language Selector to 'Original'
             if (langSelect) {
-                langSelect.innerHTML = '<option value="original" selected>Original</option>';
                 langSelect.value = 'original';
                 currentLang = 'original';
             }
@@ -240,8 +319,7 @@ function initApp() {
             }
 
             if (data.audio_url) {
-                console.log("[Stream] Loading URL:", data.audio_url);
-                // Keep audio source logic as requested (Direct URL from provided context)
+                // console.log("[Stream] Loading URL:", data.audio_url);
                 audio.src = data.audio_url;
                 audio.load();
 
@@ -255,13 +333,15 @@ function initApp() {
                                 display.showAutoplayRequest(() => {
                                     audio.play().catch(err => console.error("Play failed even after click:", err));
                                 });
-                            } else {
-                                console.error("DisplayManager missing showAutoplayRequest.");
                             }
                         }
                     });
                 }
             }
+        } else if (!newAudioUrl) {
+            // No active session/song
+            stopPlayback();
+            return;
         } else if (data.languages) {
             updateLanguageList(data.languages);
         }
@@ -285,45 +365,12 @@ function initApp() {
 
         // CASE C: Sync & Playback State
         if (!isNewSong) {
-            const serverTime = data.current_time;
-            if (typeof serverTime === 'number') {
-                const localTime = audio.currentTime;
-                const diff = Math.abs(localTime - serverTime);
-
-                if (diff >= 3) {
-                    console.log(`[Sync] Drift ${diff.toFixed(2)}s >= 3s. Seeking to ${serverTime}s.`);
-                    if (Number.isFinite(audio.duration) || (audio.seekable && audio.seekable.length > 0)) {
-                        audio.currentTime = serverTime;
-                    }
-                }
-            }
-
-            const shouldBePaused = (data.is_paused === true);
-            if (shouldBePaused) {
-                if (!audio.paused) {
-                    audio.pause();
-                }
-            } else {
-                if (audio.paused && audio.readyState >= 2) {
-                    const playPromise = audio.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(e => {
-                            if (e.name === 'NotAllowedError') {
-                                if (typeof display.showAutoplayRequest === 'function') {
-                                    display.showAutoplayRequest(() => audio.play());
-                                }
-                            }
-                        });
-                    }
-                }
-            }
+            syncState(data);
         }
     }
 
-    // Start polling immediately
-    startPolling();
-    // Fetch once on load
-    fetchData();
+    // Start WebSocket connection
+    connectWebSocket();
 }
 
 // Module scripts are deferred by default, DOM is usually ready.

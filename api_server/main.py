@@ -1,16 +1,35 @@
+import asyncio
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
-from routers import player
+from routers import player, api
 import src as _ # for load logger
 
-app = FastAPI()
+from src.tasks import del_task_event, add_task
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 開啟
+    add_task(asyncio.create_task(del_task_event()))
+
+    yield
+    
+    # 關閉
+    from src.utils import close_event
+    try:
+        await close_event()
+    except asyncio.CancelledError:
+        pass
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(player.router)
+app.include_router(api.router)
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 ASSETS_DIR = Path(__file__).parent / "assets"

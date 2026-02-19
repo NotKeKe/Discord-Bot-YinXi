@@ -9,4 +9,4 @@ REDIS = {
 }
 '''include host and port'''
 
-PLAY_WEBSITE_KEY = os.getenv('PLAY_WEBSITE_KEY')
+DC_BOT_PASSED_KEY = os.getenv('DC_BOT_PASSED_KEY')
