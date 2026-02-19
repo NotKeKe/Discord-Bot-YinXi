@@ -16,7 +16,7 @@ from cmds.music_bot.play4.play_list import add_to_custom_list, CustomListPlayer,
 from cmds.music_bot.play4.autocomplete import *
 
 from core.classes import Cog_Extension
-from core.functions import KeJCID, create_basic_embed, PLAY_WEBSITE_KEY
+from core.functions import KeJCID, create_basic_embed, DC_BOT_PASSED_KEY
 from core.translator import locale_str, load_translated
 
 players: dict[int, Player] = {}
@@ -375,7 +375,7 @@ class Music(Cog_Extension):
             
             try:
                 # await redis_client.srem('musics_player_ids', f'{ctx.guild.id}:{player._uuid}') # type: ignore , having no idea how to delete
-                async with AsyncClient(headers={'x-api-key': PLAY_WEBSITE_KEY}) as client:
+                async with AsyncClient(headers={'DC-BOT-API-KEY': DC_BOT_PASSED_KEY}) as client:
                     resp = await client.post(
                         'http://api_server:3000/player/delete_song',
                         data={'guild_id': ctx.guild.id}

@@ -4,15 +4,15 @@ from discord import PCMVolumeTransformer
 import asyncio
 import traceback
 from typing import Literal
-from httpx import AsyncClient, Limits
 import orjson
 import uuid
+import websockets
 
 from cmds.music_bot.play4 import utils
 from cmds.music_bot.play4.downloader import Downloader
 from cmds.music_bot.play4.lyrics import search_lyrics
 
-from core.functions import create_basic_embed, current_time, secondToReadable, math_round, redis_client
+from core.functions import create_basic_embed, current_time, secondToReadable, math_round, redis_client, DC_BOT_PASSED_KEY
 from core.translator import load_translated
 
 loop_option = ('None', 'single', 'list')
@@ -58,13 +58,10 @@ class Player:
         # Tasks
         self.update_progress_bar_task: asyncio.Task | None = None
         self.playlist_load_task: asyncio.Task | None = None
-        self.add_to_api_task: asyncio.Task | None = None
         self.update_to_api_task: asyncio.Task | None = None
         self.clean_up_task: asyncio.Task | None = None
 
         # api
-        _limit = Limits(max_keepalive_connections=2, max_connections=2)
-        self.httpx_client = AsyncClient(limits=_limit)
         self._uuid = str(uuid.uuid4())
     
     def __del__(self):
@@ -81,21 +78,14 @@ class Player:
             if self.playlist_load_task:
                 self.playlist_load_task.cancel()
                 tasks.append(self.playlist_load_task)
-            if self.add_to_api_task:
-                self.add_to_api_task.cancel()
-                tasks.append(self.add_to_api_task)
             if self.update_to_api_task:
                 self.update_to_api_task.cancel()
                 tasks.append(self.update_to_api_task)
 
-            async def delete_song():
-                await redis_client.srem('musics_player_ids', f'{self.ctx.guild.id}:{self._uuid}') # type: ignore
-                resp = await self.httpx_client.post(url='http://api_server:3000/player/delete_song', data={'guild_id': self.ctx.guild.id, 'uuid': self._uuid})
-                if resp.status_code != 200:
-                    print(resp.status_code, resp.text)
-                await self.httpx_client.aclose()
+            async def clean_redis():
+                await redis_client.delete(f'musics_player_user_ids:{self.guild.id}:{self._uuid}')
 
-            tasks.append(delete_song())
+            tasks.append(asyncio.create_task(clean_redis()))
 
             await asyncio.gather(*tasks)
         except asyncio.CancelledError:
@@ -213,61 +203,44 @@ class Player:
                 after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(e), self.bot.loop)
             )
 
-            # 向 api 發送請求，以獲得 url
-            try:
-                if self.add_to_api_task:
-                    self.add_to_api_task.cancel()
-                    try: await self.add_to_api_task
-                    except: pass
-                self.add_to_api_task = asyncio.create_task(self.upload_to_api(audio_url))
-                if not self.update_to_api_task:
-                    self.update_to_api_task = asyncio.create_task(self.update_to_api())
-            except:
-                traceback.print_exc()
+            await redis_client.sadd(f'musics_player_user_ids:{self.guild.id}:{self._uuid}', "__EMPTY__")
+
+            # 新增 update to api task
+            if not self.update_to_api_task or self.update_to_api_task.done():
+                self.update_to_api_task = asyncio.create_task(self.update_to_api())
         except Exception as e:
             print(f'播放錯誤: {e}')
             traceback.print_exc()
             await self.ctx.send((await self.translator.get_translate('send_player_play_error', self.locale)).format(e=str(e)))
 
-    async def upload_to_api(self, audio_url: str):
-        # post to api
-        srts = self.list[self.current_index].get('subtitles', {})
-        await redis_client.sadd('musics_player_ids', f'{self.ctx.guild.id}:{self._uuid}')
-        await self.httpx_client.post(
-            f'http://api_server:3000/player/upload_song',
-            data={
-                'guild_id': self.ctx.guild.id,
-                'uuid': self._uuid,
-                'title': self.list[self.current_index]['title'],
-                'audio_url': audio_url,
-                'duration': self.list[self.current_index]['duration_int'],
-                'srts': orjson.dumps(srts).decode()
-            },
-        )
     async def update_to_api(self):
-        while True:
-            await asyncio.sleep(3)
-            if self.add_to_api_task and not self.add_to_api_task.done(): continue
-
-            srts = self.list[self.current_index].get('subtitles', {})
-            resp = await self.httpx_client.post(
-                f'http://api_server:3000/player/update_song',
-                data={
-                    'guild_id': self.ctx.guild.id,
-                    'uuid': self._uuid,
-                    'title': self.list[self.current_index]['title'],
-                    'audio_url': self.list[self.current_index]['audio_url'],
-                    'srts': orjson.dumps(srts).decode(),
-                    'duration': self.list[self.current_index]['duration_int'],
-                    'current_time': self.passed_time,
-                    'is_paused': self.voice_client.is_paused(),
+        try:
+            async with websockets.connect(
+                f'ws://api_server:3000/player/dc/{self.guild.id}/{self._uuid}',
+                additional_headers={
+                    'DC-BOT-API-KEY': DC_BOT_PASSED_KEY
                 }
-            )
+            ) as self.ws_conn:
+                while True:
+                    srts = self.list[self.current_index].get('subtitles', {})
+                    data = {
+                        'guild_id': self.ctx.guild.id,
+                        'uuid': self._uuid,
+                        'title': self.list[self.current_index]['title'],
+                        'audio_url': self.list[self.current_index]['audio_url'],
+                        'srts': srts,
+                        'duration': self.list[self.current_index]['duration_int'],
+                        'current_time': self.passed_time,
+                        'is_paused': self.voice_client.is_paused(),
+                    }
 
-            if resp.status_code == 200: continue
-            print(resp.status_code, resp.text)
+                    await self.ws_conn.send(orjson.dumps(data).decode())
 
-            if resp.status_code in (400, 404): break
+                    await asyncio.sleep(3)
+        except websockets.exceptions.ConnectionClosedError:
+            print(f'dc player websocket closed: guild_id: {self.guild.id}')
+        except Exception:
+            traceback.print_exc()
 
     def _change_prefer_loop(self):
         if self.loop_status not in loop_option: return 'Invalid loop type'

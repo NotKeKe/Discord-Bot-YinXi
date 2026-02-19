@@ -3,13 +3,14 @@ from discord.ui import View, button, select, Button
 from discord.ext.commands import Context
 import traceback
 import io
+from urllib.parse import urlparse
 
 from .player import Player
 from .utils import send_info_embed, create_basic_embed
 from .lyrics import search_lyrics
 from .modals import SleepTimerModal
 from core.classes import get_bot
-from core.functions import yinxi_base_url
+from core.functions import yinxi_base_url, redis_client
 
 
 class MusicControlButtons(View):
@@ -18,9 +19,6 @@ class MusicControlButtons(View):
         self.player = player
         self.translator = player.translator
         self.locale = player.locale
-
-        url_button = Button(label='URL', emoji='🔗', style=ButtonStyle.link, url=f'{yinxi_base_url}/player/{player.guild.id}_{player._uuid}')
-        self.add_item(url_button)
 
     async def button_error(self, inter: Interaction, exception):
         if isinstance(exception, errors.Forbidden):
@@ -66,7 +64,7 @@ class MusicControlButtons(View):
             from cmds.play4 import players
             
             if not interaction.guild: return
-            if not interaction.user.voice.channel: return await interaction.response.send_message(await self.translator.get_translate('send_button_not_in_voice', self.locale))
+            if not (interaction.user.voice and interaction.user.voice.channel): return await interaction.response.send_message(await self.translator.get_translate('send_button_not_in_voice', self.locale))
             if not interaction.guild.voice_client: return await interaction.response.send_message(await self.translator.get_translate('send_button_bot_not_in_voice', self.locale))
 
             player: Player = players.get(interaction.guild.id)
@@ -137,6 +135,22 @@ class MusicControlButtons(View):
     async def sleep_callback(self, interaction: Interaction, button: Button):
         try:
             await interaction.response.send_modal(SleepTimerModal(self.player.ctx))
+        except Exception as e:
+            await self.button_error(interaction, e)
+
+    @button(label='URL', emoji='🔗')
+    async def url_callback(self, interaction: Interaction, button: Button):
+        try:
+            if not await redis_client.exists(f'musics_player_user_ids:{self.player.guild.id}:{self.player._uuid}'):
+                await interaction.response.send_message('This player has not been started yet. Try again later', ephemeral=True)
+                return
+
+            await redis_client.sadd(f'musics_player_user_ids:{self.player.guild.id}:{self.player._uuid}', str(interaction.user.id))
+            url = f'{yinxi_base_url}/player/{self.player.guild.id}_{self.player._uuid}?user_id={interaction.user.id}'
+
+            parsed = urlparse(url)
+            await interaction.response.send_message(f'[Go to the music player web!!! ({parsed.hostname}/player)]({url})', ephemeral=True)
+                
         except Exception as e:
             await self.button_error(interaction, e)
 
