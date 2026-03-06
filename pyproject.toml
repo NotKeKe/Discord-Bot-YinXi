@@ -53,4 +53,4 @@ exclude = [
     "**/api_server",
     "**/useless",
 ]
-typeCheckingMode = "off"
+typeCheckingMode = "basic"

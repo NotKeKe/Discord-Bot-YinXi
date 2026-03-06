@@ -88,10 +88,10 @@ async def ws_player(websocket: WebSocket, guild_id: str, uuid: str):
 
     await dc_player_connection_manager.connect(websocket, guild_id, uuid)
 
-@router.get('/test')
-async def test():
-    from src.player.player import players
+# @router.get('/test')
+# async def test():
+#     from src.player.player import players
 
-    return {
-        'players': [{'guild_id': p.guild_id, 'uuid': p.uuid} for p in players.values()]
-    }
+#     return {
+#         'players': [{'guild_id': p.guild_id, 'uuid': p.uuid} for p in players.values()]
+#     }

@@ -14,6 +14,7 @@ services:
       - LRCAPI_URL=http://lrcapi:28883
     volumes:
       - .:/app
+      - /app/.venv
     deploy:
       resources:
         limits:

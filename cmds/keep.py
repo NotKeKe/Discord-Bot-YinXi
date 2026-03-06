@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 DB_KEY = 'keep'
 DB = mongo_db_client[DB_KEY]
 
-PROVIDER = 'cerebras'
-MODEL = 'qwen-3-32b'
+PROVIDER = 'zhipu'
+MODEL = 'glm-4.5-flash'
 OPENAI_CLIENT = AsyncOpenAI(api_key=base_url_options[PROVIDER]['api_key'], base_url=base_url_options[PROVIDER]['base_url'])
 
 class RunKeep:
