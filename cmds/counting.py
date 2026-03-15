@@ -65,9 +65,7 @@ class Counting(Cog_Extension):
 
         '''i18n'''
         locale = message.guild.preferred_locale.value if message.guild else 'zh-TW'
-        translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
-        components = translations.get('components', {})
-        eb_template_str = components.get('embed_counting_error', '[{}]')
+        eb_template_str = await self.bot.tree.translator.get_translate('embed_counting_error', locale)
         eb_data = load_translated(eb_template_str)[0]
         ''''''
 

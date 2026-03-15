@@ -27,15 +27,15 @@ ALL_DIFFS = ["easy", "normal", "hard", "expert", "master", "append"]
 db = MongoDB_DB.pjsk
 collection = MongoDB_DB.pjsk['songs']
 
-async def song_autocomplete(inter: Interaction, current: str) -> list[Choice[str]]:
-    await collection.find({
-        '$or': [
-            {"songName": {"$regex": current, "$options": "i"}},
-            {"lyricist": {"$regex": current, "$options": "i"}},
-            {"composer": {"$regex": current, "$options": "i"}},
-            {"arranger": {"$regex": current, "$options": "i"}}
-        ]
-    })
+# async def song_autocomplete(inter: Interaction, current: str) -> list[Choice[str]]:
+#     await collection.find({
+#         '$or': [
+#             {"songName": {"$regex": current, "$options": "i"}},
+#             {"lyricist": {"$regex": current, "$options": "i"}},
+#             {"composer": {"$regex": current, "$options": "i"}},
+#             {"arranger": {"$regex": current, "$options": "i"}}
+#         ]
+#     })
 
 def get_descrip_of_info_embed(item: dict, descrips: list, descrip_template: str):
     """

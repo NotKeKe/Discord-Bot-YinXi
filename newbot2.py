@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands, tasks
+from discord.errors import HTTPException as discord_HTTPException
 # from pretty_help import PrettyHelp
 import json
 import os
@@ -9,6 +10,7 @@ import time
 import traceback
 import logging
 import sys
+from aiohttp.client_exceptions import ClientConnectorDNSError
 # import gc
 
 from core.functions import math_round, current_time, testing_guildID, create_basic_embed, thread_pool
@@ -149,14 +151,21 @@ class UpdateStatus(Cog_Extension):
     async def update_status(self):
         channel = self.bot.get_channel(int(jdata['status_channel']['channel_ID']))
         if not channel: return root_logger.error(f'Cannot find channel ({channel=}): ', exc_info=True)
+
         try:
             message = await channel.fetch_message(int(jdata['status_channel']['message_ID']))       
-        except:
-            return root_logger.warning(f'Cannot fetch message, passed', exc_info=True)
-        embed = create_basic_embed(title='Bot狀態', description=':green_circle:')
-        embed.add_field(name='上線時間', value=online_time)
-        embed.set_footer(text='最後更新時間')
-        await message.edit(content=None, embed=embed)
+
+            embed = create_basic_embed(title='Bot狀態', description=':green_circle:')
+            embed.add_field(name='上線時間', value=online_time)
+            embed.set_footer(text='最後更新時間')
+
+            await message.edit(content=None, embed=embed)
+        except discord_HTTPException as e:
+            root_logger.warning(f'Cannot update status with {e.status} http status code, passed')
+        except ClientConnectorDNSError as e:
+            root_logger.warning(f'Cannot update status with aiohttp, DNS error: {e.strerror}')
+        except Exception as e:
+            root_logger.error(f'Cannot update status: {e}', exc_info=True)
 
     @tasks.loop(hours=1)
     async def change_activity(self):
