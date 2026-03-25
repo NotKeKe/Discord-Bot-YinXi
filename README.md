@@ -3,7 +3,9 @@
   <img src="https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/botself.png?raw=true" width = "300" height = "300"/>
 </p>
 
-( cogview-3-flash 幫他畫了 6 根手指ww )
+<p align="center">
+    <small>(cogview-3-flash 幫他畫了 6 根手指ww)</small>
+</p>
 
 **🔗 Bot 邀請連結:**
 - [URL](https://discord.com/oauth2/authorize?client_id=990798785489825813)
@@ -50,6 +52,14 @@
     > 如果之後有機會能將整個 Project 改為使用 MongoDB的話，應該就可以直接用 `git clone` 的方式拿下來用
 
 ## ⚡ Quick Start
+- 儘管該專案配置了 Docker 相關設定，仍然**不建議自行部署**。
+- 因為專案當初使用了大量的 JSON 作為儲存，並且檔案不存在時不會有相關的錯誤處理。
+- 並且專案設計之初，並未使用任何較為嚴格的的 type checking，所以可能有一些淺在問題。
+<details>
+<summary>
+Quick Start & env & Json
+</summary>
+
 **❗建議使用 Python 3.13+ 以上的環境❗**
 
 **請先設定 `.env` 檔案**:
@@ -176,12 +186,19 @@ GENIUS_ACCESS_TOKEN = ... # `/歌詞搜尋` 的 apiKEY
     *   `world_channels.json`
     *   `youtube_update_channels.json`
 
+</details>
+
 ## 🤝 貢獻指南
-我們歡迎任何形式的貢獻！如果您想為音汐機器人做出貢獻，請遵循以下步驟：
-1. 想不到吧 這裡也是空的w
+我們歡迎任何形式的貢獻！如果您想為**音汐機器人**做出貢獻，請遵循以下步驟：
+1. 給我 Star 來支持我!
 
 ## ❓ 常見問題 (FAQ)
-*   不要問我怎麼啟動這個專案 因為我最一開始沒有設計要讓他開源讓別人用，所以開不起來不要找我w
+*   我遇到了一個錯誤，我要怎麼回報?
+    - 使用 `/錯誤回報` 指令，來進行錯誤回報。
+    - 參考 [聯絡與支援](#contact-support)
+    - 就算您只是發現一個很小的錯誤，也歡迎告知我!
+
+<p id="contact-support">
 
 ## 📞 聯絡與支援
 如果您有任何問題、建議或需要支援，可以透過以下方式聯絡我們：
@@ -193,5 +210,5 @@ GENIUS_ACCESS_TOKEN = ... # `/歌詞搜尋` 的 apiKEY
 - [LICENSE-MIT](LICENSE)
 
 ## TODO & DONE
-[TODO](https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/TODO.md)
+[TODO](https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/TODO.md)  
 [DONE](https://github.com/NotKeKe/Discord-Bot-YinXi/blob/main/assests/DONE.md)
