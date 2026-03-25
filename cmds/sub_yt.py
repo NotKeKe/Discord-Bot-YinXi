@@ -75,6 +75,7 @@ async def fetch_video_ids(urls: dict):
 
 def _get_upload_date(url: str):
     ydl_opts = {
+        'ignoreerrors': True,      # 忽略錯誤
         'quiet': True,             # 不輸出進度
         'skip_download': True,     # 跳過下載
     }
