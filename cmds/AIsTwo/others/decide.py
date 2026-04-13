@@ -2,19 +2,16 @@ import discord
 import random
 import traceback
 import orjson
-import requests
 import sqlite3
-import asyncio
 from typing import Optional
 from httpx import AsyncClient
 import aiosqlite
 
 from core.mongodb import MongoDB_DB
-from core.classes import get_bot
 
 from cmds.AIsTwo.base_chat import base_zhipu_chat, true_zhipu, ollama, base_openai_chat
 from cmds.AIsTwo.utils import halfToFull, to_assistant_message, to_system_message, to_user_message
-from core.functions import translate, current_time, read_json, write_json, async_translate
+from core.functions import current_time, async_translate
 # tools
 from cmds.AIsTwo.others.if_tools_needed import get_tool_results
 from cmds.AIsTwo.tool_map import tools_descrip
@@ -86,7 +83,7 @@ class ActivitySelector:
         {status}
         ```
 '''.format(status = orjson.dumps(cls.past_status, option=orjson.OPT_INDENT_2).decode()).strip()
-        model = 'zhipu:glm-z1-flash'
+        model = 'ai-local:qwen3-1.7b'
 
         match status:
             # Playing
@@ -113,7 +110,7 @@ class ActivitySelector:
                     # or generate from model
                     else:
                         client = Chat(model=model, system_prompt=system_prompt)
-                        _, result, _ = await client.chat(
+                        _, result, h = await client.chat(
                             prompt=(
                                 f'現在時間為: {curr_time}，'
                                 '幫我寫一段emo風格的短文，主題是「孤獨感像海水一樣淹沒我」，' # ??????
@@ -122,6 +119,19 @@ class ActivitySelector:
                             ),
                             is_enable_tools=False
                         )
+
+                        # retry to handle model no output
+                        for _ in range(3):
+                            if result:
+                                break
+
+                            _, result, h = await client.chat(
+                                prompt='You didn\'t output anything, please OUTPUT your final answer or result after thinking.', 
+                                tool_choice='none',
+                                history=h
+                            )
+
+
                         result = halfToFull(result).replace('。', '\n')
                         cls.past_status.append((f'{curr_time} 正在玩 ' + result))
 
@@ -141,7 +151,18 @@ class ActivitySelector:
                 else:
                     client = Chat(model=model, system_prompt=system_prompt)
 
-                    _, result, _ = await client.chat(prompt='基於搜尋，找`一首`有關 `emo` 的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字')
+                    _, result, h = await client.chat(prompt='基於搜尋，找`一首`有關 `emo` 的歌，確保輸出時僅輸出歌曲的名稱，沒有其他攏言贅字', tool_choice='required')
+
+                    # retry to handle model no output
+                    for _ in range(3):
+                        if result:
+                            break
+
+                        _, result, h = await client.chat(
+                            prompt='You didn\'t output anything, please OUTPUT your final answer or result after thinking.', 
+                            tool_choice='none',
+                            history=h
+                        )
 
                     result = halfToFull(result).replace('。', '\n')
                     cls.past_status.append((f'{curr_time} 正在聽 ' + result))
@@ -152,7 +173,19 @@ class ActivitySelector:
             case 3:
                 client = Chat(model=model, system_prompt=system_prompt)
 
-                _, result, _ = await client.chat(prompt='基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字')
+                _, result, h = await client.chat(prompt='基於搜尋，找`一部`隨機的`愛情`電影，確保輸出時僅輸出電影的名稱，沒有其他攏言贅字', tool_choice='required')
+                
+                # retry to handle model no output
+                for _ in range(3):
+                    if result:
+                        break
+
+                    _, result, h = await client.chat(
+                        prompt='You didn\'t output anything, please OUTPUT your final answer or result after thinking.', 
+                        tool_choice='none',
+                        history=h
+                    )
+
 
                 result = halfToFull(result).replace('。', '\n')
                 cls.past_status.append((f'{curr_time} 正在聽 ' + result))
