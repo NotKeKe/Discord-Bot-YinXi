@@ -50,7 +50,11 @@ async def fetch_models():
         gemini_models = []
 
     try:
-        cerebras_models = [model.id for model in (await AsyncClient.cerebras.models.list()).data]
+        # cerebras_models = [model.id for model in (await AsyncClient.cerebras.models.list()).data]
+        cerebras_models = [
+            'llama3.1-8b',
+            'qwen-3-235b-a22b-instruct-2507'
+        ]
         # logger.info(f'cerebras: {cerebras_models}')
     except Exception as e:
         logger.error(f'Cannot fetch cerebras models: {e}')
