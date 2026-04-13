@@ -82,6 +82,7 @@ def _get_upload_date(url: str):
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(url, download=False)
+        if not info_dict: return
         
         # 'YYYYMMDD'
         upload_date_str = info_dict.get('upload_date')
