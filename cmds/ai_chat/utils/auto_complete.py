@@ -19,7 +19,7 @@ async def chat_history_autocomplete(interaction: Interaction, current: str) -> L
     data.sort(key=lambda x: x[1], reverse=True)
 
     # 限制最多回傳 25 個結果
-    return [app_commands.Choice(name=f'{title} ({UnixToReadable(time)})', value=title) for title, time in data[:25] if title != '']
+    return [app_commands.Choice(name=f'{title} ({UnixToReadable(time)})', value=title.strip()) for title, time in data[:25] if title and isinstance(title, str) and title.strip()]
 
 async def model_autocomplete(interaction: Interaction, current: str) -> List[app_commands.Choice[str]]:
     db = db_client['aichat_available_models']

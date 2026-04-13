@@ -17,7 +17,8 @@ PROVIDERS = {
     'ollama': AsyncClient.ollama,
     'gemini': AsyncClient.gemini,
     'cerebras': AsyncClient.cerebras,
-    'zhipu': AsyncClient.zhipu
+    'zhipu': AsyncClient.zhipu,
+    'ai-local': AsyncClient.ai_local
 }
 
 def split_provider_model(provider_and_model: str) -> Tuple[str, str]:

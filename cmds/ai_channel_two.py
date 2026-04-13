@@ -5,6 +5,7 @@ import logging
 import openai
 import traceback
 from io import BytesIO
+from typing import Optional
 
 from core.functions import create_basic_embed, current_time, get_attachment, split_str_by_len_and_backtick, UnixNow
 from core.mongodb import MongoDB_DB
@@ -159,7 +160,7 @@ class AIChannelTwo(Cog_Extension):
     @commands.hybrid_command(name=locale_str('set_ai_channel'), description=locale_str('set_ai_channel'))
     @commands.has_permissions(administrator=True)
     @app_commands.autocomplete(model=model_autocomplete)
-    async def set_ai_channel(self, ctx: commands.Context, model: str = None, system_prompt: str = None):
+    async def set_ai_channel(self, ctx: commands.Context, model: Optional[str] = None, system_prompt: str = None):
         try:
             async with ctx.typing():
                 db = self.db
@@ -176,7 +177,7 @@ class AIChannelTwo(Cog_Extension):
                         return await ctx.send(await ctx.interaction.translate('send_set_ai_channel_channel_exist'))
                     
                 if model is None:
-                    model = 'qwen-3-32b'
+                    model = 'ai-local:qwen3-1.7b'
 
                 provider, model = split_provider_model(model)
                     

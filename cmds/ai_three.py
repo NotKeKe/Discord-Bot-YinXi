@@ -43,7 +43,7 @@ class AIChat(Cog_Extension):
             self, 
             ctx: commands.Context, 
             prompt: str, 
-            model: str = 'cerebras:gpt-oss-120b', 
+            model: str = 'ai-local:qwen3-1.7b', 
             history: str = None, 
             enable_tools: bool = True, 
             image: Optional[discord.Attachment] = None, 

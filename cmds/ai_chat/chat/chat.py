@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class Chat:
     def __init__(self, model: str = None, system_prompt: str = '', ctx: commands.Context = None):
-        if not model: model = 'cerebras:qwen-3-32b'
+        if not model: model = 'zhipu:glm-4-flash'
         self.model = model.strip()
         self.ctx = ctx
         self.userID: int = ctx.author.id if ctx else None

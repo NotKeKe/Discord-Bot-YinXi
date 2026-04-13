@@ -63,13 +63,16 @@ async def fetch_models():
         logger.error(f'Cannot fetch lmstudio models: {e}')
         lmstudio_models = []
 
+    ai_local_models = ['qwen3-1.7b']
+
     data = {
         'openrouter': openrouter_models,
         'zhipu': zhipu_models,
         'ollama': ollama_models,
         'gemini': gemini_models,
         'cerebras': cerebras_models,
-        'lmstudio': lmstudio_models
+        'lmstudio': lmstudio_models,
+        'ai-local': ai_local_models
     }
     
     db = db_client['aichat_available_models']

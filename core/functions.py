@@ -192,11 +192,13 @@ if settings:
     testing_guildID: int = settings['testing_guildID']
     DEVICE_IP: str = settings.get('DEVICE_IP')
     OLLAMA_IP: str = settings.get('OLLAMA_IP')
+    AI_IP: str = settings.get('AI_IP')
     BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 else:
     testing_guildID: int = 123456789
     DEVICE_IP: str = '127.0.0.1'
     OLLAMA_IP: str = '127.0.0.1'
+    AI_IP: str = '127.0.0.1'
     BASE_OLLAMA_URL: str = f'http://{OLLAMA_IP}:11434'
 
 MONGO_URL = f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{DEVICE_IP}:27020/"
