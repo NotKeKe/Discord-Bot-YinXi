@@ -1,6 +1,3 @@
-# pull playwright
-FROM mcr.microsoft.com/playwright:v1.55.0-noble AS playwright-base
-
 # pull python
 FROM python:3.13.5-slim-bookworm
 
@@ -9,15 +6,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg libzbar0 libsodium-dev libopus0 \
     && rm -rf /var/lib/apt/lists/*
 
-# copy from playwright
-COPY --from=playwright-base /usr/lib /usr/lib
-COPY --from=playwright-base /lib /lib
-COPY --from=playwright-base /ms-playwright /ms-playwright
-
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# sync deps
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache
+
+# install playwright
+RUN uv run playwright install
