@@ -1,7 +1,12 @@
-.venv
+**/.venv/
 .pm2
 .vscode
-__pycache__/
+**/__pycache__/
 
+data/
+logs/
+.git
+*.example
+*.sh
 
-api_server
+api_server/
