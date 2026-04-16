@@ -2,7 +2,7 @@ import discord
 from openai import OpenAI
 from ollama import Client
 from zhipuai import ZhipuAI
-from huggingface_hub import InferenceClient
+# from huggingface_hub import InferenceClient
 import os
 from tenacity import retry, stop_after_attempt, wait_fixed
 import traceback

@@ -5,12 +5,8 @@ from discord.ext import commands
 import orjson
 import ast
 import operator
-import duckduckgo_search
 import requests
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
-from typing import Optional
-import sqlite3
 
 from core.functions import read_json, current_time, UnixToReadable, DEVICE_IP
 from core.classes import bot
@@ -25,8 +21,6 @@ ops = {
     ast.Div: operator.truediv,
     ast.Mod: operator.mod
 }
-# 模仿使用者 (for search)
-ua = UserAgent()
 
 func_map = {}
 
