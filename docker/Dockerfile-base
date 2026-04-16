@@ -1,22 +1,43 @@
-# pull python
-FROM python:3.13.5-slim-bookworm
+# ----- build -----
 
-# install tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg libzbar0 libsodium-dev libopus0 \
-    && rm -rf /var/lib/apt/lists/*
+# pull python
+FROM python:3.13.5-slim-bookworm AS builder
 
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# sync deps
 WORKDIR /app
 
+# copy deps files
 COPY pyproject.toml uv.lock ./
+
+# install deps
+ENV UV_LINK_MODE=copy
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project
 
-# install playwright
-RUN uv run playwright install --with-deps \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+
+# ----- run -----
+
+# pull python
+FROM python:3.13.5-slim-bookworm
+
+# copy deps
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /app
+
+# install tools and playwright
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ffmpeg \
+        libzbar0 \
+        libsodium23 \
+        libopus0 && \
+    uv run playwright install chromium --with-deps && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
