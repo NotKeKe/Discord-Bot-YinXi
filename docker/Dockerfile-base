@@ -16,4 +16,4 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-cache
 
 # install playwright
-RUN uv run playwright install
+RUN uv run playwright install --with-deps
