@@ -2,8 +2,8 @@ version: '3.8'
 services:
   bot:
     build:
-      context: .
-      dockerfile: Dockerfile-dev
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: yinxi-dc-bot
     depends_on:
       - lrcapi
@@ -12,7 +12,7 @@ services:
     environment:
       - LRCAPI_URL=http://lrcapi:28883
     volumes:
-      - .:/app
+      - ..:/app
       - /app/.venv
     deploy:
       resources:
@@ -21,12 +21,12 @@ services:
     restart: unless-stopped
   api_server:
     build: 
-      context: .
-      dockerfile: Dockerfile-api
+      context: ../api_server
+      dockerfile: ../docker/Dockerfile-api
     command: uv run main.py
     container_name: yinxi-dc-api-server
     volumes:
-      - ./api_server:/app
+      - ../api_server:/app
     expose:
       - "3000"
     ports:
@@ -52,8 +52,8 @@ services:
     container_name: yinxi-dc-mongodb-backup
     restart: unless-stopped
     volumes:
-      - ./data/mongodb/backup.sh:/backup.sh
-      - ./data/mongodb:/backup
+      - ../data/mongodb/backup.sh:/backup.sh
+      - ../data/mongodb:/backup
     depends_on:
       - mongodb
     entrypoint: ["/bin/sh", "-c", "apk add --no-cache mongodb-tools && echo '0 3 * * * /backup.sh' | crontab - && crond -f"]
