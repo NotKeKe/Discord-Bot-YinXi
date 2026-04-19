@@ -27,6 +27,7 @@ services:
     container_name: yinxi-dc-api-server
     volumes:
       - ../api_server:/app
+      - /app/.venv
     expose:
       - "3000"
     ports:
