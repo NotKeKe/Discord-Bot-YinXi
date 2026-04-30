@@ -93,6 +93,10 @@ class Player:
         except:
             traceback.print_exc()
 
+    async def clean_up(self):
+        self.clean_up_task = asyncio.create_task(self._cleanup())
+        await self.clean_up_task
+
     def init_bar(self):
         self.duration_int = None
         self.passed_time = 0
@@ -237,7 +241,7 @@ class Player:
                     await self.ws_conn.send(orjson.dumps(data).decode())
 
                     await asyncio.sleep(3)
-        except websockets.exceptions.ConnectionClosedError:
+        except (websockets.exceptions.ConnectionClosedError, websockets.exceptions.ConnectionClosedOK):
             print(f'dc player websocket closed: guild_id: {self.guild.id}')
         except Exception:
             traceback.print_exc()

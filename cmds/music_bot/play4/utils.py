@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 import asyncio
 import httpx
 import time
-# import scrapetube
 
 from core.functions import create_basic_embed
 from core.translator import load_translated
@@ -156,9 +155,12 @@ async def leave(ctx: commands.Context, return_value: bool = True) -> bool | None
         if ctx.author.voice.channel != ctx.guild.voice_client.channel: await ctx.send('疑? 我們好像在不同的頻道裡面欸'); return False
 
     from cmds.play4 import players, custom_list_players, join_channel_time
+    if not ctx.guild: return
+
     await ctx.guild.voice_client.disconnect()
     if ctx.guild.id in players:
         player = players[ctx.guild.id]
+        await player.clean_up()
         del players[ctx.guild.id]
         del player
     if ctx.guild.id in custom_list_players:
