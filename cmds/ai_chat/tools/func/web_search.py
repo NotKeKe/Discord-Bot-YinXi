@@ -9,6 +9,8 @@ NOT_AVAILABLE = 'web_search is not available'
 searching_sem = asyncio.Semaphore(40)
 headers = {"User-Agent": 'Mozilla/5.0'}
 
+failed_urls: set[str] = set()
+
 async def web_search(keywords: str, time_range: str = 'year', language: str = 'zh-TW') -> str:
     result = []
     time_range = ('day' if time_range.lower().strip() not in ('year', 'monuth', 'week', 'day') else time_range.lower().strip()) if time_range else None
@@ -36,8 +38,10 @@ async def web_search(keywords: str, time_range: str = 'year', language: str = 'z
             
     urls = [item['url'] for item in data['results']][:10]
 
-    async def scrape_page(session: ClientSession, url) -> tuple[str, str, str]:
+    async def scrape_page(session: ClientSession, url: str) -> tuple[str, str, str]:
         try:
+            if url in failed_urls: return None, None, None
+
             async with searching_sem:
                 async with session.get(url, headers=headers, timeout=5) as resp:
                     if resp.status != 200: return None, None, None
@@ -55,6 +59,7 @@ async def web_search(keywords: str, time_range: str = 'year', language: str = 'z
                 return title, content, url
         except Exception as e:
             print(f"爬取失敗: {url}, 錯誤: {e}")
+            failed_urls.add(url)
             return None, None, None
 
     async with ClientSession() as session:
