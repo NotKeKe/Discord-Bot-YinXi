@@ -26,6 +26,9 @@ FROM python:3.13.5-slim-bookworm
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
+# copy deno (for yt-dlp)
+COPY --from=denoland/deno:bin-2.1.9 /deno /usr/local/bin/deno
+
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
