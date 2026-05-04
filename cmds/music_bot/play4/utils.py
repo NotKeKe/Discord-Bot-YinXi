@@ -41,6 +41,7 @@ QUEUE = MyPriorityQueue()
 # }
 
 YTDL_OPTIONS = {
+    'remote_components': ['ejs:github'],  # 2025.11.12 yt-dlp version
     'format': 'bestaudio[protocol^=http][protocol!*=m3u8]/bestaudio[protocol!*=m3u8]',  # 選擇最佳音質
     'noplaylist': True,          # 如果輸入是播放清單，只下載當前影片
     'quiet': True,               # 禁止在 console 輸出大量訊息
