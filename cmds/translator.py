@@ -4,7 +4,8 @@ from discord import app_commands
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed, thread_pool
 from core.translator import load_translated, locale_str
-from cmds.AIsTwo.others.func import translate
+# from cmds.AIsTwo.others.func import translate
+from cmds.ai_chat.chat.translate import translate
 
 class Translator(Cog_Extension):
     @commands.Cog.listener()
@@ -22,11 +23,11 @@ class Translator(Cog_Extension):
             field_1: dict = (eb.get('field'))[0]
             translate_name = field_1.get('name')
             ''''''
-            think, translated = await thread_pool(translate, content, target, ctx.interaction.locale.value)
+            translated = await translate(content, target, ctx.interaction.locale.value)
             
-            embed = create_basic_embed(功能=yinxi_translated, color=ctx.author.color)
-            embed.add_field(name=translate_name, value=translated if translated else think, inline=False)
-            embed.set_footer(text='Powered by qwen-3-32b')
+            embed = create_basic_embed(description=translated, 功能=yinxi_translated, color=ctx.author.color)
+            embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+            embed.set_footer(text='Powered by qwen3-1.7b')
 
             await ctx.send(embed=embed)
 
