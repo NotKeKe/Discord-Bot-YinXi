@@ -6,6 +6,7 @@ from discord.ext import commands, tasks
 import traceback
 import copy
 from httpx import AsyncClient
+from typing import Optional
 
 from cmds.music_bot.play4.player import Player, loop_option
 from cmds.music_bot.play4.utils import send_info_embed, check_and_get_player
@@ -40,18 +41,20 @@ class Music(Cog_Extension):
             if isinstance(exception.original, discord.Forbidden):
                 try:
                     u = self.bot.get_user(ctx.author.id)
-                    return await u.send("I'm missing some permissions:((")
+                    if u:
+                        await u.send("I'm missing some permissions:((")
+                    return
                 except:
                     ...
         if not ctx.cog: return
         if ctx.cog.__cog_name__ != 'Music': return
-        await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=True)
+        await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name if ctx.command else 'Unknown', exception=exception, user_send=False, ephemeral=True) # type: ignore
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         '''用於檢測 bot 加入語音頻道，並紀錄時間'''
         guild_id = member.guild.id
-        if member.id == self.bot.user.id:
+        if self.bot.user and member.id == self.bot.user.id:
             if before.channel is None and after.channel is not None: # 加入語音頻道
                 join_channel_time[guild_id] = datetime.now()
             elif before.channel is not None and after.channel is None: # 離開語音頻道
@@ -77,14 +80,14 @@ class Music(Cog_Extension):
     @commands.hybrid_command(name=locale_str('play'), description=locale_str('play'), aliases=['p', '播放'])
     @app_commands.describe(query=locale_str('play_query'))
     @app_commands.autocomplete(query=play_query_autocomplete)
-    async def _play(self, ctx: commands.Context, *, query: str = None):
+    async def _play(self, ctx: commands.Context, *, query: Optional[str] = None):
         try:
             async with ctx.typing():
                 member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
                 if not member:
                     return await ctx.send(await get_translate('send_play_not_in_guild', ctx))
 
-                if not member.voice: return await ctx.send(await get_translate('send_play_not_in_voice', ctx))
+                if not member.voice or not member.voice.channel: return await ctx.send(await get_translate('send_play_not_in_voice', ctx))
                 if not ctx.voice_client:
                     await member.voice.channel.connect()
 
