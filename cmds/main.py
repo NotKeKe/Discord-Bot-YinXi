@@ -1,35 +1,19 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.utils import get
-import json
 from datetime import datetime
-import random
 import os
-from dotenv import load_dotenv
 import uuid
 import asyncio
 import aiosqlite
 import io
+from typing import Optional
 
 from cmds.AIsTwo.others.func import image_read
-from cmds.AIsTwo.utils import image_url_to_base64
 
 from core.classes import Cog_Extension
 from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow, testing_guildID, image_to_base64
 from core.translator import locale_str, load_translated, get_translate
-
-# get env
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-KeJC_ID = int(os.getenv('KeJC_ID'))
-
-
-#setting.json
-with open('setting.json', 'r', encoding = 'utf8') as jfile:
-        #(檔名，mode=read)
-    jdata = json.load(jfile)
-
 
 class Main(Cog_Extension):
 
@@ -44,6 +28,8 @@ class Main(Cog_Extension):
         會傳個訊息跟你說這群的群主名字 跟他的ID
         '''
         async with ctx.typing():
+            if not ctx.guild: return await ctx.send('You are not in a server.')
+
             '''i18n'''
             eb_template = await get_translate('embed_owner_id', ctx)
             eb_data = load_translated(eb_template)[0]
@@ -51,7 +37,10 @@ class Main(Cog_Extension):
             title = eb_data.get('title')
             field_name = eb_data.get('field').get('name')
             ''''''
-            guild_owner = await self.bot.fetch_user(int(ctx.guild.owner_id))
+            try:
+                guild_owner = await self.bot.fetch_user(int(ctx.guild.owner_id) if ctx.guild.owner_id else -1)
+            except:
+                return await ctx.send('Owner not found.')
             embed=discord.Embed(title=title.format(owner_mention=guild_owner.mention), color=discord.Color.blue(), timestamp=datetime.now())
             embed.set_author(name=author_name)
             embed.add_field(name=field_name, value=ctx.guild.owner_id, inline=False)
@@ -82,27 +71,29 @@ class Main(Cog_Extension):
     #回傳使用者頭貼
     @commands.hybrid_command(name=locale_str("avatar"), description=locale_str("avatar"))
     @app_commands.describe(member=locale_str('avatar_member'))
-    async def avatar(self, ctx: commands.Context, member: discord.Member = None):
+    async def avatar(self, ctx: commands.Context, member: Optional[discord.Member] = None):
         '''
         [avatar member
         member的話能tag人，或是都沒輸入的話就回傳你自己的頭貼
         '''
         async with ctx.typing():
             if member is None:
-                member = ctx.author
+                member = ctx.author # type: ignore
 
-            try:
-                embed=discord.Embed(title=member, color=member.color).set_image(url=member.avatar.url)
-            except:
-                await ctx.send((await get_translate('send_avatar_no_avatar', ctx)).format(member_name=member.display_name))
-                return
-            
-            await ctx.send(embed=embed)
+            if member:
+                try:
+                    embed=discord.Embed(title=member, color=member.color).set_image(url=member.avatar.url if member.avatar else member.default_avatar.url)
+                except:
+                    await ctx.send((await get_translate('send_avatar_no_avatar', ctx)).format(member_name=member.display_name))
+                    return
+                
+                await ctx.send(embed=embed)
     
     #獲得該guild的system channel
     @commands.hybrid_command(name=locale_str('get_system_channel'), description=locale_str('get_system_channel'))
     async def systemChannel(self, ctx: commands.Context):
         async with ctx.typing():
+            if not ctx.guild: return await ctx.send('You are not in a server.')
             channel = ctx.guild.system_channel
             if channel is None:
                 await ctx.send(await get_translate('send_get_system_channel_no_system_channel', ctx))
@@ -110,7 +101,7 @@ class Main(Cog_Extension):
                 await ctx.send(channel.mention)
 
     @commands.command(name='add_admin')
-    async def add_admin(self, ctx: commands.Context, userID: int = None):
+    async def add_admin(self, ctx: commands.Context, userID: Optional[int] = None):
         if str(ctx.author.id) != KeJCID: return
 
         global admins
@@ -134,10 +125,10 @@ class Main(Cog_Extension):
             true_member_counts = len([m for m in ctx.guild.members if not m.bot])
             bot_counts = total_member_counts - true_member_counts
             channel_counts = len(ctx.guild.channels)
-            owner = ctx.guild.owner.global_name
-            ownerID = ctx.guild.owner.id
+            owner = ctx.guild.owner.global_name if ctx.guild.owner else None
+            ownerID = ctx.guild.owner.id if ctx.guild.owner else None
             online_member_counts = len([m for m in ctx.guild.members if m.status not in (discord.Status.offline, discord.Status.invisible)])
-            system_channel = ctx.guild.system_channel or 'None'
+            system_channel = ctx.guild.system_channel
 
             '''i18n'''
             eb_template = await get_translate('embed_server_info', ctx)
@@ -147,7 +138,7 @@ class Main(Cog_Extension):
             ''''''
             eb = create_basic_embed(title, color=ctx.author.color)
             
-            values = [name, id, total_member_counts, true_member_counts, bot_counts, channel_counts, owner, ownerID, online_member_counts, system_channel.mention]
+            values = [name, id, total_member_counts, true_member_counts, bot_counts, channel_counts, owner, ownerID, online_member_counts, system_channel.mention if system_channel else None]
             for i, field in enumerate(fields):
                 eb.add_field(name=field.get('name'), value=values[i])
             await ctx.send(embed=eb)
@@ -156,7 +147,7 @@ class Main(Cog_Extension):
     @app_commands.describe(unix_second=locale_str('convert_timestamp_timestamp'))
     async def unixSecondToReadalbe(self, ctx: commands.Context, unix_second: str):
         async with ctx.typing():
-            try: unix_second = float(unix_second)
+            try: unix_second = float(unix_second) # type: ignore
             except: return await ctx.send(await get_translate('send_convert_timestamp_invalid_number', ctx))
             readable = UnixToReadable(unix_second)
             await ctx.send(readable)
@@ -164,7 +155,7 @@ class Main(Cog_Extension):
     @commands.hybrid_command(name=locale_str('tw_high_school_score_calculator'), description=locale_str('tw_high_school_score_calculator'))
     @app_commands.guilds(discord.Object(testing_guildID))
     @app_commands.describe(image=locale_str('tw_high_school_score_calculator_image'), prompt=locale_str('tw_high_school_score_calculator_prompt'))
-    async def high_school_totalScore_calculate(self, ctx: commands.Context, 國文: float = 0.0, 英文: float = 0.0, 數學: float = 0.0, 化學: float = 0.0, 生物: float = 0.0, 物理: float = 0.0, 歷史: float = 0.0, 地理: float = 0.0, 公民: float = 0.0, 體育: float = 0.0, image: discord.Attachment = None, prompt: str = None):
+    async def high_school_totalScore_calculate(self, ctx: commands.Context, 國文: float = 0.0, 英文: float = 0.0, 數學: float = 0.0, 化學: float = 0.0, 生物: float = 0.0, 物理: float = 0.0, 歷史: float = 0.0, 地理: float = 0.0, 公民: float = 0.0, 體育: float = 0.0, image: Optional[discord.Attachment] = None, prompt: Optional[str] = None):
         async with ctx.typing():
             '''i18n'''
             eb_template = await get_translate('embed_tw_high_school_score_calculator', ctx)
