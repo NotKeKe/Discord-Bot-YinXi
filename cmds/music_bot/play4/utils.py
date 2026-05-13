@@ -12,7 +12,7 @@ import httpx
 import time
 
 from core.functions import create_basic_embed
-from core.translator import load_translated
+from core.translator import load_translated, get_translate
 from core.scrapetube import scrapetube
 from core.priority_queue import MyPriorityQueue
 
@@ -246,14 +246,14 @@ async def check_and_get_player(ctx: commands.Context, *, check_user_in_channel=T
     
     if check_user_in_channel:
         if not ctx.author.voice:
-            return await ctx.send(await ctx.bot.tree.translator.get_translate('send_check_not_in_voice', locale_value)), False
+            return await ctx.send(await get_translate('send_check_not_in_voice', ctx)), False
     if not ctx.voice_client:
-        return await ctx.send(await ctx.bot.tree.translator.get_translate('send_check_bot_not_in_voice', locale_value)), False
+        return await ctx.send(await get_translate('send_check_bot_not_in_voice', ctx)), False
 
     player: Player = players.get(ctx.guild.id)
 
     if not player:
-        return await ctx.send(await ctx.bot.tree.translator.get_translate('send_add_player_crashed', locale_value)), False
+        return await ctx.send(await get_translate('send_add_player_crashed', ctx)), False
     return player, True
 
 

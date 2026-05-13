@@ -80,7 +80,7 @@ async def create_info_embed(ctx: commands.Context, cursor: AsyncIOMotorCursor):
 
     '''i18n'''
     eb_text = load_translated(
-        (await ctx.interaction.translate('embed_pjsk_global_full_info')) 
+        (await get_translate('embed_pjsk_global_full_info', ctx)) 
         if ctx.interaction else 
         (await get_translate('embed_pjsk_global_full_info', ctx.guild.preferred_locale.value if ctx.guild else 'zh-TW'))
     )[0]
@@ -190,7 +190,7 @@ class PJSK(commands.Cog):
             else:
                 '''i18n'''
                 eb_text = load_translated(
-                    (await ctx.interaction.translate('embed_pjsk_search_song_short_info')) 
+                    (await get_translate('embed_pjsk_search_song_short_info', ctx)) 
                     if ctx.interaction else 
                     (await get_translate('embed_pjsk_search_song_short_info', ctx.guild.preferred_locale.value if ctx.guild else 'zh-TW'))
                 )[0]

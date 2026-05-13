@@ -84,7 +84,7 @@ class Music(Cog_Extension):
                 if not member:
                     return await ctx.send(await get_translate('send_play_not_in_guild', ctx))
 
-                if not member.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
+                if not member.voice: return await ctx.send(await get_translate('send_play_not_in_voice', ctx))
                 if not ctx.voice_client:
                     await member.voice.channel.connect()
 
@@ -110,7 +110,7 @@ class Music(Cog_Extension):
         async with ctx.typing():
             member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
             if not member:
-                return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+                return await ctx.send(await get_translate('send_play_not_in_guild', ctx))
 
             if not member.voice: return await ctx.send(await get_translate('send_add_not_in_voice', ctx))
             if not ctx.voice_client: return await ctx.send(await get_translate('send_add_use_play_first', ctx))
@@ -170,7 +170,7 @@ class Music(Cog_Extension):
         async with ctx.typing():
             member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
             if not member:
-                return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+                return await ctx.send(await get_translate('send_play_not_in_guild', ctx))
             
             if not (member.voice and ctx.voice_client): return await ctx.send(await get_translate('send_stop_not_in_voice', ctx))
             if member.voice.channel != ctx.voice_client.channel: return await ctx.send(await get_translate('send_stop_not_in_same_channel', ctx))
@@ -296,9 +296,9 @@ class Music(Cog_Extension):
         async with ctx.typing():
             member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
             if not member:
-                return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+                return await ctx.send(await get_translate('send_play_not_in_guild', ctx))
 
-            if not member.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
+            if not member.voice: return await ctx.send(await get_translate('send_play_not_in_voice', ctx))
             if players.get(ctx.guild.id): # 不讓使用者同時播放兩個 list，或是自訂歌曲 + 自訂歌單
                 return await ctx.send(await get_translate('send_play_custom_list_already_playing_left_first', ctx))
             if not ctx.voice_client:

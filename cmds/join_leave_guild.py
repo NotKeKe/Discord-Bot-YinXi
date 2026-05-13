@@ -174,8 +174,8 @@ class OnJoinLeave(Cog_Extension):
             elif not leaveCh:
                 return await ctx.send(await get_translate('send_join_leave_message_no_leave_channel', ctx))
             
-            if not joinCh.permissions_for(joinCh.guild.me).send_messages: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_permission'))
-            if not leaveCh.permissions_for(leaveCh.guild.me).send_messages: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_permission'))
+            if not joinCh.permissions_for(joinCh.guild.me).send_messages: return await ctx.send(await get_translate('send_join_leave_message_no_permission', ctx))
+            if not leaveCh.permissions_for(leaveCh.guild.me).send_messages: return await ctx.send(await get_translate('send_join_leave_message_no_permission', ctx))
 
             data[guildID] = {'joinChannel': joinCh.id, 'leaveChannel': leaveCh.id}
             self.write_data(data)
