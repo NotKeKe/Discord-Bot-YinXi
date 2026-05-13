@@ -9,7 +9,7 @@ from pyzbar.pyzbar import decode
 
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed
-from core.translator import load_translated, locale_str
+from core.translator import load_translated, locale_str, get_translate
 
 class QRcode(Cog_Extension):
     @commands.Cog.listener()
@@ -34,8 +34,8 @@ class QRcode(Cog_Extension):
     async def img(self, ctx: commands.Context, * , url:str):
         async with ctx.typing():
             '''i18n'''
-            invalid_url = await ctx.interaction.translate('send_qrcode_generator_invalid_url')
-            eb = await ctx.interaction.translate('embed_qrcode_generator_1')
+            invalid_url = await get_translate('send_qrcode_generator_invalid_url', ctx)
+            eb = await get_translate('embed_qrcode_generator_1', ctx)
             eb: dict = (load_translated(eb))[0]
             author = eb.get('author')
             ''''''
@@ -59,7 +59,7 @@ class QRcode(Cog_Extension):
     async def scanner(self, ctx: commands.Context, image: discord.Attachment):
         async with ctx.typing():
             if not image.content_type.startswith('image/'):
-                return await ctx.send(locale_str('qrcode_scanner_invalid_image'))
+                return await ctx.send(await get_translate('qrcode_scanner_invalid_image', ctx))
 
             try:
                 image_data = await image.read()
@@ -69,13 +69,13 @@ class QRcode(Cog_Extension):
                 decoded_objects = decode(img)
 
                 if not decoded_objects:
-                    return await ctx.send(locale_str('send_qrcode_scanner_no_qrcode_found'))
+                    return await ctx.send(await get_translate('send_qrcode_scanner_no_qrcode_found', ctx))
 
                 # 提取第一個 QR Code 的數據
                 qrcode_data = decoded_objects[0].data.decode('utf-8')
 
                 '''i18n'''
-                eb_text = await ctx.interaction.translate('embed_qrcode_scanner')
+                eb_text = await get_translate('embed_qrcode_scanner', ctx)
                 eb_dict = load_translated(eb_text)[0]
                 title = eb_dict.get('title')
                 功能 = eb_dict.get('author')
@@ -91,7 +91,7 @@ class QRcode(Cog_Extension):
                 await ctx.send(embed=embed)
 
             except Exception as e:
-                await ctx.send(locale_str('send_qrcode_scanner_error').format(error=e))
+                await ctx.send((await get_translate('send_qrcode_scanner_error', ctx)).format(error=e))
 
 async def setup(bot):
     await bot.add_cog(QRcode(bot))
