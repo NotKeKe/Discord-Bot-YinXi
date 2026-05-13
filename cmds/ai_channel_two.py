@@ -160,7 +160,7 @@ class AIChannelTwo(Cog_Extension):
     @commands.hybrid_command(name=locale_str('set_ai_channel'), description=locale_str('set_ai_channel'))
     @commands.has_permissions(administrator=True)
     @app_commands.autocomplete(model=model_autocomplete)
-    async def set_ai_channel(self, ctx: commands.Context, model: Optional[str] = None, system_prompt: str = None):
+    async def set_ai_channel(self, ctx: commands.Context, model: Optional[str] = None, system_prompt: Optional[str] = None):
         try:
             async with ctx.typing():
                 db = self.db
@@ -170,8 +170,8 @@ class AIChannelTwo(Cog_Extension):
 
                 if channel_exist:
                     if model or system_prompt:
-                        if system_prompt: await ctx.invoke(self.bot.get_command('change_ai_channel_system_prompt'), system_prompt=system_prompt)
-                        if model: await ctx.invoke(self.bot.get_command('change_ai_channel_model'), model=model)
+                        if system_prompt: await ctx.invoke(self.bot.get_command('change_ai_channel_system_prompt'), system_prompt=system_prompt) # type: ignore
+                        if model: await ctx.invoke(self.bot.get_command('change_ai_channel_model'), model=model) # type: ignore
                         return
                     else:
                         return await ctx.send(await get_translate('send_set_ai_channel_channel_exist', ctx))
@@ -223,15 +223,17 @@ class AIChannelTwo(Cog_Extension):
                     msg = interaction.message
                     await collection.drop()
                     await interaction.response.send_message(await get_translate('send_cancel_ai_channel_button_check_success', interaction))
-                    await msg.edit(view=None)
+                    if msg:
+                        await msg.edit(view=None)
 
                 async def button_refuse_callback(interaction: discord.Interaction):
                     msg = interaction.message
                     await interaction.response.send_message(await get_translate('send_cancel_ai_channel_button_check_cancel', interaction))
-                    await msg.edit(view=None)
+                    if msg:
+                        await msg.edit(view=None)
 
-                button_check.callback = button_check_callback
-                button_refuse.callback = button_refuse_callback
+                button_check.callback = button_check_callback # type: ignore
+                button_refuse.callback = button_refuse_callback # type: ignore
                 view.add_item(button_check)
                 view.add_item(button_refuse)
 
@@ -257,7 +259,9 @@ class AIChannelTwo(Cog_Extension):
                     collection = db['models']
 
                     _id = 'model_setting'
-                    data = await collection.find_one({'_id': _id})
+                    data: dict | None = await collection.find_one({'_id': _id})
+                    if data is None: return False
+
                     models = set([m for models in data.values() for m in models if m != _id])
 
                     return model in models
@@ -358,15 +362,17 @@ class AIChannelTwo(Cog_Extension):
                     msg = interaction.message
                     await collection.drop()
                     await interaction.response.send_message(await get_translate('send_cancel_chat_human_button_check_success', interaction))
-                    await msg.edit(view=None)
+                    if msg:
+                        await msg.edit(view=None)
 
                 async def button_refuse_callback(interaction: discord.Interaction):
                     msg = interaction.message
                     await interaction.response.send_message(await get_translate('send_cancel_chat_human_button_check_cancel', interaction))
-                    await msg.edit(view=None)
+                    if msg:
+                        await msg.edit(view=None)
 
-                button_check.callback = button_check_callback
-                button_refuse.callback = button_refuse_callback
+                button_check.callback = button_check_callback # type: ignore
+                button_refuse.callback = button_refuse_callback # type: ignore
                 view.add_item(button_check)
                 view.add_item(button_refuse)
 
