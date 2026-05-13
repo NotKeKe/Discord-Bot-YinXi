@@ -82,7 +82,7 @@ def write_json(obj, path: str):
         return
 
 
-def create_basic_embed(title = None, description = None, color = discord.Color.blue(), 功能:str = None, time=True):
+def create_basic_embed(title = None, description = None, color = discord.Color.blue(), 功能:str = None, time=True) -> discord.Embed:
     '''
     會設定discord.Embed(title, description, color, timestamp)
         embed.set_author(功能, embed_default_link)

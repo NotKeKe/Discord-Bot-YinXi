@@ -274,11 +274,6 @@
             }],
             "footer": "Time: {keep_time}"
         }],
-        "embed_translate_translated": [{
-            "field": [{
-                "name": "**Translation**"
-            }]
-        }],
         "embed_qrcode_generator_1": [{
             "author": "QR Code Generator"
         }],

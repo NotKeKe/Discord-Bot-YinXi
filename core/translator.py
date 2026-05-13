@@ -101,7 +101,7 @@ class i18n(Translator):
         await self.unload(lang)
         await self.load(lang)
 
-async def get_translate(key: str, ctx: commands.Context | Interaction, locale: Optional[str] = None) -> Optional[str]:
+async def get_translate(key: str, ctx: commands.Context | Interaction, locale: Optional[str] = None) -> str:
     # basically make get translate more easier.
     bot = get_bot()
     result = None

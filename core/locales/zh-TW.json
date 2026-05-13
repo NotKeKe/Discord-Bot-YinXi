@@ -274,11 +274,6 @@
             }],
             "footer": "時間: {keep_time}"
         }],
-        "embed_translate_translated": [{
-            "field": [{
-                "name": "**翻譯**"
-            }]
-        }],
         "embed_qrcode_generator_1": [{
             "author": "QRcode生成器"
         }],
