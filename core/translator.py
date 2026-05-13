@@ -18,22 +18,8 @@ class i18n(Translator):
     def __init__(self):
         super().__init__()
         self.translations = {}
-
-    def get_translate_sync(self, string: str, lang_code: Optional[str] = None):
-        if not lang_code: lang_code = DEFAULT_LANG
-        locale_item = self.translations.get(lang_code, {})  
-
-        item = locale_item.get('components', {})
-        return_item = item.get(string, string)
-
-        if isinstance(return_item, list):
-            return orjson.dumps(return_item).decode('utf-8')
-        elif isinstance(return_item, str):
-            return return_item
-        else:
-            return string
-
-    async def get_translate(self, string: str, lang_code: Optional[str] = None, ctx: Optional[commands.Context | Interaction] = None):
+        
+    def get_translate(self, string: str, lang_code: Optional[str] = None):
         """這是一個能夠透過 lang code 與指定 key 來獲得翻譯的方法，因為 translate 會被 interaction.translate 呼叫，但不一定每個 ctx 都有 interaction (我不確定，但我的理解是這樣)。
 
         Args:
