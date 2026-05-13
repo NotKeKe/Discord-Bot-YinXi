@@ -2,14 +2,15 @@ from discord.ext import commands
 from discord import (
     app_commands, 
     Interaction, 
-    errors as dc_errors
+    errors as dc_errors,
+    Guild
 )
 from discord.app_commands import Choice
 import asyncio
 import orjson
 import uuid
 from datetime import datetime
-from typing import List
+from typing import List, cast
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
 import traceback
@@ -73,8 +74,8 @@ class RunKeep:
         ]
         response = await self.client.chat.completions.create(
             model=self.model, 
-            messages=messages,
-            tools=self.tool_descrip,
+            messages=messages, # type: ignore
+            tools=self.tool_descrip, # type: ignore
             tool_choice='required'
         )
         if not response.choices: raise ValueError('AI沒有回應')
@@ -88,7 +89,7 @@ class RunKeep:
             tool_call = await self.chat()
             tool_name = tool_call.function.name
             arguments = tool_call.function.arguments
-            args = orjson.loads(arguments) if type(arguments) != dict else arguments
+            args = orjson.loads(arguments) if not isinstance(arguments, dict) else arguments
             print(f'{tool_name}: {args}')
             await self.func(**args)
         except: 
@@ -97,7 +98,7 @@ class RunKeep:
     async def func(self, time: str, event: str):
         '''格式為'%Y-%m-%d %H:%M' '''
         inter = self.inter
-        channelID = inter.channel.id
+        channelID = inter.channel.id if inter.channel else -1
 
         '''i18n'''
         invalid_format = await get_translate('send_keep_invalid_format', inter)
@@ -136,12 +137,12 @@ class RunKeep:
         embed_translated: dict = (load_translated(embed_translated))[0]
 
         title = embed_translated.get('title')
-        field_1 = (embed_translated.get('field'))[0]
+        field_1 = (embed_translated.get('field'))[0] # type: ignore
         ''''''
         embed = create_basic_embed(title=title, description=f'**{event}**', color=inter.user.color, time=False)
-        embed.set_author(name=inter.user.name, icon_url=inter.user.avatar.url)
+        embed.set_author(name=inter.user.name, icon_url=inter.user.avatar.url if inter.user.avatar else None)
         embed.add_field(name=field_1.get('name'), value=field_1.get('value'), inline=True)
-        embed.set_footer(text=embed_translated.get('footer').format(keep_time=keep_time))
+        embed.set_footer(text=str(embed_translated.get('footer')).format(keep_time=keep_time))
 
         await inter.followup.send(embed=embed)
 
@@ -152,11 +153,16 @@ class RunKeep:
 async def keepMessage(collection: AsyncIOMotorCollection, channel, user, event: str, delay: float, uuid: str):
     await asyncio.sleep(delay)
 
+    lang_code = None
+    if channel.guild:
+        lang_code = channel.guild.preferred_locale.value if channel.guild.preferred_locale else None
+    
+    bot = get_bot()
     try:
-        await channel.send((await get_translate('send_keep_remind', ctx)).format(mention=user.mention, event=event))
+        await channel.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
     except dc_errors.Forbidden:
         try:
-            await user.send((await get_translate('send_keep_remind', user)).format(mention=user.mention, event=event))
+            await user.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
         except dc_errors.Forbidden:
             ...
         except Exception as e:
@@ -215,9 +221,21 @@ async def keep_event_autocomplete(interaction: Interaction, current: str) -> Lis
     userID = str(interaction.user.id)
     collection = DB[userID]
 
+    _get_channel_name = lambda channelID: (
+        channel := bot.get_channel(channelID),
+        str(channel.name) if hasattr(channel, 'name') else "Private Channel"
+    )
+    get_channel_name = lambda channelID: _get_channel_name(channelID)[1]
+
+    _get_guild_name = lambda channelID: (
+        channel := bot.get_channel(channelID),
+        channel.guild.name if hasattr(channel, 'guild') and channel.guild and hasattr(channel.guild, 'name') else "Private Channel"
+    )
+    get_guild_name = lambda channelID: _get_guild_name(channelID)[1]
+
     result = [
         (
-            f"{item.get('event', '')} | {datetime.fromtimestamp(item.get('sendAt', 0))} | {(bot.get_channel(item.get('channelID', 0))).name} | {(bot.get_channel(item.get('channelID', 0))).guild.name}" ,
+            f"{item.get('event', '')} | {datetime.fromtimestamp(item.get('sendAt', 0))} | {get_channel_name(item.get('channelID', 0))} | {get_guild_name(item.get('channelID', 0))}",
             orjson.dumps((item.get('uuid', ''), item.get('channelID', ''))).decode('utf-8')
         )
         async for item in collection.find()
@@ -291,8 +309,8 @@ class Keep(Cog_Extension):
             sendAt = UnixToReadable(e.get('sendAt', 0))
             event = e.get('event', '')
             channel = self.bot.get_channel(e.get('channelID', 0))
-            channelName = channel.name
-            guildName = channel.guild.name
+            channelName = channel.name if hasattr(channel, 'name') else "Private Channel"
+            guildName = channel.guild.name if hasattr(channel, 'guild') and channel.guild and hasattr(channel.guild, 'name') else "Private Channel"
             u = e.get('uuid')
 
             data.append(dedent(
