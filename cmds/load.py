@@ -170,6 +170,7 @@ class Load(Cog_Extension):
         I did this because I'm not always sitting in front of the computer, and sometimes my bot sended some bad things.
         '''
         if str(ctx.author.id) != KeJCID: return
+        if not ctx.guild: return
         if ctx.guild.me.guild_permissions.manage_messages:
             await ctx.message.delete()
         msg = await ctx.channel.fetch_message(msgID)
