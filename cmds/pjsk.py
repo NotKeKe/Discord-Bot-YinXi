@@ -79,11 +79,7 @@ async def create_info_embed(ctx: commands.Context, cursor: AsyncIOMotorCursor):
     descrips = []
 
     '''i18n'''
-    eb_text = load_translated(
-        (await get_translate('embed_pjsk_global_full_info', ctx)) 
-        if ctx.interaction else 
-        (await get_translate('embed_pjsk_global_full_info', ctx.guild.preferred_locale.value if ctx.guild else 'zh-TW'))
-    )[0]
+    eb_text = load_translated(await get_translate('embed_pjsk_global_full_info', ctx))[0]
     footer = eb_text.get('footer')
     descrip = eb_text.get('description')
     ''''''
@@ -192,7 +188,7 @@ class PJSK(commands.Cog):
                 eb_text = load_translated(
                     (await get_translate('embed_pjsk_search_song_short_info', ctx)) 
                     if ctx.interaction else 
-                    (await get_translate('embed_pjsk_search_song_short_info', ctx.guild.preferred_locale.value if ctx.guild else 'zh-TW'))
+                    (await get_translate('embed_pjsk_search_song_short_info', ctx))
                 )[0]
                 footer = eb_text.get('footer')
                 descrip = eb_text.get('description')
@@ -238,16 +234,18 @@ class PJSK(commands.Cog):
                 await self.send_channels_collection.find_one_and_delete({'channelID': ctx.channel.id})
 
                 await inter.followup.send(await get_translate('send_pjsk_new_song_notify_delete_success', inter), ephemeral=True)
-                await msg.edit(view=None)
+                if msg:
+                    await msg.edit(view=None)
             async def button_refuse_callback(inter: Interaction):
                 await inter.response.defer()
                 msg = inter.message
                 await inter.followup.send(await get_translate('send_pjsk_new_song_notify_delete_cancel', inter), ephemeral=True)
-                await msg.edit(view=None)
+                if msg:
+                    await msg.edit(view=None)
 
 
-            button_check.callback = button_check_callback
-            button_refuse.callback = button_refuse_callback
+            button_check.callback = button_check_callback # type: ignore
+            button_refuse.callback = button_refuse_callback # type: ignore
 
             view = discord.ui.View()
             view.add_item(button_check)
