@@ -8,8 +8,7 @@ from pprint import pp
 import traceback
 from datetime import datetime
 from deep_translator import GoogleTranslator
-import typing
-from typing import Optional
+from typing import Optional, List, cast
 import os
 import asyncio
 import time
@@ -29,20 +28,22 @@ from core.classes import Cog_Extension
 youtube_download_base_url = None
 
 class select_autocomplete:
-    countries = read_json('./cmds/data.json/country.json')
+    countries = cast(dict[str, str], read_json('./cmds/data.json/country.json'))
 
     @staticmethod
-    async def country(_, interaction: discord.Interaction, current: str) -> typing.List[Choice[str]]:
+    async def country(_, interaction: discord.Interaction, current: str) -> List[Choice[str]]:
         try:
             return [
                 Choice(name=name, value=code) 
                 for code, name in select_autocomplete.countries.items()
                 if current.lower().strip() in name.lower() or current.lower().strip() in code.lower()
             ][:25]
-        except: traceback.print_exc()
+        except: 
+            traceback.print_exc()
+            return []
 
     @staticmethod
-    async def langs_for_gifs(_, interaction: discord.Interaction, current: str) -> typing.List[Choice[str]]:
+    async def langs_for_gifs(_, interaction: discord.Interaction, current: str) -> List[Choice[str]]:
         try:
             langs = {
                 "Arabic": "ar", "Bengali": "bn", "Chinese Simplified": "zh-CN", "Chinese Traditional": "zh-TW",
@@ -61,7 +62,9 @@ class select_autocomplete:
             else:
                 return [Choice(name=lang, value=code) for lang, code in items][:25]
 
-        except: traceback.print_exc()
+        except: 
+            traceback.print_exc()
+            return []
 
 
 
@@ -75,10 +78,6 @@ class ApiCog(Cog_Extension):
         
     async def cog_load(self):
         print(f'已載入「{__name__}」')
-        self.update_alive.start()
-
-    async def cog_unload(self):
-        self.update_alive.stop()
     
     @commands.hybrid_command(name=locale_str('joke'), description=locale_str('joke'), aliases=['jokes'])
     async def joke(self, ctx: commands.Context):
@@ -109,10 +108,10 @@ class ApiCog(Cog_Extension):
             ))
 
     @commands.hybrid_command(name=locale_str('news'), description=locale_str('news'), aliases=['新聞'])
-    @app_commands.choices(options=[
+    @app_commands.choices(options=[ # type: ignore
         Choice(name='Everything', value=1),
         Choice(name='Top_Headlines', value=2),
-    ], language=[
+    ], language=[ # type: ignore
             app_commands.Choice(name="Arabic", value="ar"),
             app_commands.Choice(name="German", value="de"),
             app_commands.Choice(name="English", value="en"),
@@ -136,7 +135,7 @@ class ApiCog(Cog_Extension):
         country=locale_str('news_country'),
         輸出數量=locale_str('news_count')
     )
-    async def news(self, ctx: commands.Context, options: int, question: str=None, language: str = 'zh', country: str='tw', 輸出數量: int=3):
+    async def news(self, ctx: commands.Context, options: int, question: Optional[str] = None, language: str = 'zh', country: str='tw', 輸出數量: int=3):
         try:
             async with ctx.typing():
                 if 輸出數量 > 5:
@@ -155,8 +154,8 @@ class ApiCog(Cog_Extension):
                         await interaction.response.send_message(cancel_msg, ephemeral=True)
                         return
 
-                    button1.callback = button1_callback
-                    button2.callback = button2_callback
+                    button1.callback = button1_callback # type: ignore
+                    button2.callback = button2_callback # type: ignore
                     view.add_item(button1)
                     view.add_item(button2)
                     await ctx.send(confirm_msg_template.format(count=輸出數量), view=view, ephemeral=True)
@@ -300,7 +299,7 @@ class ApiCog(Cog_Extension):
     @commands.hybrid_command(name=locale_str('get_gifs'), description=locale_str('get_gifs'), aliases=['gif'])
     @app_commands.describe(query=locale_str('get_gifs_query'), num=locale_str('get_gifs_num'), lang=locale_str('get_gifs_lang'))
     @app_commands.autocomplete(lang = select_autocomplete.langs_for_gifs)
-    async def get_gifs(self, ctx: commands.Context, query: str=None, num: int=1, lang: str = None):
+    async def get_gifs(self, ctx: commands.Context, query: Optional[str] = None, num: int = 1, lang: Optional[str] = None):
         async with ctx.typing():
             if num > 50:
                 return await ctx.send(await get_translate('send_gif_too_many', ctx), ephemeral=True) 
@@ -448,10 +447,10 @@ class ApiCog(Cog_Extension):
                         
                         try: os.remove(new_path)
                         except: ...
-                    button.callback = button_callback
+                    button.callback = button_callback # type: ignore
                     view.add_item(button)
 
-                await ctx.send(embed=eb, file=file, view=view)
+                await ctx.send(embed=eb, file=file, view=view) # type: ignore
         except Exception as e:
             traceback.print_exc()
             return await ctx.send((await get_translate('send_mc_status_error', ctx)).format(reason=e))
@@ -501,7 +500,7 @@ class ApiCog(Cog_Extension):
         type=locale_str('yt_downloader_type'),
         quality=locale_str('yt_downloader_quality')
     )
-    async def yt_downloader(self, ctx: commands.Context, url: str, type: str = 'mp3', quality: str = None):
+    async def yt_downloader(self, ctx: commands.Context, url: str, type: str = 'mp3', quality: Optional[str] = None):
         try:
             async with ctx.typing():
                 data = {
@@ -594,12 +593,6 @@ class ApiCog(Cog_Extension):
         await ctx.send('\n'.join(urls) or 'No Results')
 
         await page.close()
-
-
-    @tasks.loop(minutes=1)
-    async def update_alive(self):
-        global alive
-        alive = time.time()
 
 async def setup(bot):
     await bot.add_cog(ApiCog(bot))
