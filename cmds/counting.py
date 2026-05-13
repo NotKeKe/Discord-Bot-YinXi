@@ -1,9 +1,10 @@
 import discord
 from discord.ext import commands, tasks
+from typing import Optional
 
 from core.functions import read_json, write_json, create_basic_embed, math_round
 from core.translator import locale_str, load_translated, get_translate
-from core.classes import Cog_Extension
+from core.classes import Cog_Extension, get_bot
 
 PATH = './cmds/data.json/counting.json'
 
@@ -15,7 +16,7 @@ example_data = {
 }
 
 class Counting(Cog_Extension):
-    data = None
+    data: Optional[dict] = None
     is_update = False
 
     @classmethod
@@ -56,6 +57,7 @@ class Counting(Cog_Extension):
         self.initdata()
         channelID = str(message.channel.id)
         data = self.__class__.data
+        if not data: return
         if channelID not in data: return
 
         preUserID = data[channelID].get('user')
@@ -63,9 +65,10 @@ class Counting(Cog_Extension):
         eb = None
         userID = message.author.id
 
+        bot = get_bot()
         '''i18n'''
         locale = message.guild.preferred_locale.value if message.guild else 'zh-TW'
-        eb_template_str = await get_translate('embed_counting_error', locale)
+        eb_template_str = bot.tree.translator.get_translate('embed_counting_error', locale) # type: ignore
         eb_data = load_translated(eb_template_str)[0]
         ''''''
 
@@ -113,6 +116,9 @@ class Counting(Cog_Extension):
 
             self.initdata()
             data = self.__class__.data
+            if not data:
+                return await ctx.send('No data loaded, please report this error with `/report`')
+
             channelID = str(ctx.channel.id)
             if channelID in data:
                 count_data = data[channelID].get('count', 0)
