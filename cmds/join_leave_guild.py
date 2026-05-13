@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import List
 import traceback
 
-from core.classes import Cog_Extension
+from core.classes import Cog_Extension, get_bot
 from core.functions import read_json, write_json, create_basic_embed
 from core.translator import locale_str, load_translated, get_translate
 
@@ -58,10 +58,11 @@ class OnJoinLeave(Cog_Extension):
                 channel = (chl for chl in guild.text_channels if chl.permissions_for(guild.me).send_messages)
 
             if channel is None: return
+            
+            bot = get_bot()
             '''i18n'''
             locale = guild.preferred_locale.value if guild.preferred_locale else 'zh-TW'
-            translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
-            eb_template_str = translations.get('components', {}).get('embed_on_guild_join', '[{}]')
+            eb_template_str = bot.tree.translator.get_translate('embed_on_guild_join', locale) # type: ignore
             eb_data = load_translated(eb_template_str)[0]
             ''''''
             
@@ -69,7 +70,7 @@ class OnJoinLeave(Cog_Extension):
             embed.set_author(name=eb_data.get('author'))
             for field in eb_data.get('fields', []):
                 embed.add_field(name=field.get('name'), value=field.get('value'), inline=field.get('inline', False))
-            await channel.send(embed=embed)
+            await channel.send(embed=embed) # type: ignore
         except Exception as exception:
             print(f"Error: {exception}")
 
@@ -86,11 +87,13 @@ class OnJoinLeave(Cog_Extension):
             chn = await self.bot.fetch_channel(channelID)
 
             if chn and hasattr(chn, 'guild') and chn.guild:
-                locale = chn.guild.preferred_locale.value if chn.guild else 'zh-TW'
-                translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
-                send_str = translations.get('components', {}).get('send_on_member_join', '{member_name}')
-                await chn.send(send_str.format(member_name=member.name))
-        except: traceback.print_exc()
+                bot = get_bot()
+
+                locale = chn.guild.preferred_locale.value if chn.guild else None # type: ignore
+                send_str: str = bot.tree.translator.get_translate('send_on_member_join', locale) # type: ignore
+                await chn.send(send_str.format(member_name=member.name)) # type: ignore
+        except: 
+            traceback.print_exc()
 
     #成員離開
     @commands.Cog.listener()
@@ -105,17 +108,17 @@ class OnJoinLeave(Cog_Extension):
             chn = await self.bot.fetch_channel(channelID)
 
             if chn and hasattr(chn, 'guild') and chn.guild:
-                locale = chn.guild.preferred_locale.value if chn.guild else 'zh-TW'
-                translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
-                send_str = translations.get('components', {}).get('send_on_member_remove', '{member_name}')
-                await chn.send(send_str.format(member_name=member.name))
+                bot = get_bot()
+                locale = chn.guild.preferred_locale.value if chn.guild else 'zh-TW' # type: ignore
+                send_str = bot.tree.translator.get_translate('send_on_member_remove', locale) # type: ignore
+                await chn.send(send_str.format(member_name=member.name)) # type: ignore
         except: traceback.print_exc()
 
     @commands.hybrid_command(name=locale_str('join_leave_message'), description=locale_str('join_leave_message'))
     @app_commands.describe(join_channel=locale_str('join_leave_message_join_channel'), leave_channel=locale_str('join_leave_message_leave_channel'))
     @commands.has_permissions(administrator=True)
     @app_commands.autocomplete(join_channel=channel_autocomplete, leave_channel=channel_autocomplete)
-    async def set_join_leave_message(self, ctx: commands.Context, join_channel: str=None, leave_channel: str=None):
+    async def set_join_leave_message(self, ctx: commands.Context, join_channel: str | None = None, leave_channel: str | None = None):
         if not ctx.guild: return await ctx.send('You are not in a server.')
         self.init_data()
         data = self.__class__.data
@@ -131,17 +134,17 @@ class OnJoinLeave(Cog_Extension):
                 refuse_button.disabled = True
                 return
 
-            async def check_callback(interation: discord.Interaction):
-                await interation.response.send_message(await get_translate('send_join_leave_message_cancel_success', inter), ephemeral=True)
+            async def check_callback(interaction: discord.Interaction):
+                await interaction.response.send_message(await get_translate('send_join_leave_message_cancel_success', interaction), ephemeral=True)
                 disabled_button()
-            async def refuse_callback(interation: discord.Interaction):
+            async def refuse_callback(interaction: discord.Interaction):
                 del data[guildID]
-                await interation.response.send_message((await get_translate('send_join_leave_message_delete_success', inter)).format(guild_name=inter.guild.name))
+                await interaction.response.send_message((await get_translate('send_join_leave_message_delete_success', interaction)).format(guild_name=interaction.guild.name if interaction.guild else None))
                 self.write_data(data)
                 disabled_button()
             
-            check_button.callback = check_callback
-            refuse_button.callback = refuse_callback
+            check_button.callback = check_callback # type: ignore
+            refuse_button.callback = refuse_callback # type: ignore
 
             view.add_item(check_button)
             view.add_item(refuse_button)
