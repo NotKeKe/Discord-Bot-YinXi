@@ -123,7 +123,7 @@ class RunKeep:
             return
 
         u = str(uuid.uuid4())
-        self.collection.insert_one({
+        await self.collection.insert_one({
             'createAt': datetime.now().timestamp(),
             'sendAt': keep_time.timestamp(),
             'channelID': channelID,
@@ -166,7 +166,7 @@ async def keepMessage(collection: AsyncIOMotorCollection, channel, user, event: 
 
     reminder_tasks.pop(uuid)
 
-    collection.find_one_and_delete({
+    await collection.find_one_and_delete({
         'uuid': uuid,
         'channelID': channel.id
     })        
