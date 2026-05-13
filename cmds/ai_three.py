@@ -44,7 +44,7 @@ class AIChat(Cog_Extension):
             ctx: commands.Context, 
             prompt: str, 
             model: str = 'ai-local:qwen3-1.7b', 
-            history: str = None, 
+            history: Optional[str] = None, 
             enable_tools: bool = True, 
             image: Optional[discord.Attachment] = None, 
             text_file: Optional[discord.Attachment] = None,
@@ -140,14 +140,14 @@ class AIChat(Cog_Extension):
 
     @commands.hybrid_command(name=locale_str('video_generate'), description=locale_str('video_generate'))
     @app_commands.choices(
-        model=[Choice(name='cogvideox-flash', value='cogvideox-flash')],
-        size = [
+        model=[Choice(name='cogvideox-flash', value='cogvideox-flash')], # type: ignore
+        size = [ # type: ignore
             Choice(name=size, value=size) 
             for size in ('720x480', '1024x1024', '1280x960', '960x1280', '1920x1080', '1080x1920', '2048x1080', '3840x2160')
         ],
-        fps = [
-            Choice(name=30, value=30),
-            Choice(name=60, value=60)
+        fps = [ # type: ignore
+            Choice(name=str(30), value=30),
+            Choice(name=str(60), value=60)
         ]
     )
     @app_commands.describe(
@@ -162,8 +162,8 @@ class AIChat(Cog_Extension):
     async def _video_generate(
             self, ctx: commands.Context, *,
             prompt: str,
-            image_url: str = None,
-            size: str = None,
+            image_url: Optional[str] = None,
+            size: Optional[str] = None,
             fps: int = 60,
             has_audio: bool = True,
             duration: int = 5,

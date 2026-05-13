@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-from typing import Tuple, Union
-from typing import AsyncGenerator
+from typing import Tuple, Union, AsyncGenerator, Optional
 from openai.types.chat import ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
 import orjson
 import logging
@@ -19,11 +18,11 @@ from core.classes import get_bot
 logger = logging.getLogger(__name__)
 
 class Chat:
-    def __init__(self, model: str = None, system_prompt: str = '', ctx: commands.Context = None):
+    def __init__(self, model: Optional[str] = None, system_prompt: str = '', ctx: Optional[commands.Context] = None):
         if not model: model = 'zhipu:glm-4-flash'
         self.model = model.strip()
         self.ctx = ctx
-        self.userID: int = ctx.author.id if ctx else None
+        self.userID: Optional[int] = ctx.author.id if ctx else None
 
         self.client = None
 
@@ -57,7 +56,8 @@ class Chat:
         if not self.userID: return ''
 
         bot = get_bot()
-        name = (bot.get_user(self.userID)).global_name
+        user = bot.get_user(self.userID)
+        name = user.global_name if user else self.userID
         preference = None
         info = None
 
@@ -78,14 +78,14 @@ class Chat:
 
         for tool in tmp_tools_descrip:
             tool_name = tool['function']['name']
-            if type(delete_func_name) == list:
+            if isinstance(delete_func_name, list):
                 if tool_name in delete_func_name:
                     delete_func_name.remove(tool_name)
                     tmp_tools_descrip.remove(tool)
                     
                     if not delete_func_name:
                         break
-            elif type(delete_func_name) == str:
+            elif isinstance(delete_func_name, str):
                 if tool_name == delete_func_name: 
                     tmp_tools_descrip.remove(tool)
                     break
@@ -104,6 +104,8 @@ class Chat:
                     tool_calls.extend([{} for _ in delta.tool_calls])
                 
                 for i, tool_call_chunk in enumerate(delta.tool_calls):
+                    if not tool_call_chunk.function: continue
+
                     if tool_call_chunk.function.name:
                         tool_calls[i]['name'] = tool_call_chunk.function.name
                     if tool_call_chunk.function.arguments:
@@ -137,23 +139,23 @@ class Chat:
             for tool_call in message.tool_calls:
                 tool_calls.append({
                     'id': tool_call.id,
-                    'name': tool_call.function.name,
-                    'arguments': tool_call.function.arguments
+                    'name': tool_call.function.name, # type: ignore
+                    'arguments': tool_call.function.arguments # type: ignore
                 })
 
         if message.content:
             result = message.content
 
         if (hasattr(message, 'reasoning_content')):
-            think = message.reasoning_content
+            think = str(message.reasoning_content)
         elif (hasattr(message, 'reasoning')):
-            think = message.reasoning
+            think = str(message.reasoning)
         else:
             think = get_think(result)
 
         result = clean_text(result)
 
-        total_tokens = response.usage.total_tokens
+        total_tokens = response.usage.total_tokens if response.usage else -1
         
         return think, result, tool_calls, total_tokens
 
@@ -201,7 +203,7 @@ class Chat:
                     raise TypeError("Function arguments must be a dictionary.")
 
                 if is_async(function_to_call):
-                    function_response = await function_to_call(**function_args)
+                    function_response = await function_to_call(**function_args) # type: ignore
                 else:
                     function_response = function_to_call(**function_args)
 
@@ -222,7 +224,7 @@ class Chat:
                 }
             )
 
-    async def process_user_prompt(self, user_prompt: str, image: discord.Attachment = None, text_file: discord.Attachment = None, url: str = None) -> list:
+    async def process_user_prompt(self, user_prompt: str, image: Optional[discord.Attachment] = None, text_file: Optional[discord.Attachment] = None, url: Optional[list] = None) -> list:
         image_content = None
         text_file_content = None
         if text_file:
@@ -240,24 +242,24 @@ class Chat:
         return to_user_message(('\n\n'.join(prompt)).strip())
 
     async def chat(
-                self,
-                prompt: str,
-                is_vision_model: bool = False,
-                model: str = None,
-                temperature: float = 1.0,
-                history: list = None,
-                max_tokens: int = None,
-                is_enable_tools: bool = True,
-                top_p: float = 1.0,
-                delete_tools: Union[str, list] = None,
-                timeout: float = None,
-                url: list = None,
-                image: discord.Attachment = None,
-                text_file: discord.Attachment = None,
-                custom_system_prompt: str = None,
-                tool_choice: str = None,
-                reasoning_effort: str = 'low'
-            ) -> Tuple[str, str, list]:
+            self,
+            prompt: str,
+            is_vision_model: bool = False,
+            model: Optional[str] = None,
+            temperature: float = 1.0,
+            history: Optional[list] = None,
+            max_tokens: Optional[int] = None,
+            is_enable_tools: bool = True,
+            top_p: float = 1.0,
+            delete_tools: Optional[Union[str, list]] = None,
+            timeout: Optional[float] = None,
+            url: Optional[list] = None,
+            image: Optional[discord.Attachment] = None,
+            text_file: Optional[discord.Attachment] = None,
+            custom_system_prompt: Optional[str] = None,
+            tool_choice: Optional[str] = None,
+            reasoning_effort: str = 'low'
+        ) -> Tuple[str, str, list]:
         '''Return think, response, history'''
         if model:
             await self.re_model(model)
@@ -279,7 +281,7 @@ class Chat:
         history += await self.process_user_prompt(prompt, image, text_file, url)
 
         async def call():
-            resp = await self.client.chat.completions.create(
+            resp = await self.client.chat.completions.create( # type: ignore
                 model=self.model,
                 messages=system + history,
                 max_completion_tokens=max_tokens,
