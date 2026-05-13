@@ -19,7 +19,7 @@ import logging
 
 from core.classes import Cog_Extension, get_bot
 from core.functions import create_basic_embed, current_time, is_testing_guild, mongo_db_client, UnixToReadable
-from core.translator import load_translated, locale_str
+from core.translator import load_translated, locale_str, get_translate
 
 from cmds.ai_chat.utils.config import base_url_options
 
@@ -100,9 +100,9 @@ class RunKeep:
         channelID = inter.channel.id
 
         '''i18n'''
-        invalid_format = await self.inter.translate('send_keep_invalid_format')
-        time_passed = await self.inter.translate('send_keep_time_passed')
-        too_far = await self.inter.translate('send_keep_too_far')
+        invalid_format = await get_translate('send_keep_invalid_format', inter)
+        time_passed = await get_translate('send_keep_time_passed', inter)
+        too_far = await get_translate('send_keep_too_far', inter)
         ''''''
 
         try:        #如果使用者輸入錯誤的格式，則返回訊息並結束keep command
@@ -132,7 +132,7 @@ class RunKeep:
         })
 
         '''i18n'''
-        embed_translated = await self.inter.translate('embed_keep_created')
+        embed_translated = await get_translate('embed_keep_created', inter)
         embed_translated: dict = (load_translated(embed_translated))[0]
 
         title = embed_translated.get('title')
@@ -153,10 +153,10 @@ async def keepMessage(collection: AsyncIOMotorCollection, channel, user, event: 
     await asyncio.sleep(delay)
 
     try:
-        await channel.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
+        await channel.send((await get_translate('send_keep_remind', ctx)).format(mention=user.mention, event=event))
     except dc_errors.Forbidden:
         try:
-            await user.send((await bot.tree.translator.get_translate('send_keep_remind')).format(mention=user.mention, event=event))
+            await user.send((await get_translate('send_keep_remind', user)).format(mention=user.mention, event=event))
         except dc_errors.Forbidden:
             ...
         except Exception as e:
@@ -252,7 +252,7 @@ class Keep(Cog_Extension):
         try:
             keep_event = orjson.loads(keep_event)
         except:
-            return await inter.followup.send(await inter.translate('send_del_keep_please_use_slash_command'), ephemeral=True)
+            return await inter.followup.send(await get_translate('send_del_keep_please_use_slash_command', inter), ephemeral=True)
         
         uuid = keep_event[0]
         channelID = keep_event[1]
@@ -265,7 +265,7 @@ class Keep(Cog_Extension):
         task = reminder_tasks.pop(uuid)
         task.cancel()
 
-        await inter.followup.send( (await inter.translate('send_del_keep_cancel_success') ).format(
+        await inter.followup.send( (await get_translate('send_del_keep_cancel_success', inter) ).format(
                 event=doc.get('event', ''), 
                 time=datetime.fromtimestamp(doc.get('sendAt', 0)).strftime('%Y-%m-%d %H:%M')
             ), 
@@ -279,9 +279,9 @@ class Keep(Cog_Extension):
         collection = DB[str(inter.user.id)]
 
         '''i18n'''
-        sendAt_text = await inter.translate('send_show_keep_sendAt_text')
-        event_text = await inter.translate('send_show_keep_event_text')
-        channel_text = await inter.translate('send_show_keep_channel_text')
+        sendAt_text = await get_translate('send_show_keep_sendAt_text', inter)
+        event_text = await get_translate('send_show_keep_event_text', inter)
+        channel_text = await get_translate('send_show_keep_channel_text', inter)
         ''''''
 
         data = ['## Events:']

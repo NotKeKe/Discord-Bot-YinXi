@@ -3,7 +3,7 @@
 import discord
 from discord.ext import commands
 
-from core.translator import locale_str
+from core.translator import locale_str, get_translate
 
 class TicTacToeGame:
     def __init__(self):
@@ -47,7 +47,7 @@ class TicTacToe(commands.Cog):
         self.games[ctx.channel.id] = TicTacToeGame()
         game = self.games[ctx.channel.id]
         '''i18n'''
-        i18n_data = await ctx.interaction.translate('embed_tictactoe_game')
+        i18n_data = await get_translate('embed_tictactoe_game', ctx)
         i18n_data = i18n_data[0]
         ''''''
         embed = discord.Embed(title=i18n_data['title'], description=game.format_board(), color=discord.Color.blue())
@@ -58,7 +58,7 @@ class TicTacToe(commands.Cog):
         view = discord.ui.View()
         
         '''i18n'''
-        button_labels = await ctx.interaction.translate('button_tictactoe_labels')
+        button_labels = await get_translate('button_tictactoe_labels', ctx)
         button_labels = button_labels[0]
         ''''''
 
@@ -87,7 +87,7 @@ class TicTacToe(commands.Cog):
             channel_id, row, col = map(int, custom_id.split("-"))
 
             if channel_id not in self.games:
-                await interaction.response.send_message(await interaction.translate('send_tictactoe_no_game'), ephemeral=True)
+                await interaction.response.send_message(await get_translate('send_tictactoe_no_game', interaction), ephemeral=True)
                 return
 
             game = self.games[channel_id]
@@ -119,7 +119,7 @@ class TicTacToe(commands.Cog):
                 winner = game.check_winner()
                 if winner:
                     '''i18n'''
-                    i18n_data = await interaction.translate('embed_tictactoe_game')
+                    i18n_data = await get_translate('embed_tictactoe_game', interaction)
                     i18n_data = i18n_data[0]
                     ''''''
                     embed = discord.Embed(title=i18n_data['title'], description=i18n_data['winner_description'].format(winner=winner) + f"\n\n{game.format_board()}", color=discord.Color.green())
@@ -128,7 +128,7 @@ class TicTacToe(commands.Cog):
                 else:
                     game.current_player = ":blue_circle:" if game.current_player == ":x:" else ":x:"
                     '''i18n'''
-                    i18n_data = await interaction.translate('embed_tictactoe_game')
+                    i18n_data = await get_translate('embed_tictactoe_game', interaction)
                     i18n_data = i18n_data[0]
                     ''''''
                     embed = discord.Embed(title=i18n_data['title'], description=game.format_board(), color=discord.Color.blue())
@@ -136,7 +136,7 @@ class TicTacToe(commands.Cog):
                     ctx = await self.bot.get_context(interaction)
                     await interaction.response.edit_message(embed=embed, view=await self.create_view(ctx, channel_id))
             else:
-                await interaction.response.send_message(await interaction.translate('send_tictactoe_position_taken'), ephemeral=True)
+                await interaction.response.send_message(await get_translate('send_tictactoe_position_taken', interaction), ephemeral=True)
         except: pass
 
 async def setup(bot):

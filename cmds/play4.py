@@ -17,7 +17,7 @@ from cmds.music_bot.play4.autocomplete import *
 
 from core.classes import Cog_Extension
 from core.functions import KeJCID, create_basic_embed, DC_BOT_PASSED_KEY
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 players: dict[int, Player] = {}
 custom_list_players: dict[int, CustomListPlayer] = {}
@@ -82,14 +82,14 @@ class Music(Cog_Extension):
             async with ctx.typing():
                 member = ctx.guild.get_member(ctx.author.id) or await ctx.guild.fetch_member(ctx.author.id) if ctx.guild else None
                 if not member:
-                    return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
+                    return await ctx.send(await get_translate('send_play_not_in_guild', ctx))
 
                 if not member.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
                 if not ctx.voice_client:
                     await member.voice.channel.connect()
 
                 if ctx.voice_client.is_paused(): return await ctx.invoke(self.bot.get_command('resume'))
-                elif not query: return await ctx.send(await ctx.interaction.translate('send_play_no_query'))
+                elif not query: return await ctx.send(await get_translate('send_play_no_query', ctx))
                 if players.get(ctx.guild.id): return await ctx.invoke(self.bot.get_command('add'), query=query)
 
                 player = Player(ctx)
@@ -99,7 +99,7 @@ class Music(Cog_Extension):
                 await send_info_embed(player, ctx)
         except:
             traceback.print_exc()
-            await ctx.send(await ctx.interaction.translate('send_play_error'))
+            await ctx.send(await get_translate('send_play_error', ctx))
             if ctx.guild.id in players:
                 del players[ctx.guild.id]
 
@@ -112,19 +112,19 @@ class Music(Cog_Extension):
             if not member:
                 return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
 
-            if not member.voice: return await ctx.send(await ctx.interaction.translate('send_add_not_in_voice'))
-            if not ctx.voice_client: return await ctx.send(await ctx.interaction.translate('send_add_use_play_first'))
-            if member.voice.channel != ctx.voice_client.channel: return await ctx.send((await ctx.interaction.translate('send_add_not_in_same_channel')).format(channel_mention=ctx.guild.voice_client.channel.mention))
+            if not member.voice: return await ctx.send(await get_translate('send_add_not_in_voice', ctx))
+            if not ctx.voice_client: return await ctx.send(await get_translate('send_add_use_play_first', ctx))
+            if member.voice.channel != ctx.voice_client.channel: return await ctx.send((await get_translate('send_add_not_in_same_channel', ctx)).format(channel_mention=ctx.guild.voice_client.channel.mention))
 
             try:
                 player: Player = players.get(ctx.guild.id)
-                if not player: return await ctx.send(await ctx.interaction.translate('send_add_player_crashed'))
+                if not player: return await ctx.send(await get_translate('send_add_player_crashed', ctx))
 
                 data = await player.add(query, ctx)
                 size = data[0]
 
                 await send_info_embed(player, ctx, size-1)
-                await ctx.send((await ctx.interaction.translate('send_add_success')).format(size=size), ephemeral=True)
+                await ctx.send((await get_translate('send_add_success', ctx)).format(size=size), ephemeral=True)
             except:
                 traceback.print_exc()
 
@@ -134,7 +134,7 @@ class Music(Cog_Extension):
             player, status = await check_and_get_player(ctx)
             if not status: return
 
-            if not (await player.skip()): return await ctx.send(await ctx.interaction.translate('send_skip_no_more_songs'))
+            if not (await player.skip()): return await ctx.send(await get_translate('send_skip_no_more_songs', ctx))
 
             await send_info_embed(player, ctx)
 
@@ -144,7 +144,7 @@ class Music(Cog_Extension):
             player, status = await check_and_get_player(ctx)
             if not status: return
             
-            if not (await player.back()): return await ctx.send(await ctx.interaction.translate('send_back_no_more_songs'))
+            if not (await player.back()): return await ctx.send(await get_translate('send_back_no_more_songs', ctx))
 
             await send_info_embed(player, ctx)
 
@@ -172,11 +172,11 @@ class Music(Cog_Extension):
             if not member:
                 return await ctx.send(await ctx.interaction.translate('send_play_not_in_guild'))
             
-            if not (member.voice and ctx.voice_client): return await ctx.send(await ctx.interaction.translate('send_stop_not_in_voice'))
-            if member.voice.channel != ctx.voice_client.channel: return await ctx.send(await ctx.interaction.translate('send_stop_not_in_same_channel'))
+            if not (member.voice and ctx.voice_client): return await ctx.send(await get_translate('send_stop_not_in_voice', ctx))
+            if member.voice.channel != ctx.voice_client.channel: return await ctx.send(await get_translate('send_stop_not_in_same_channel', ctx))
             channel = ctx.voice_client.channel
             await utils.leave(ctx)
-            await ctx.send((await ctx.interaction.translate('send_stop_success')).format(channel_mention=channel.mention))
+            await ctx.send((await get_translate('send_stop_success', ctx)).format(channel_mention=channel.mention))
 
     @commands.hybrid_command(name=locale_str('loop'), description=locale_str('loop'))
     @app_commands.choices(loop_type = [Choice(name=item, value=item) for item in loop_option])
@@ -184,7 +184,7 @@ class Music(Cog_Extension):
     async def _loop(self, ctx: commands.Context, loop_type: str = None):
         async with ctx.typing():
             loop_option_str = ', '.join(loop_option)
-            if loop_type not in loop_option and loop_type is not None: return await ctx.send((await ctx.interaction.translate('send_loop_invalid_type')).format(loop_option_str=loop_option_str))
+            if loop_type not in loop_option and loop_type is not None: return await ctx.send((await get_translate('send_loop_invalid_type', ctx)).format(loop_option_str=loop_option_str))
 
             player, status = await check_and_get_player(ctx)
             if not status: return
@@ -194,7 +194,7 @@ class Music(Cog_Extension):
             else:
                 loop_type = player.turn_loop()
 
-            await ctx.send((await ctx.interaction.translate('send_loop_success')).format(loop_type=loop_type))
+            await ctx.send((await get_translate('send_loop_success', ctx)).format(loop_type=loop_type))
 
     @commands.hybrid_command(name=locale_str('nowplaying'), description=locale_str('nowplaying'), aliases=['np', '當前播放', 'now'])
     async def current_playing(self, ctx: commands.Context):
@@ -223,7 +223,7 @@ class Music(Cog_Extension):
 
             item = player.delete_song(number - 1)
 
-            await ctx.send((await ctx.interaction.translate('send_remove_success')).format(title=item.get('title'), user_name=item.get('user').global_name))
+            await ctx.send((await get_translate('send_remove_success', ctx)).format(title=item.get('title'), user_name=item.get('user').global_name))
 
     @commands.hybrid_command(name=locale_str('clear'), description=locale_str('clear'), aliases=['cq', '清除'])
     async def clear_queue(self, ctx: commands.Context):
@@ -231,29 +231,29 @@ class Music(Cog_Extension):
             async with ctx.typing():
                 player, status = await check_and_get_player(ctx)
                 if not status: return
-                if not player.list: return await ctx.send(await ctx.interaction.translate('send_clear_already_empty'))
+                if not player.list: return await ctx.send(await get_translate('send_clear_already_empty', ctx))
 
                 view = discord.ui.View(timeout=60)
-                button_check = discord.ui.Button(emoji='✅', label=await ctx.interaction.translate('send_clear_confirm_button'), style=discord.ButtonStyle.green)
+                button_check = discord.ui.Button(emoji='✅', label=await get_translate('send_clear_confirm_button', ctx), style=discord.ButtonStyle.green)
                 async def clear_queue_callback(interaction: discord.Interaction):
                     player.clear_list()
                     button_reject.disabled = True
                     button_check.disabled = True
-                    await interaction.response.edit_message(content=await interaction.translate('send_clear_success'), embed=None, view=None)
+                    await interaction.response.edit_message(content=await get_translate('send_clear_success', interaction), embed=None, view=None)
                 button_check.callback = clear_queue_callback
 
-                button_reject = discord.ui.Button(emoji='❌', label=await ctx.interaction.translate('send_clear_reject_button'), style=discord.ButtonStyle.red)
+                button_reject = discord.ui.Button(emoji='❌', label=await get_translate('send_clear_reject_button', ctx), style=discord.ButtonStyle.red)
                 async def button_reject_callback(interaction: discord.Interaction):
                     button_reject.disabled = True
                     button_check.disabled = True
-                    await interaction.response.edit_message(content=await interaction.translate('send_clear_cancelled'), embed=None, view=None)
+                    await interaction.response.edit_message(content=await get_translate('send_clear_cancelled', interaction), embed=None, view=None)
                 button_reject.callback = button_reject_callback
 
                 view.add_item(button_check)
                 view.add_item(button_reject)
 
                 '''i18n'''
-                eb = load_translated((await ctx.interaction.translate('embed_clear_confirm')))[0]
+                eb = load_translated((await get_translate('embed_clear_confirm', ctx)))[0]
                 title = eb.get('title')
                 ''''''
 
@@ -272,11 +272,11 @@ class Music(Cog_Extension):
     async def lyrics_search(self, ctx: commands.Context, query: str, artist: str = None, lrc: bool = False):
         async with ctx.typing():
             result = await search_lyrics(query, artist, lrc)
-            await ctx.send(result if result else await ctx.interaction.translate('send_lyrics_not_found'))
+            await ctx.send(result if result else await get_translate('send_lyrics_not_found', ctx))
 
             if not isinstance(result, str): return
 
-            if len(result.splitlines()) < 10: await ctx.send(await ctx.interaction.translate('send_lyrics_too_short_tip'), ephemeral=True)
+            if len(result.splitlines()) < 10: await ctx.send(await get_translate('send_lyrics_too_short_tip', ctx), ephemeral=True)
 
     @commands.hybrid_command(name=locale_str('volume'), description=locale_str('volume'))
     @app_commands.describe(volume=locale_str('volume_volume'))
@@ -288,7 +288,7 @@ class Music(Cog_Extension):
             if volume:
                 await player.volume_adjust(volume=volume / 100)
 
-            await ctx.send(await ctx.interaction.translate('send_volume_buttons_title'), view=VolumeControlButtons(player))
+            await ctx.send(await get_translate('send_volume_buttons_title', ctx), view=VolumeControlButtons(player))
 
     @commands.hybrid_command(name=locale_str('play_custom_list'), description=locale_str('play_custom_list'))
     @app_commands.autocomplete(list_name=custom_play_list_autocomplete)
@@ -300,7 +300,7 @@ class Music(Cog_Extension):
 
             if not member.voice: return await ctx.send(await ctx.interaction.translate('send_play_not_in_voice'))
             if players.get(ctx.guild.id): # 不讓使用者同時播放兩個 list，或是自訂歌曲 + 自訂歌單
-                return await ctx.send(await ctx.interaction.translate('send_play_custom_list_already_playing_left_first'))
+                return await ctx.send(await get_translate('send_play_custom_list_already_playing_left_first', ctx))
             if not ctx.voice_client:
                 await member.voice.channel.connect()
 
@@ -323,7 +323,7 @@ class Music(Cog_Extension):
     async def add_custom_list(self, ctx: commands.Context, url: str, list_name: str):
         async with ctx.typing():
             result = await add_to_custom_list(url, list_name, ctx.author.id)
-            await ctx.send(result if result is not True else (await ctx.interaction.translate('send_add_to_custom_list_success')).format(list_name=list_name))
+            await ctx.send(result if result is not True else (await get_translate('send_add_to_custom_list_success', ctx)).format(list_name=list_name))
 
     @commands.hybrid_command(name=locale_str('show_custom_list'), description=locale_str('show_custom_list'))
     @app_commands.autocomplete(list_name=custom_play_list_autocomplete)
@@ -346,21 +346,21 @@ class Music(Cog_Extension):
 
                 await del_custom_list(list_name, interaction.user.id)
 
-                await interaction.response.edit_message(content=await interaction.translate('send_delete_custom_list_success'), embed=None, view=None)
+                await interaction.response.edit_message(content=await get_translate('send_delete_custom_list_success', interaction), embed=None, view=None)
             button_check.callback = button_check_callback
 
             button_reject = discord.ui.Button(emoji='❌', label='No', style=discord.ButtonStyle.red)
             async def button_reject_callback(interaction: discord.Interaction):
                 button_reject.disabled = True
                 button_check.disabled = True
-                await interaction.response.edit_message(content=await interaction.translate('send_delete_custom_list_cancelled'), embed=None, view=None)
+                await interaction.response.edit_message(content=await get_translate('send_delete_custom_list_cancelled', interaction), embed=None, view=None)
             button_reject.callback = button_reject_callback
 
             view.add_item(button_check)
             view.add_item(button_reject)
 
             '''i18n'''
-            eb = load_translated((await ctx.interaction.translate('embed_clear_confirm')))[0]
+            eb = load_translated((await get_translate('embed_clear_confirm', ctx)))[0]
             title = eb.get('title')
             ''''''
 
@@ -382,11 +382,11 @@ class Music(Cog_Extension):
                     )
 
                 if resp.status_code != 200:
-                    await ctx.send((await ctx.interaction.translate('send_clear_play_web_error')).format(err=f'{resp.status_code} {resp.text}'))
+                    await ctx.send((await get_translate('send_clear_play_web_error', ctx)).format(err=f'{resp.status_code} {resp.text}'))
                 else:
-                    await ctx.send(await ctx.interaction.translate('send_clear_play_web_success'))
+                    await ctx.send(await get_translate('send_clear_play_web_success', ctx))
             except Exception as e:
-                await ctx.send((await ctx.interaction.translate('send_clear_play_web_error')).format(err=e))
+                await ctx.send((await get_translate('send_clear_play_web_error', ctx)).format(err=e))
                 traceback.print_exc()
 
     @commands.command(name='show_players')

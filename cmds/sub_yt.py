@@ -15,7 +15,7 @@ from cmds.music_bot.play4.utils import is_url, get_video_id
 
 from core.functions import create_basic_embed, redis_client
 from core.classes import Cog_Extension
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 from core.mongodb import MongoDB_DB
 from core.scrapetube import scrapetube
 
@@ -165,9 +165,9 @@ class SubYT(Cog_Extension):
     async def sub_yt(self, ctx: commands.Context, url: str):
         async with ctx.typing():
             url = url.strip()
-            if not is_url(url): return await ctx.send(await ctx.interaction.translate('send_sub_yt_invalid_url'), ephemeral=True)
+            if not is_url(url): return await ctx.send(await get_translate('send_sub_yt_invalid_url', ctx), ephemeral=True)
             channel_name = await get_channel_name(url)
-            if not (channel_name): return await ctx.send(await ctx.interaction.translate('send_sub_yt_cannot_found_ytb'), ephemeral=True)
+            if not (channel_name): return await ctx.send(await get_translate('send_sub_yt_cannot_found_ytb', ctx), ephemeral=True)
 
             collection = db[str(ctx.channel.id)]
             exist = await collection.find_one({'sub_url': url})
@@ -175,7 +175,7 @@ class SubYT(Cog_Extension):
 
             await collection.insert_one({'sub_url': url, 'channelName': channel_name, 'createAt': datetime.now().timestamp()})
 
-            await ctx.send( (await ctx.interaction.translate('send_sub_yt_successfully_save') ).format( ytb = (await get_channel_name(url) )))
+            await ctx.send( (await get_translate('send_sub_yt_successfully_save', ctx) ).format( ytb = (await get_channel_name(url) )))
             asyncio.create_task(add_to_all(url))
 
         # initial_videos = await asyncio.to_thread(fetch_video_ids, [url])
@@ -203,7 +203,7 @@ class SubYT(Cog_Extension):
                 collection = db[str(ctx.channel.id)]
                 d = await collection.find_one_and_delete({'sub_url': ytb})
 
-                await ctx.send((await ctx.interaction.translate('send_sub_yt_cancel_successfully')).format(name=d.get('channelName'), url=d.get('sub_url')))
+                await ctx.send((await get_translate('send_sub_yt_cancel_successfully', ctx)).format(name=d.get('channelName'), url=d.get('sub_url')))
             except:
                 logger.error('Error accured at sub_yt_cancel: ', exc_info=True)
                 await ctx.send('Cannot cancel the YouTuber, please /report this issue')
@@ -212,7 +212,7 @@ class SubYT(Cog_Extension):
     async def sub_yt_list(self, ctx: commands.Context):
         async with ctx.typing():
             '''i18n'''
-            eb = await ctx.interaction.translate('embed_sub_yt_list')
+            eb = await get_translate('embed_sub_yt_list', ctx)
             eb = load_translated(eb)[0]
             author: str = eb.get('author')
             ''''''
@@ -302,7 +302,7 @@ class SubYT(Cog_Extension):
                     if (datetime.now() - publish_time).total_seconds() > 60*60*24*2: # 大於2天
                         continue
 
-                    sent_message: str = await self.bot.tree.translator.get_translate('send_sub_yt_new_video', lang_code=preferred_lang)
+                    sent_message: str = await get_translate('send_sub_yt_new_video', preferred_lang)
                     await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url)))          
 
 

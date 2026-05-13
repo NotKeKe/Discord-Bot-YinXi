@@ -17,7 +17,7 @@ from cmds.AIsTwo.utils import image_url_to_base64
 
 from core.classes import Cog_Extension
 from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow, testing_guildID, image_to_base64
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 # get env
 load_dotenv()
@@ -45,7 +45,7 @@ class Main(Cog_Extension):
         '''
         async with ctx.typing():
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_owner_id')
+            eb_template = await get_translate('embed_owner_id', ctx)
             eb_data = load_translated(eb_template)[0]
             author_name = eb_data.get('author')
             title = eb_data.get('title')
@@ -66,7 +66,7 @@ class Main(Cog_Extension):
         '''
         async with ctx.typing():
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_ping')
+            eb_template = await get_translate('embed_ping', ctx)
             eb_data = load_translated(eb_template)[0]
             title = eb_data.get('title')
             description = eb_data.get('description').format(latency=round(self.bot.latency*1000))
@@ -94,7 +94,7 @@ class Main(Cog_Extension):
             try:
                 embed=discord.Embed(title=member, color=member.color).set_image(url=member.avatar.url)
             except:
-                await ctx.send((await ctx.interaction.translate('send_avatar_no_avatar')).format(member_name=member.display_name))
+                await ctx.send((await get_translate('send_avatar_no_avatar', ctx)).format(member_name=member.display_name))
                 return
             
             await ctx.send(embed=embed)
@@ -105,7 +105,7 @@ class Main(Cog_Extension):
         async with ctx.typing():
             channel = ctx.guild.system_channel
             if channel is None:
-                await ctx.send(await ctx.interaction.translate('send_get_system_channel_no_system_channel'))
+                await ctx.send(await get_translate('send_get_system_channel_no_system_channel', ctx))
             else:
                 await ctx.send(channel.mention)
 
@@ -126,7 +126,7 @@ class Main(Cog_Extension):
     @commands.hybrid_command(name=locale_str('server_info'), description=locale_str('server_info'))
     async def get_server_info(self, ctx: commands.Context):
         async with ctx.typing():
-            if not ctx.guild: return await ctx.send(await ctx.interaction.translate('send_server_info_not_in_guild'))
+            if not ctx.guild: return await ctx.send(await get_translate('send_server_info_not_in_guild', ctx))
 
             name = ctx.guild.name
             id = ctx.guild.id
@@ -140,7 +140,7 @@ class Main(Cog_Extension):
             system_channel = ctx.guild.system_channel or 'None'
 
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_server_info')
+            eb_template = await get_translate('embed_server_info', ctx)
             eb_data = load_translated(eb_template)[0]
             title = eb_data.get('title').format(guild_name=name)
             fields = eb_data.get('fields')
@@ -157,7 +157,7 @@ class Main(Cog_Extension):
     async def unixSecondToReadalbe(self, ctx: commands.Context, unix_second: str):
         async with ctx.typing():
             try: unix_second = float(unix_second)
-            except: return await ctx.send(await ctx.interaction.translate('send_convert_timestamp_invalid_number'))
+            except: return await ctx.send(await get_translate('send_convert_timestamp_invalid_number', ctx))
             readable = UnixToReadable(unix_second)
             await ctx.send(readable)
 
@@ -167,7 +167,7 @@ class Main(Cog_Extension):
     async def high_school_totalScore_calculate(self, ctx: commands.Context, 國文: float = 0.0, 英文: float = 0.0, 數學: float = 0.0, 化學: float = 0.0, 生物: float = 0.0, 物理: float = 0.0, 歷史: float = 0.0, 地理: float = 0.0, 公民: float = 0.0, 體育: float = 0.0, image: discord.Attachment = None, prompt: str = None):
         async with ctx.typing():
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_tw_high_school_score_calculator')
+            eb_template = await get_translate('embed_tw_high_school_score_calculator', ctx)
             eb_data = load_translated(eb_template)[0]
             title = eb_data.get('title')
             fields = eb_data.get('fields')
@@ -184,7 +184,7 @@ class Main(Cog_Extension):
                 eb.add_field(name=unweighted_field_name, value=f'`{total}`')
                 await ctx.send(embed=eb)
             else:
-                if not prompt: return await ctx.send(await ctx.interaction.translate('send_tw_high_school_score_calculator_no_prompt'), ephemeral=True)
+                if not prompt: return await ctx.send(await get_translate('send_tw_high_school_score_calculator_no_prompt', ctx), ephemeral=True)
                 os.makedirs('./data/upload', exist_ok=True)
                 path = f'./data/upload/{ctx.author.id}_{UnixNow()}_{uuid.uuid4()}.jpg'
                 absolute_path = os.path.abspath(path)
@@ -207,14 +207,14 @@ class Main(Cog_Extension):
     async def _lang(self, ctx: commands.Context, lang: str):
         async with ctx.typing():
             if lang not in ('en-US', 'zh-TW', 'zh-CN'):
-                return await ctx.send(await ctx.interaction.translate('send_lang_invalid_lang'))
+                return await ctx.send(await get_translate('send_lang_invalid_lang', ctx))
             
             async with aiosqlite.connect('./data/user_lang.db') as db:
                 cursor = await db.execute('SELECT lang FROM users WHERE user_id = ?', (ctx.author.id,))
                 result = await cursor.fetchone()
                 if result: pre = result[0]
                 else: pre = None
-                if pre == lang: return await ctx.send((await ctx.interaction.translate('send_lang_same_lang')).format(lang=lang))
+                if pre == lang: return await ctx.send((await get_translate('send_lang_same_lang', ctx)).format(lang=lang))
 
                 await db.execute('''INSERT INTO users (user_id, lang)
                                     VALUES (?, ?)
@@ -223,7 +223,7 @@ class Main(Cog_Extension):
                                 ''', (ctx.author.id, lang))
                 await db.commit()
 
-            await ctx.send((await ctx.interaction.translate('send_lang_success')).format(lang=lang), ephemeral=True)
+            await ctx.send((await get_translate('send_lang_success', ctx)).format(lang=lang), ephemeral=True)
 
     @commands.hybrid_command(name=locale_str('image_to_base64'), description=locale_str('image_to_base64'))
     async def _to_base64(self, ctx: commands.Context, image_url: str):

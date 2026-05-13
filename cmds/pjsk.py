@@ -14,7 +14,7 @@ from motor.motor_asyncio import AsyncIOMotorCursor
 import re
 
 from core.mongodb import MongoDB_DB
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 from core.functions import create_basic_embed, UnixToReadable
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ async def create_info_embed(ctx: commands.Context, cursor: AsyncIOMotorCursor):
     eb_text = load_translated(
         (await ctx.interaction.translate('embed_pjsk_global_full_info')) 
         if ctx.interaction else 
-        (await ctx.bot.tree.translator.get_translate('embed_pjsk_global_full_info', ctx.guild.preferred_locale.value))
+        (await get_translate('embed_pjsk_global_full_info', ctx.guild.preferred_locale.value if ctx.guild else 'zh-TW'))
     )[0]
     footer = eb_text.get('footer')
     descrip = eb_text.get('description')
@@ -127,7 +127,7 @@ class PJSK(commands.Cog):
         combo=locale_str('pjsk_search_song_combo')
     )
     async def search_song(self, ctx: commands.Context, name: str = None, num: int = 5, level: int = None, combo: int = None):
-        if not (name or level or combo): return await ctx.send(await ctx.interaction.translate('send_pjsk_search_song_no_param'))
+        if not (name or level or combo): return await ctx.send(await get_translate('send_pjsk_search_song_no_param', ctx))
         await ctx.defer()
         
         '''Copilot(with GPT5) did this'''
@@ -192,7 +192,7 @@ class PJSK(commands.Cog):
                 eb_text = load_translated(
                     (await ctx.interaction.translate('embed_pjsk_search_song_short_info')) 
                     if ctx.interaction else 
-                    (await self.bot.tree.translator.get_translate('embed_pjsk_search_song_short_info', ctx.guild.preferred_locale.value))
+                    (await get_translate('embed_pjsk_search_song_short_info', ctx.guild.preferred_locale.value if ctx.guild else 'zh-TW'))
                 )[0]
                 footer = eb_text.get('footer')
                 descrip = eb_text.get('description')
@@ -225,7 +225,7 @@ class PJSK(commands.Cog):
 
             if not is_in_col:
                 await self.send_channels_collection.insert_one({'channelID': ctx.channel.id, 'createAt': datetime.now().timestamp()})
-                await ctx.send(await ctx.interaction.translate('send_pjsk_new_song_notify_opened'))
+                await ctx.send(await get_translate('send_pjsk_new_song_notify_opened', ctx))
                 return
 
             button_check = discord.ui.Button(label='Yes', style=discord.ButtonStyle.blurple, emoji='✅')
@@ -237,12 +237,12 @@ class PJSK(commands.Cog):
                 
                 await self.send_channels_collection.find_one_and_delete({'channelID': ctx.channel.id})
 
-                await inter.followup.send(await inter.translate('send_pjsk_new_song_notify_delete_success'), ephemeral=True)
+                await inter.followup.send(await get_translate('send_pjsk_new_song_notify_delete_success', inter), ephemeral=True)
                 await msg.edit(view=None)
             async def button_refuse_callback(inter: Interaction):
                 await inter.response.defer()
                 msg = inter.message
-                await inter.followup.send(await inter.translate('send_pjsk_new_song_notify_delete_cancel'), ephemeral=True)
+                await inter.followup.send(await get_translate('send_pjsk_new_song_notify_delete_cancel', inter), ephemeral=True)
                 await msg.edit(view=None)
 
 
@@ -254,7 +254,7 @@ class PJSK(commands.Cog):
             view.add_item(button_refuse)
 
             '''i18n'''
-            eb = load_translated(await ctx.interaction.translate('embed_pjsk_new_song_notify_delete'))[0]
+            eb = load_translated(await get_translate('embed_pjsk_new_song_notify_delete', ctx))[0]
             eb_title = eb.get('title')
             ''''''
 
@@ -348,7 +348,7 @@ class PJSK(commands.Cog):
                     lang = channel.guild.preferred_locale.value if hasattr(channel, 'guild') and channel.guild else None # type: ignore
 
                     '''i18n'''
-                    eb_text = load_translated(await self.bot.tree.translator.get_translate('embed_pjsk_global_full_info', lang))[0] # type: ignore
+                    eb_text = load_translated(await get_translate('embed_pjsk_global_full_info', lang))[0] # type: ignore
                     footer = eb_text.get('footer')
                     descrip = eb_text.get('description')
                     ''''''

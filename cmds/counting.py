@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands, tasks
 
 from core.functions import read_json, write_json, create_basic_embed, math_round
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 from core.classes import Cog_Extension
 
 PATH = './cmds/data.json/counting.json'
@@ -65,7 +65,7 @@ class Counting(Cog_Extension):
 
         '''i18n'''
         locale = message.guild.preferred_locale.value if message.guild else 'zh-TW'
-        eb_template_str = await self.bot.tree.translator.get_translate('embed_counting_error', locale)
+        eb_template_str = await get_translate('embed_counting_error', locale)
         eb_data = load_translated(eb_template_str)[0]
         ''''''
 
@@ -107,8 +107,8 @@ class Counting(Cog_Extension):
     async def counting(self, ctx: commands.Context):
         async with ctx.typing():
             '''i18n'''
-            already_counting_str = await ctx.interaction.translate('send_counting_already_counting')
-            set_success_str = await ctx.interaction.translate('send_counting_set_success')
+            already_counting_str = await get_translate('send_counting_already_counting', ctx)
+            set_success_str = await get_translate('send_counting_set_success', ctx)
             ''''''
 
             self.initdata()

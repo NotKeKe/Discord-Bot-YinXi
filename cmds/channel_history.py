@@ -9,7 +9,7 @@ from textwrap import dedent
 import io
 
 from core.classes import Cog_Extension
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 PATH = './data/temp'
 
@@ -73,7 +73,7 @@ class ChannelHistories:
         else:
             result = []
 
-            i18n_data = await self.ctx.interaction.translate('send_channel_history_file_template')
+            i18n_data = await get_translate('send_channel_history_file_template', self.ctx)
             i18n_data = load_translated(i18n_data)[0]
             
             author_str = i18n_data.get('author', '作者')
@@ -158,9 +158,9 @@ class ChannelHistory(Cog_Extension):
     async def output_chat_history(self, ctx: commands.Context, count: int = 10, file_type: str = 'json', reverse: bool = False, content_only: bool = False):
         async with ctx.typing():
             if not ctx.channel.permissions_for(ctx.author).read_messages or not ctx.channel.permissions_for(ctx.author).read_message_history:
-                return await ctx.send(await ctx.interaction.translate('send_output_chat_history_no_read_permission'))
+                return await ctx.send(await get_translate('send_output_chat_history_no_read_permission', ctx))
             if not ctx.channel.permissions_for(ctx.me).read_message_history:
-                return await ctx.send(await ctx.interaction.translate('send_output_chat_history_bot_no_read_permission'))
+                return await ctx.send(await get_translate('send_output_chat_history_bot_no_read_permission', ctx))
 
             ch = ChannelHistories(ctx, count, file_type, reverse, content_only)
             file = await ch.run()

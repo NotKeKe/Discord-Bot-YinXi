@@ -11,7 +11,7 @@ import traceback
 
 from core.classes import Cog_Extension, bot
 from core.functions import create_basic_embed
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 # get env
 load_dotenv()
@@ -36,8 +36,8 @@ class CommandSelectView(discord.ui.View):
             await interaction.response.defer()
             
             '''i18n'''
-            no_desc_str = await interaction.translate('send_bot_info_help_command_no_description')
-            error_str = await interaction.translate('send_bot_info_help_view_error')
+            no_desc_str = await get_translate('send_bot_info_help_command_no_description', interaction)
+            error_str = await get_translate('send_bot_info_help_view_error', interaction)
             ''''''
             
             value = select.values[0]
@@ -69,12 +69,12 @@ class CogSelectView(discord.ui.View):
     async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select) :
         try:
             '''i18n'''
-            cog_no_commands_str = await interaction.translate('send_bot_info_help_cog_no_commands')
-            eb_template = await interaction.translate('embed_help_cog')
+            cog_no_commands_str = await get_translate('send_bot_info_help_cog_no_commands', interaction)
+            eb_template = await get_translate('embed_help_cog', interaction)
             eb_data = load_translated(eb_template)[0]
             embed_title_str = eb_data.get('title')
-            more_commands_str = await interaction.translate('send_bot_info_help_more_commands_cannot_display')
-            error_str = await interaction.translate('send_bot_info_help_view_error')
+            more_commands_str = await get_translate('send_bot_info_help_more_commands_cannot_display', interaction)
+            error_str = await get_translate('send_bot_info_help_view_error', interaction)
             ''''''
 
             # Cog name
@@ -147,9 +147,9 @@ class Bot_Info_and_Help(Cog_Extension):
         '''為什麼你需要幫助:thinking:'''
         async with ctx.typing():
             '''i18n'''
-            eb_data = await ctx.interaction.translate('embed_botinfo_info')
+            eb_data = await get_translate('embed_botinfo_info', ctx)
             eb_data = load_translated(eb_data)[0]
-            button_label = await ctx.interaction.translate('button_botinfo_command_intro_label')
+            button_label = await get_translate('button_botinfo_command_intro_label', ctx)
             ''''''
 
             cogs_list = ", ".join(sorted([cogname for cogname in self.bot.cogs]))
@@ -196,11 +196,11 @@ class Bot_Info_and_Help(Cog_Extension):
     async def help_test(self, ctx: commands.Context, cog_name: str = None, cmd_name: str = None):
         async with ctx.typing():
             '''i18n'''
-            no_desc_str = await ctx.interaction.translate('send_bot_info_help_command_no_description')
+            no_desc_str = await get_translate('send_bot_info_help_command_no_description', ctx)
             ''''''
 
             if cog_name == cmd_name == None:
-                eb_data = await ctx.interaction.translate('embed_help_main')
+                eb_data = await get_translate('embed_help_main', ctx)
                 eb_data = load_translated(eb_data)[0]
                 
                 eb = create_basic_embed(color=ctx.author.color, 功能=eb_data.get('author'))
@@ -218,7 +218,7 @@ class Bot_Info_and_Help(Cog_Extension):
                 total_cmds = len(cmds)
                 
                 '''i18n'''
-                eb_template = await ctx.interaction.translate('embed_help_cog')
+                eb_template = await get_translate('embed_help_cog', ctx)
                 eb_data = load_translated(eb_template)[0]
                 desc_str = eb_data.get('description')
                 field_template = eb_data.get('fields')[0]

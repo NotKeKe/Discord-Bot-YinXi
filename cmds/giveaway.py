@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from core.functions import read_json, write_json
 from core.classes import Cog_Extension
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 path = './cmds/data.json/giveaway.json'
 
@@ -57,7 +57,7 @@ async def start(data, message_id):
     # 取得 winner
     winners = data[str(message_id)]['Participants']
     if not winners:
-        value = await bot.get_user(bot.user.id).translate('send_giveaway_no_winner')
+        value = await get_translate('send_giveaway_no_winner', bot.get_user(bot.user.id))
     else:
         winner_id = random.sample(winners, data[message_id]['WinnerTotal'] if len(winners) >= data[message_id]['WinnerTotal'] else len(winners))
         winner = [await bot.fetch_user(winner) for winner in winner_id]
@@ -71,7 +71,7 @@ async def start(data, message_id):
 
     # Embed
     '''i18n'''
-    eb_template = await bot.get_user(bot.user.id).translate('embed_giveaway_end')
+    eb_template = await get_translate('embed_giveaway_end', bot.get_user(bot.user.id))
     eb_data = load_translated(eb_template)[0]
     winner_field_name = eb_data.get('fields')[0].get('name')
     footer_text = eb_data.get('footer')
@@ -80,7 +80,7 @@ async def start(data, message_id):
     embed=discord.Embed(title=data[message_id]['Prize'], color=author.color, timestamp=datetime.now())
     embed.add_field(name=winner_field_name, value=value, inline=False)
     embed.set_footer(text=footer_text.format(winners_total=data[message_id]['WinnersTotal'], count=count))
-    await message.edit(content=(await bot.get_user(bot.user.id).translate('send_giveaway_ended_message')).format(mention=author.mention, winner=value), embed=embed, view=None)
+    await message.edit(content=(await get_translate('send_giveaway_ended_message', bot.get_user(bot.user.id))).format(mention=author.mention, winner=value), embed=embed, view=None)
 
     del data[str(message.id)]
 
@@ -100,18 +100,18 @@ async def button_callback(interaction: discord.Interaction):
         # 更改embed
         count -= 1
         #傳送取消訊息給user
-        await interaction.response.send_message(content=await interaction.translate('send_giveaway_left'), ephemeral=True)
+        await interaction.response.send_message(content=await get_translate('send_giveaway_left', interaction), ephemeral=True)
     else:
         # 更改json
         data[str(interaction.message.id)]['Participants'].append(interaction.user.id)
         # 更改embed
         count += 1
         # 傳送取消訊息給user
-        await interaction.response.send_message(content=await interaction.translate('send_giveaway_joined'), ephemeral=True)
+        await interaction.response.send_message(content=await get_translate('send_giveaway_joined', interaction), ephemeral=True)
 
     # 更新Embed
     '''i18n'''
-    eb_template = await interaction.translate('embed_giveaway_start')
+    eb_template = await get_translate('embed_giveaway_start', interaction)
     eb_data = load_translated(eb_template)[0]
     participants_field_name = eb_data.get('fields')[1].get('name')
     ''''''
@@ -137,21 +137,21 @@ class Giveaway(Cog_Extension):
         try:        #如果使用者輸入錯誤的格式，則返回訊息並結束keep command
             keep_time = datetime.strptime(f'{date} {time}', '%Y-%m-%d %H:%M')
         except Exception:
-            await ctx.send(await ctx.interaction.translate('send_giveaway_invalid_format'), ephemeral=True)
+            await ctx.send(await get_translate('send_giveaway_invalid_format', ctx), ephemeral=True)
             return
         try:
             now = datetime.now()
             delay = (keep_time - now).total_seconds()
 
             if delay <= 0:      #如果使用者輸入現在或過去的時間，則返回訊息並結束keep command
-                await ctx.send((await ctx.interaction.translate('send_giveaway_time_passed')).format(mention=ctx.author.mention), ephemeral=True)
+                await ctx.send((await get_translate('send_giveaway_time_passed', ctx)).format(mention=ctx.author.mention), ephemeral=True)
                 return
             if delay > 31557600000:
-                await ctx.send(await ctx.interaction.translate('send_giveaway_too_far'))
+                await ctx.send(await get_translate('send_giveaway_too_far', ctx))
                 return
             
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_giveaway_start')
+            eb_template = await get_translate('embed_giveaway_start', ctx)
             eb_data = load_translated(eb_template)[0]
             
             author_text = eb_data.get('author')
@@ -203,7 +203,7 @@ class Giveaway(Cog_Extension):
 
             winners = data[str(message.id)]['Participants']
             if not winners:
-                value = await ctx.interaction.translate('send_giveaway_no_winner')
+                value = await get_translate('send_giveaway_no_winner', ctx)
             else:
                 winner_id = random.sample(winners, 中獎人數 if len(winners) >= 中獎人數 else len(winners))
                 winner = [await self.bot.fetch_user(winner) for winner in winner_id]
@@ -213,7 +213,7 @@ class Giveaway(Cog_Extension):
             count = int(embed.fields[1].value)
 
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_giveaway_end')
+            eb_template = await get_translate('embed_giveaway_end', ctx)
             eb_data = load_translated(eb_template)[0]
             winner_field_name = eb_data.get('fields')[0].get('name')
             footer_text = eb_data.get('footer')
@@ -222,7 +222,7 @@ class Giveaway(Cog_Extension):
             embed=discord.Embed(title=獎品, color=ctx.author.color, timestamp=datetime.now())
             embed.add_field(name=winner_field_name, value=value, inline=False)
             embed.set_footer(text=footer_text.format(winners_total=中獎人數, count=count))
-            await message.edit(content=(await ctx.interaction.translate('send_giveaway_ended_message')).format(mention=ctx.author.mention, winner=value), embed=embed, view=None)
+            await message.edit(content=(await get_translate('send_giveaway_ended_message', ctx)).format(mention=ctx.author.mention, winner=value), embed=embed, view=None)
 
             del data[str(message.id)]
 

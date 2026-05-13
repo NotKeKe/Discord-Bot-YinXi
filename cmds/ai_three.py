@@ -9,7 +9,7 @@ import openai
 from core.functions import create_basic_embed, UnixNow
 from core.mongodb import MongoDB_DB
 from core.classes import Cog_Extension
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 from cmds.ai_chat.chat.chat import Chat
 from cmds.ai_chat.chat import gener_title
 from cmds.ai_chat.tools.map import image_generate, video_generate
@@ -79,7 +79,7 @@ class AIChat(Cog_Extension):
             )
 
             '''i18n'''
-            eb = load_translated(await ctx.interaction.translate('embed_chat'))[0]
+            eb = load_translated(await get_translate('embed_chat', ctx))[0]
             eb_title = eb.get('title')
             ''''''
 
@@ -124,7 +124,7 @@ class AIChat(Cog_Extension):
                 url, time = await image_generate(prompt, model)
 
                 '''i18n'''
-                eb = load_translated(await ctx.interaction.translate('embed_image_generate'))[0]
+                eb = load_translated(await get_translate('embed_image_generate', ctx))[0]
                 eb_title = eb.get('title')
                 eb_field_1 = (eb.get('fields'))[0]
                 field_name = eb_field_1.get('name')
@@ -136,7 +136,7 @@ class AIChat(Cog_Extension):
                 embed.set_footer(text=f'Powered by {model}')
                 await ctx.send(embed=embed)
             except:
-                await ctx.send(await ctx.interaction.translate('send_image_generate_fail'), ephemeral=True)
+                await ctx.send(await get_translate('send_image_generate_fail', ctx), ephemeral=True)
 
     @commands.hybrid_command(name=locale_str('video_generate'), description=locale_str('video_generate'))
     @app_commands.choices(
@@ -172,7 +172,7 @@ class AIChat(Cog_Extension):
         try:
             async with ctx.typing():
                 if duration > 10:
-                    await ctx.send(await ctx.interaction.translate('send_video_generate_duration_too_long').format(model=model), ephemeral=True)
+                    await ctx.send((await get_translate('send_video_generate_duration_too_long', ctx)).format(model=model), ephemeral=True)
                     duration = 10
 
                 if fps not in (30, 60):
@@ -181,13 +181,13 @@ class AIChat(Cog_Extension):
                 try:
                     has_audio = bool(has_audio)
                 except:
-                    return await ctx.send(await ctx.interaction.translate('send_video_generate_wrong_type'))
+                    return await ctx.send(await get_translate('send_video_generate_wrong_type', ctx))
 
                 url, time = await video_generate(prompt, image_url, size, fps, has_audio, duration)
-                string = (await ctx.interaction.translate('send_video_generate_success')).format(model=model, url=url, time=int(time))
+                string = (await get_translate('send_video_generate_success', ctx)).format(model=model, url=url, time=int(time))
                 await ctx.send(string)
         except Exception as e:
-            await ctx.send((await ctx.interaction.translate('send_video_generate_fail')).format(e=e), ephemeral=True)
+            await ctx.send((await get_translate('send_video_generate_fail', ctx)).format(e=e), ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(AIChat(bot))

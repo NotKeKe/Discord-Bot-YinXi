@@ -21,7 +21,7 @@ import aiofiles
 from urllib.parse import urlparse, urljoin
 
 from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY, testing_guildID
 from core.playwright import get_context, get_page
 from core.classes import Cog_Extension
@@ -86,10 +86,10 @@ class ApiCog(Cog_Extension):
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://sv443.net/jokeapi/v2/joke/Any') as response:
                     if response.status != 200:
-                        return await ctx.send(await ctx.interaction.translate('send_api_request_failed'), ephemeral=True)
+                        return await ctx.send(await get_translate('send_api_request_failed', ctx), ephemeral=True)
                     data = await response.json()
                     if data['error']:
-                        return await ctx.send(await ctx.interaction.translate('send_api_error_retry'), ephemeral=True)
+                        return await ctx.send(await get_translate('send_api_error_retry', ctx), ephemeral=True)
                     
                     joke_text = data['setup']
                     answer_text = data['delivery']
@@ -98,7 +98,7 @@ class ApiCog(Cog_Extension):
             translated_answer = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, answer_text)
             
             '''i18n'''
-            template = await ctx.interaction.translate('send_joke_template')
+            template = await get_translate('send_joke_template', ctx)
             ''''''
 
             await ctx.send(template.format(
@@ -141,8 +141,8 @@ class ApiCog(Cog_Extension):
             async with ctx.typing():
                 if 輸出數量 > 5:
                     '''i18n'''
-                    confirm_msg_template = await ctx.interaction.translate('send_news_too_many_confirm')
-                    cancel_msg = await ctx.interaction.translate('send_news_confirm_cancelled')
+                    confirm_msg_template = await get_translate('send_news_too_many_confirm', ctx)
+                    cancel_msg = await get_translate('send_news_confirm_cancelled', ctx)
                     ''''''
                     
                     view = discord.ui.View()
@@ -164,7 +164,7 @@ class ApiCog(Cog_Extension):
 
                 if options == 1:
                     if not question:
-                        return await ctx.send(await ctx.interaction.translate('send_news_question_required'), ephemeral=True)
+                        return await ctx.send(await get_translate('send_news_question_required', ctx), ephemeral=True)
                     async with aiohttp.ClientSession() as session:
                         async with session.get(f'https://newsapi.org/v2/everything?q={question}&language={language}&apiKey={NewsApiKEY}') as response:
                             data = await response.json()
@@ -174,14 +174,14 @@ class ApiCog(Cog_Extension):
                             data = await response.json()
 
                 if data['status'] != 'ok':
-                    return await ctx.send((await ctx.interaction.translate('send_news_api_error')).format(reason=data.get('code', 'N/A')))
+                    return await ctx.send((await get_translate('send_news_api_error', ctx)).format(reason=data.get('code', 'N/A')))
                 
                 result_count = data['totalResults']
                 
                 '''i18n'''
-                embed_template_str = await ctx.interaction.translate('embed_news_search_results')
+                embed_template_str = await get_translate('embed_news_search_results', ctx)
                 embed_template = load_translated(embed_template_str)[0]
-                article_template_str = await ctx.interaction.translate('embed_news_article')
+                article_template_str = await get_translate('embed_news_article', ctx)
                 article_template = load_translated(article_template_str)[0]
                 ''''''
                 
@@ -209,7 +209,7 @@ class ApiCog(Cog_Extension):
             translated = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, source)
             
             '''i18n'''
-            template = await ctx.interaction.translate('send_cat_fact_template')
+            template = await get_translate('send_cat_fact_template', ctx)
             ''''''
             
             await ctx.send(template.format(translated_fact=translated, original_fact=source))
@@ -232,9 +232,9 @@ class ApiCog(Cog_Extension):
             os.remove('./cmds/data.json/nasa_apod.jpg')
             
             '''i18n'''
-            embed_template_str = await ctx.interaction.translate('embed_nasa_apod')
+            embed_template_str = await get_translate('embed_nasa_apod', ctx)
             embed_template = load_translated(embed_template_str)[0]
-            desc_template = await ctx.interaction.translate('send_nasa_explanation_template')
+            desc_template = await get_translate('send_nasa_explanation_template', ctx)
             ''''''
 
             eb = create_basic_embed(title=title, description=desc_template.format(translated_explanation=translated_explanation, original_explanation=explanation), time=False)
@@ -250,13 +250,13 @@ class ApiCog(Cog_Extension):
                 async with session.get(f'http://numbersapi.com/{number}?json') as response:
                     data = await response.json()
             if not data['found']:
-                return await ctx.send((await ctx.interaction.translate('send_number_history_not_found')).format(number=number))
+                return await ctx.send((await get_translate('send_number_history_not_found', ctx)).format(number=number))
             
             text = data["text"]
             translated = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
             
             '''i18n'''
-            template = await ctx.interaction.translate('send_number_history_template')
+            template = await get_translate('send_number_history_template', ctx)
             ''''''
             
             await ctx.send(template.format(number=number, translated_text=translated, original_text=text))
@@ -281,7 +281,7 @@ class ApiCog(Cog_Extension):
             
             result = '\n'.join(urls)
             if not result:
-                result = await ctx.interaction.translate('send_unsplash_no_results')
+                result = await get_translate('send_unsplash_no_results', ctx)
 
             # 針對 discord 的字數限制
             if len(str(result)) >= 2000:
@@ -303,7 +303,7 @@ class ApiCog(Cog_Extension):
     async def get_gifs(self, ctx: commands.Context, query: str=None, num: int=1, lang: str = None):
         async with ctx.typing():
             if num > 50:
-                return await ctx.send(await ctx.interaction.translate('send_gif_too_many'), ephemeral=True) 
+                return await ctx.send(await get_translate('send_gif_too_many', ctx), ephemeral=True) 
 
             search_url = 'https://api.giphy.com/v1/gifs/search'
             random_url = 'https://api.giphy.com/v1/gifs/random'
@@ -324,7 +324,7 @@ class ApiCog(Cog_Extension):
                         results.append((data['data']['title'], data['data']['images']['original']['url']))
             
             if not results:
-                return await ctx.send(await ctx.interaction.translate('send_gif_no_results'))
+                return await ctx.send(await get_translate('send_gif_no_results', ctx))
 
             def strip_title(title: str) -> str:
                 if isinstance(title, str): return title.strip()
@@ -341,7 +341,7 @@ class ApiCog(Cog_Extension):
             async with aiohttp.ClientSession() as sess:
                 async with sess.get('https://api.zxki.cn/api/tgrj') as resp:
                     if resp.status != 200:
-                        return await ctx.send(await ctx.interaction.translate('send_tiangou_api_error'), ephemeral=True)
+                        return await ctx.send(await get_translate('send_tiangou_api_error', ctx), ephemeral=True)
                     text = await resp.text()
                     translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
                     await ctx.send(translated_text)
@@ -351,12 +351,12 @@ class ApiCog(Cog_Extension):
     @app_commands.describe(address=locale_str('minecraft_server_status_address'), edition=locale_str('minecraft_server_status_edition'))
     async def minecraft_server_status(self, ctx: commands.Context, address: str, edition: str = 'java'):
         try:
-            if edition not in ('java', 'bedrock'): return await ctx.send(await ctx.interaction.translate('send_mc_status_invalid_edition'))
+            if edition not in ('java', 'bedrock'): return await ctx.send(await get_translate('send_mc_status_invalid_edition', ctx))
             async with ctx.typing():
                 async with aiohttp.ClientSession() as sess:
                     url = f'https://api.mcsrvstat.us/3/{address}' if edition == 'java' else f'https://api.mcsrvstat.us/bedrock/3/{address}'
                     async with sess.get(url) as resp:
-                        if resp.status != 200: return await ctx.send(await ctx.interaction.translate('send_mc_status_api_error'), ephemeral=True)
+                        if resp.status != 200: return await ctx.send(await get_translate('send_mc_status_api_error', ctx), ephemeral=True)
                         data = await resp.json()
                 
                     ip = data.get('ip', 'None')
@@ -394,7 +394,7 @@ class ApiCog(Cog_Extension):
                             file = discord.File(image_buffer, filename="icon.png")
 
                 '''i18n'''
-                eb_template = await ctx.interaction.translate('embed_mc_server_status')
+                eb_template = await get_translate('embed_mc_server_status', ctx)
                 eb_template = load_translated(eb_template)[0]
                 title_str = eb_template['title']
                 field = eb_template['fields']
@@ -408,7 +408,7 @@ class ApiCog(Cog_Extension):
                 plugins_str = field[7]['name']
                 mods_str = field[8]['name']
 
-                button_str = await ctx.interaction.translate('button_mc_status_show_details')
+                button_str = await get_translate('button_mc_status_show_details', ctx)
                 ''''''
 
                 eb = create_basic_embed(功能=title_str, color=ctx.author.color)
@@ -454,7 +454,7 @@ class ApiCog(Cog_Extension):
                 await ctx.send(embed=eb, file=file, view=view)
         except Exception as e:
             traceback.print_exc()
-            return await ctx.send((await ctx.interaction.translate('send_mc_status_error')).format(reason=e))
+            return await ctx.send((await get_translate('send_mc_status_error', ctx)).format(reason=e))
         
     @commands.hybrid_command(name=locale_str('yiyan'), description=locale_str('yiyan'), aliases=['一言'])
     async def yiyan(self, ctx: commands.Context):
@@ -462,7 +462,7 @@ class ApiCog(Cog_Extension):
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://v1.hitokoto.cn/?c=d&c=e&c=f&encode=text') as resp:
                     if not resp.status == 200:
-                        return await ctx.send(await ctx.interaction.translate('send_yiyan_api_error'), ephemeral=True)
+                        return await ctx.send(await get_translate('send_yiyan_api_error', ctx), ephemeral=True)
                     data = await resp.text()
             
             translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, data)
@@ -474,7 +474,7 @@ class ApiCog(Cog_Extension):
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://api.btstu.cn/yan/api.php?charset=utf-8&encode=text') as resp:
                     if resp.status != 200:
-                        return await ctx.send(await ctx.interaction.translate('send_toxic_soup_api_error'), ephemeral=True)
+                        return await ctx.send(await get_translate('send_toxic_soup_api_error', ctx), ephemeral=True)
                     text = await resp.text()
             
             translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
@@ -486,7 +486,7 @@ class ApiCog(Cog_Extension):
             async with aiohttp.ClientSession() as session:
                 async with session.get('https://api.lovelive.tools/api/SweetNothings') as resp:
                     if resp.status != 200:
-                        return await ctx.send(await ctx.interaction.translate('send_lovelive_api_error'), ephemeral=True)
+                        return await ctx.send(await get_translate('send_lovelive_api_error', ctx), ephemeral=True)
                     text = await resp.text()
             await ctx.send(text)
 
@@ -513,11 +513,11 @@ class ApiCog(Cog_Extension):
                 async with aiohttp.ClientSession() as sess:
                     async with sess.post(f'{youtube_download_base_url}/api/download', json=data) as resp:
                         if resp.status == 404:
-                            return await ctx.send(await ctx.interaction.translate('send_yt_download_api_offline'))
+                            return await ctx.send(await get_translate('send_yt_download_api_offline', ctx))
                         resp_json = await resp.json()
                         task_id = resp_json.get('task_id')
 
-                await ctx.send((await ctx.interaction.translate('send_yt_download_tracking')).format(task_id=task_id))
+                await ctx.send((await get_translate('send_yt_download_tracking', ctx)).format(task_id=task_id))
 
                 for _ in range(10):
                     await asyncio.sleep(3)
@@ -529,15 +529,15 @@ class ApiCog(Cog_Extension):
                             if status == 'error': 
                                 reason = resp_json.get('message')
                                 if 'NSFW' in reason:
-                                    return await ctx.send(await ctx.interaction.translate('send_yt_download_nsfw_error'))
+                                    return await ctx.send(await get_translate('send_yt_download_nsfw_error', ctx))
                                 else:
-                                    return await ctx.send((await ctx.interaction.translate('send_yt_download_error')).format(reason=reason))
+                                    return await ctx.send((await get_translate('send_yt_download_error', ctx)).format(reason=reason))
                             if status == 'started': continue
                             
                             info = resp_json.get('info')
                             
                             '''i18n'''
-                            embed_template_str = await ctx.interaction.translate('embed_yt_downloader')
+                            embed_template_str = await get_translate('embed_yt_downloader', ctx)
                             embed_template = load_translated(embed_template_str)[0]
                             ''''''
                             
@@ -554,9 +554,9 @@ class ApiCog(Cog_Extension):
                             await ctx.send(f"[下載連結]({resp_json.get('download_url')})", embed=eb)
                             return
                 
-                await ctx.send(await ctx.interaction.translate('send_yt_download_tracking_failed'))
+                await ctx.send(await get_translate('send_yt_download_tracking_failed', ctx))
         except Exception as e: 
-            await ctx.send((await ctx.interaction.translate('send_mc_status_error')).format(reason=str(e)))
+            await ctx.send((await get_translate('send_mc_status_error', ctx)).format(reason=str(e)))
             traceback.print_exc()
 
     @commands.hybrid_command(name=locale_str('codlin_meme'), description=locale_str('codlin_meme'), aliases=['meme', 'codlin'])

@@ -7,7 +7,7 @@ import traceback
 
 from core.classes import Cog_Extension
 from core.functions import read_json, write_json, create_basic_embed
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 PATH = './cmds/data.json/guild_join.json'
 
@@ -132,11 +132,11 @@ class OnJoinLeave(Cog_Extension):
                 return
 
             async def check_callback(interation: discord.Interaction):
-                await interation.response.send_message(await interation.translate('send_join_leave_message_cancel_success'), ephemeral=True)
+                await interation.response.send_message(await get_translate('send_join_leave_message_cancel_success', inter), ephemeral=True)
                 disabled_button()
             async def refuse_callback(interation: discord.Interaction):
                 del data[guildID]
-                await interation.response.send_message((await interation.translate('send_join_leave_message_delete_success')).format(guild_name=interation.guild.name))
+                await interation.response.send_message((await get_translate('send_join_leave_message_delete_success', inter)).format(guild_name=inter.guild.name))
                 self.write_data(data)
                 disabled_button()
             
@@ -147,14 +147,14 @@ class OnJoinLeave(Cog_Extension):
             view.add_item(refuse_button)
 
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_join_leave_message_confirm_delete')
+            eb_template = await get_translate('embed_join_leave_message_confirm_delete', ctx)
             eb_data = load_translated(eb_template)[0]
             ''''''
             embed = create_basic_embed(eb_data.get('title'), eb_data.get('description'), time=False)
 
             await ctx.send(embed=embed, view=view)
         else:
-            if join_channel == leave_channel == ctx.guild.system_channel == None: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_channel_input'))
+            if join_channel == leave_channel == ctx.guild.system_channel == None: return await ctx.send(await get_translate('send_join_leave_message_no_channel_input', ctx))
             joinCh = None
             leaveCh = None
             if not join_channel: joinCh = ctx.guild.system_channel
@@ -170,9 +170,9 @@ class OnJoinLeave(Cog_Extension):
                     if type(join_channel) == type(leave_channel) == discord.channel.TextChannel:
                         break
             if not joinCh:
-                return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_join_channel'))
+                return await ctx.send(await get_translate('send_join_leave_message_no_join_channel', ctx))
             elif not leaveCh:
-                return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_leave_channel'))
+                return await ctx.send(await get_translate('send_join_leave_message_no_leave_channel', ctx))
             
             if not joinCh.permissions_for(joinCh.guild.me).send_messages: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_permission'))
             if not leaveCh.permissions_for(leaveCh.guild.me).send_messages: return await ctx.send(await ctx.interaction.translate('send_join_leave_message_no_permission'))
@@ -180,7 +180,7 @@ class OnJoinLeave(Cog_Extension):
             data[guildID] = {'joinChannel': joinCh.id, 'leaveChannel': leaveCh.id}
             self.write_data(data)
             '''i18n'''
-            eb_template = await ctx.interaction.translate('embed_join_leave_message_set_success')
+            eb_template = await get_translate('embed_join_leave_message_set_success', ctx)
             eb_data = load_translated(eb_template)[0]
             title = eb_data.get('title').format(guild_name=ctx.guild.name)
             description = eb_data.get('description').format(join_channel_name=joinCh.name, leave_channel_name=leaveCh.name)
@@ -195,7 +195,7 @@ class OnJoinLeave(Cog_Extension):
         async with ctx.typing(ephemeral=True):
             try:
                 if not ctx.guild: return await ctx.send('You are not in a server.')
-                if not ctx.guild.me.guild_permissions.manage_messages: return await ctx.send(await ctx.interaction.translate('send_delete_spam_messages_no_permission'), ephemeral=True)
+                if not ctx.guild.me.guild_permissions.manage_messages: return await ctx.send(await get_translate('send_delete_spam_messages_no_permission', ctx), ephemeral=True)
 
                 count = 0
                 cant_delete_m: list[discord.Message] = []
@@ -223,7 +223,7 @@ class OnJoinLeave(Cog_Extension):
                             count += 1
 
                 '''i18n'''
-                eb_template = await ctx.interaction.translate('embed_delete_spam_messages')
+                eb_template = await get_translate('embed_delete_spam_messages', ctx)
                 eb_data = load_translated(eb_template)[0]
                 title = eb_data.get('title')
                 fields = eb_data.get('fields')

@@ -13,7 +13,7 @@ import os
 
 from core.classes import Cog_Extension
 from core.functions import mongo_db_client, is_KeJC, create_basic_embed, is_testing_guild, secondToReadable
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +141,7 @@ class BotStats(Cog_Extension):
         on_command_error = (await collection.find_one({'type': 'on_command_error'})) or {}
         
         '''i18n'''
-        eb_obj = load_translated(await inter.translate('embed_bot_stats'))[0]
+        eb_obj = load_translated(await get_translate('embed_bot_stats', inter))[0]
         author = eb_obj.get('author')
         fields = eb_obj.get('fields')
         start_time_text = fields[0].get('name')
@@ -183,7 +183,7 @@ class BotStats(Cog_Extension):
         os_name = platform.system()
 
         '''i18n'''
-        eb_obj = load_translated(await ctx.interaction.translate('embed_machine_stats'))[0]
+        eb_obj = load_translated(await get_translate('embed_machine_stats', ctx))[0]
         title = eb_obj.get('title')
         fields = eb_obj.get('fields')
         field_1 = fields[0]

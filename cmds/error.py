@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from core.classes import Cog_Extension
 from core.functions import KeJCID
+from core.translator import get_translate
 import traceback, logging
 
 logging.getLogger(__name__)
@@ -18,7 +19,7 @@ class ErrorHandler(Cog_Extension):
         string = f'有個在「{檔案名稱} {指令名稱}」的錯誤: 「{error}」，{ctx.author.id} used `{ctx.args}` and `{ctx.kwargs}`'
         logging.error(string, exc_info=True)
 
-        await ctx.send(content=await ctx.interaction.translate('send_error_occurred'), ephemeral=ephemeral)
+        await ctx.send(content=await get_translate('send_error_occurred', ctx), ephemeral=ephemeral)
 
         if user_send:
             await user.send(string)

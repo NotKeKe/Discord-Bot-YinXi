@@ -3,7 +3,7 @@ from discord import app_commands
 
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed, thread_pool
-from core.translator import load_translated, locale_str
+from core.translator import load_translated, locale_str, get_translate
 # from cmds.AIsTwo.others.func import translate
 from cmds.ai_chat.chat.translate import translate
 
@@ -17,8 +17,8 @@ class Translator(Cog_Extension):
     async def translate(self, ctx: commands.Context, content: str, target:str = 'zh-TW'):
         async with ctx.typing():
             '''i18n'''
-            yinxi_translated = await ctx.interaction.translate('yin_xi')
-            eb = await ctx.interaction.translate('embed_translate_translated')
+            yinxi_translated = await get_translate('yin_xi', ctx)
+            eb = await get_translate('embed_translate_translated', ctx)
             eb: dict = (load_translated(eb))[0]
             field_1: dict = (eb.get('field'))[0]
             translate_name = field_1.get('name')

@@ -7,7 +7,7 @@ import traceback
 
 from core.classes import Cog_Extension
 from core.functions import create_basic_embed, read_json, write_json
-from core.translator import locale_str, load_translated
+from core.translator import locale_str, load_translated, get_translate
 
 path = './cmds/data.json/world_channels.json'
 
@@ -105,13 +105,13 @@ class WorldChat(Cog_Extension):
         channelID = ctx.channel.id
 
         if 取消:
-            if channelID not in channels['channels']: await ctx.send(await ctx.interaction.translate('send_world_chat_not_world_channel'), ephemeral=True); return
+            if channelID not in channels['channels']: await ctx.send(await get_translate('send_world_chat_not_world_channel', ctx), ephemeral=True); return
             channels['channels'].remove(channelID)
-            await ctx.send(await ctx.interaction.translate('send_world_chat_cancelled'))
+            await ctx.send(await get_translate('send_world_chat_cancelled', ctx))
         else:
-            if channelID in channels['channels']: await ctx.send(await ctx.interaction.translate('send_world_chat_already_set')); return
+            if channelID in channels['channels']: await ctx.send(await get_translate('send_world_chat_already_set', ctx)); return
             channels['channels'].append(channelID)
-            await ctx.send(await ctx.interaction.translate('send_world_chat_set_success'))
+            await ctx.send(await get_translate('send_world_chat_set_success', ctx))
 
         self.__class__.channels = channels
         write_json(channels, path)
@@ -122,7 +122,7 @@ class WorldChat(Cog_Extension):
         channel = await self.bot.fetch_channel(bad_image_channel)
         now = time.strftime("%Y/%m/%d %H:%M:%S")
         '''i18n'''
-        log_message_template = await self.bot.tree.translator.translate(locale_str('send_report_bad_image_log'), channel.guild.preferred_locale, None)
+        log_message_template = await get_translate('send_report_bad_image_log', channel.guild.preferred_locale.value if hasattr(channel.guild, 'preferred_locale') else 'zh-TW')
         ''''''
         log_message = log_message_template.format(
             guild_name=ctx.guild.name,
@@ -133,7 +133,7 @@ class WorldChat(Cog_Extension):
             reporter_id=ctx.author.id
         )
         await channel.send(log_message)
-        await ctx.send((await ctx.interaction.translate('send_report_bad_image_success')).format(author=author))
+        await ctx.send((await get_translate('send_report_bad_image_success', ctx)).format(author=author))
 
 
 async def setup(bot):
