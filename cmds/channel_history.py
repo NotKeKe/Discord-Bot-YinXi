@@ -7,6 +7,7 @@ import time
 import traceback
 from textwrap import dedent
 import io
+from typing import cast, Optional
 
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated, get_translate
@@ -28,13 +29,13 @@ class ChannelHistories:
         ctx = self.ctx
         count = self.count
         ls = [{
-            'channel': {'id': ctx.channel.id, 'name': ctx.channel.name if hasattr(ctx.channel, 'name') else None}, # type: ignore
+            'channel': {'id': ctx.channel.id, 'name': ctx.channel.name if hasattr(ctx.channel, 'name') else None},
             **({'guild': {'id': ctx.guild.id, 'name': ctx.guild.name}} if ctx.guild else {})
         }]
         async for m in ctx.channel.history(limit=count):
             if m.content == m.attachments == m.embeds == None: continue
 
-            ls.append({ # type: ignore
+            ls.append({
                 'author': {
                     'id': m.author.id,
                     'name': m.author.global_name or m.author.name,
@@ -136,12 +137,14 @@ class ChannelHistories:
                 filename=f'channel_history_{self.channelID}.txt'
             )
 
-    async def run(self) -> discord.File:
+    async def run(self) -> Optional[discord.File]:
         try:
             await self.get_histories()
             await self.type_process()
-            return self.file
-        except: traceback.print_exc()
+            return cast(discord.File, self.file)
+        except: 
+            traceback.print_exc()
+            return None
 
 class ChannelHistory(Cog_Extension):
     async def cog_load(self):

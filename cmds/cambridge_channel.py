@@ -223,7 +223,7 @@ class CambridgeChannel(Cog_Extension):
                 audio_io.seek(0)
                 await interaction.response.send_message(file=discord.File(audio_io, 'audio.mp3'), ephemeral=True)
             button = discord.ui.Button(label='US Audio', style=discord.ButtonStyle.blurple)
-            button.callback = partial(button_callback, audio_io)
+            button.callback = partial(button_callback, audio_io) # type: ignore
             view.add_item(button)
 
         msg = await msg.reply(message if meanings_str else '找不到詞性或意義', view=view)
