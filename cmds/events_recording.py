@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from core.classes import Cog_Extension
+from core.classes import Cog_Extension, get_bot
 from core.functions import create_basic_embed, read_json, write_json
 from core.translator import locale_str, get_translate
 
@@ -28,7 +28,7 @@ def compare_list(a, b):
     return list(difference1), list(difference2)
 
 class Events_Recording(Cog_Extension):
-    data = None
+    data: dict | None = None
 
     @classmethod
     def initdata(cls):
@@ -46,20 +46,28 @@ class Events_Recording(Cog_Extension):
         guildID = str(guild.id)
         data = self.__class__.data
 
-        if data is not None and data == {}: return
+        if data is None: return
+        if data == {}: return
         if guildID not in data: return
         if 'messageChannel' not in data[guildID]: return
 
         sended_channel = await self.bot.fetch_channel(data[guildID]['messageChannel'])
 
+        bot = get_bot()
+        lang_code = sended_channel.guild.preferred_locale.value if hasattr(sended_channel, 'guild') else None # type: ignore
+        """i18n"""
+        before_name = bot.tree.translator.get_translate('embed_events_recording_message_edit_before', lang_code) # type: ignore
+        after_name = bot.tree.translator.get_translate('embed_events_recording_message_edit_after', lang_code) # type: ignore
+        """"""
+
         member = before.author
         channel = before.channel
         embed = create_basic_embed(color=discord.Color.light_gray)
         embed.set_author(name=member.global_name, icon_url=member.avatar_url)
-        embed.add_field(name=await get_translate('embed_events_recording_message_edit_before', sended_channel.guild.preferred_locale.value if hasattr(sended_channel.guild, 'preferred_locale') else 'zh-TW'), value=f'```{before.content}```', inline=False)
-        embed.add_field(name=await get_translate('embed_events_recording_message_edit_after', sended_channel.guild.preferred_locale.value if hasattr(sended_channel.guild, 'preferred_locale') else 'zh-TW'), value=f'```{after.content}```', inline=False)
+        embed.add_field(name=before_name, value=f'```{before.content}```', inline=False)
+        embed.add_field(name=after_name, value=f'```{after.content}```', inline=False)
         embed.set_footer(text=channel.name)
-        await sended_channel.send(embed=embed)
+        await sended_channel.send(embed=embed) # type: ignore
 
     @commands.Cog.listener()
     async def on_message_delete(self, message:discord.Message):
@@ -68,7 +76,8 @@ class Events_Recording(Cog_Extension):
         guildID = str(guild.id)
         data = self.__class__.data
 
-        if data is not None and data == {}: return
+        if data is None: return
+        if data == {}: return
         if guildID not in data: return
         if 'messageChannel' not in data[guildID]: return
 
@@ -77,7 +86,7 @@ class Events_Recording(Cog_Extension):
         user = message.author
         channel = message.channel
         embed = create_basic_embed(color=discord.Color.light_gray)
-        embed.set_author(name=user.global_name, icon_url=user.avatar_url)
+        embed.set_author(name=user.global_name, icon_url=user.avatar.url if user.avatar else None)
         embed.add_field(name=await get_translate('embed_events_recording_message_delete', sended_channel.guild.preferred_locale.value if hasattr(sended_channel.guild, 'preferred_locale') else 'zh-TW'), value=f'```{message.content}```', inline=False)
         embed.set_footer(text=channel.name)
         await sended_channel.send(embed=embed)
@@ -110,5 +119,5 @@ class Events_Recording(Cog_Extension):
 
 
 
-async def setup(bot):
-    await bot.add_cog(Events_Recording(bot))
+# async def setup(bot):
+#     await bot.add_cog(Events_Recording(bot))
