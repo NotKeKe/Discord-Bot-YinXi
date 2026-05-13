@@ -10,7 +10,7 @@ logging.getLogger(__name__)
 class ErrorHandler(Cog_Extension):
     @commands.command(hidden=True)
     async def errorresponse(self, ctx: commands.Context, 檔案名稱, 指令名稱, exception=None, user_send = False, ephemeral=False):
-        user = await self.bot.fetch_user(int(KeJCID))
+        user = await self.bot.fetch_user(int(KeJCID)) if KeJCID else None
 
         if traceback.format_exc().strip() not in ('NoneType: None', 'None'):
             error = traceback.format_exc()
@@ -21,13 +21,8 @@ class ErrorHandler(Cog_Extension):
 
         await ctx.send(content=await get_translate('send_error_occurred', ctx), ephemeral=ephemeral)
 
-        if user_send:
+        if user and user_send:
             await user.send(string)
 
 async def setup(bot):
     await bot.add_cog(ErrorHandler(bot))
-        
-if __name__ == '__main__':
-    intents = discord.Intents.default()
-    bot = commands.Bot(command_prefix='!', intents=intents)
-    ErrorHandler(bot).response('error.py', 'test', 'test')
