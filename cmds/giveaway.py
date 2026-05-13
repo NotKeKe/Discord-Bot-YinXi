@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 from core.functions import read_json, write_json
-from core.classes import Cog_Extension
+from core.classes import Cog_Extension, get_bot
 from core.translator import locale_str, load_translated, get_translate
 
 path = './cmds/data.json/giveaway.json'
@@ -26,16 +26,16 @@ path = './cmds/data.json/giveaway.json'
 
 async def start(data, message_id):
     # 重新追蹤button
-    bot = Giveaway.bot
+    bot = get_bot()
 
     channel_id = data[message_id]['Channel_id']
     message_id = int(message_id)
 
     channel = await bot.fetch_channel(channel_id)
-    message = await channel.fetch_message(message_id)
+    message = await channel.fetch_message(message_id) # type: ignore
 
     button = discord.ui.Button(label='🎉')
-    button.callback = button_callback
+    button.callback = button_callback # type: ignore
 
     view = discord.ui.View()
     view.add_item(button)
@@ -53,11 +53,13 @@ async def start(data, message_id):
 
     # 等待完畢
     data = read_json(path)
+    if not data:
+        return
 
     # 取得 winner
     winners = data[str(message_id)]['Participants']
     if not winners:
-        value = await get_translate('send_giveaway_no_winner', bot.get_user(bot.user.id))
+        value = bot.tree.translator.get_translate('send_giveaway_no_winner', channel.guild.preferred_locale.value) # type: ignore
     else:
         winner_id = random.sample(winners, data[message_id]['WinnerTotal'] if len(winners) >= data[message_id]['WinnerTotal'] else len(winners))
         winner = [await bot.fetch_user(winner) for winner in winner_id]
@@ -166,7 +168,7 @@ class Giveaway(Cog_Extension):
 
             # Embed
             embed=discord.Embed(title=f'**{獎品}**', color=ctx.author.color, timestamp=keep_time)
-            embed.set_author(name=author_text, icon_url=ctx.author.avatar.url)
+            embed.set_author(name=author_text, icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
             embed.add_field(name=winners_field_name, value=中獎人數, inline=False)
             embed.add_field(name=participants_field_name, value=participants_field_value, inline=False)
             embed.add_field(name=note_field_name, value=note_field_value, inline=False)
@@ -174,7 +176,7 @@ class Giveaway(Cog_Extension):
 
             # Button
             button = discord.ui.Button(label="🎉")
-            button.callback = button_callback
+            button.callback = button_callback # type: ignore
             
             # View
             view = discord.ui.View()
@@ -184,6 +186,8 @@ class Giveaway(Cog_Extension):
 
             # 寫入抽獎資訊
             data = read_json(path)
+            if not data:
+                data = {}
 
             data[str(message.id)] = {
                 "Channel_id": ctx.channel.id,
@@ -200,8 +204,10 @@ class Giveaway(Cog_Extension):
             await asyncio.sleep(delay)
 
             data = read_json(path)
+            if not data:
+                data = {}
 
-            winners = data[str(message.id)]['Participants']
+            winners = data.get(str(message.id), {}).get('Participants')
             if not winners:
                 value = await get_translate('send_giveaway_no_winner', ctx)
             else:
