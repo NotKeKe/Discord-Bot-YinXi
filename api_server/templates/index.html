@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>音汐 - Discord Bot</title>
     <link rel="stylesheet" href="/static/index/style.css">
-    <!-- <link rel="stylesheet" href="style.css"> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
+    {% include 'partials/navbar.html' %}
+
     <div class="container">
         <div class="header">
             <img src="/assets/botself.png" alt="音汐 Discord Bot 頭貼">
@@ -20,7 +21,7 @@
                 <h2>基於 Python 的多功能 Discord Bot</h2>
             </div>
         </div>
-        
+
         <p>音汐是一個基於 Python 所製作的 Discord 多功能機器人，主要功能包含音樂播放、記事功能、AI聊天、以及其他的雜項功能，同時也支援多種語言。</p>
         <p>關於音樂播放功能，還有個特色，他可以讓你直接在網頁聽音樂!</p>
 
@@ -29,6 +30,35 @@
             <a href="https://github.com/NotKeKe/Discord-Bot-YinXi"><i class="fab fa-github"></i> 查看 GitHub</a>
             <a href="https://top.gg/bot/990798785489825813"><i class="fas fa-award"></i> top.gg</a>
             <a href="https://www.wales.com.tw/posts/yinxi-discord-bot"><i class="fas fa-circle-info"></i> 介紹</a>
+        </div>
+
+        <div class="status-preview">
+            <a href="/status" class="status-preview-link">
+                <div class="status-preview-header">
+                    <i class="fas fa-chart-bar"></i> 系統狀態
+                </div>
+                <div class="status-preview-grid">
+                    <div class="status-preview-item">
+                        <i class="fas fa-server"></i>
+                        <span class="status-preview-label">伺服器</span>
+                    </div>
+                    <div class="status-preview-item">
+                        <i class="fas fa-users"></i>
+                        <span class="status-preview-label">使用者</span>
+                    </div>
+                    <div class="status-preview-item">
+                        <i class="fas fa-headphones"></i>
+                        <span class="status-preview-label">語音</span>
+                    </div>
+                    <div class="status-preview-item">
+                        <i class="fas fa-clock"></i>
+                        <span class="status-preview-label">運行</span>
+                    </div>
+                </div>
+                <div class="status-preview-footer">
+                    點擊查看完整狀態 <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
         </div>
     </div>
 </body>

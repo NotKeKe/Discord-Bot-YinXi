@@ -10,6 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from routers import player, api
 import src as _ # for load logger
 
+from src.redis_client import redis_client
+
 from src.tasks import del_task_event, add_task
 
 @asynccontextmanager
@@ -57,6 +59,11 @@ async def direct_to_discord_server():
 @app.get('/github', response_class=RedirectResponse)
 async def direct_to_yinxi_github():
     return RedirectResponse('https://github.com/NotKeKe/Discord-Bot-YinXi')
+
+@app.get('/status', response_class=HTMLResponse)
+async def status(request: Request):
+    data = await redis_client.hgetall('bot_status') # type: ignore
+    return templates.TemplateResponse("status.html", {'request': request, 'bot_status': data})
 
 if __name__ == '__main__':
     import uvicorn

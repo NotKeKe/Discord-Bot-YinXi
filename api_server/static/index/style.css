@@ -121,6 +121,112 @@ p {
     margin-bottom: 10px;
 }
 
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 40px;
+    background: #121417;
+    border-bottom: 1px solid #2c3036;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-logo {
+    font-family: 'Liu Jian Mao Cao', cursive;
+    font-size: 1.5rem;
+    color: goldenrod;
+    font-weight: 900;
+}
+
+.nav-links {
+    display: flex;
+    gap: 16px;
+}
+
+.nav-links a {
+    background: transparent;
+    border: 1px solid #2c3036;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+}
+
+.nav-links a:hover {
+    background: #1f5dd8;
+    border-color: #1f5dd8;
+    box-shadow: 0 0 10px rgba(31, 93, 216, 0.5);
+}
+
+.status-preview {
+    margin-top: 40px;
+    width: 80%;
+}
+
+.status-preview-link {
+    display: block;
+    background: #1a1d23;
+    border: 1px solid #2c3036;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.status-preview-link:hover {
+    background: #1e2128;
+    border-color: #e0c060;
+    box-shadow: 0 0 20px rgba(224, 192, 96, 0.2);
+    transform: scale(1.02);
+}
+
+.status-preview-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e0c060;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.status-preview-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px;
+    background: #121417;
+    border-radius: 8px;
+}
+
+.status-preview-item i {
+    font-size: 1.25rem;
+    color: #e0c060;
+}
+
+.status-preview-label {
+    font-size: 0.75rem;
+    color: #8a9199;
+}
+
+.status-preview-footer {
+    font-size: 0.8rem;
+    color: #6b7280;
+    text-align: right;
+}
+
+.status-preview-footer i {
+    color: #e0c060;
+}
+
 @media (max-width: 1200px) {
     img {
         width: 200px;
@@ -175,5 +281,23 @@ p {
     .button-container {
         margin-top: 30px;
         justify-content: center;
+    }
+
+    .navbar {
+        padding: 12px 20px;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .nav-logo {
+        font-size: 1.25rem;
+    }
+
+    .status-preview {
+        width: 100%;
+    }
+
+    .status-preview-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }

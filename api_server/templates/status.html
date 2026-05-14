@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>狀態 - 音汐 Discord Bot</title>
+    <link rel="stylesheet" href="/static/index/style.css">
+    <link rel="stylesheet" href="/static/index/status.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    {% include 'partials/navbar.html' %}
+
+    <div class="container">
+        <div class="page-title">
+            <h1><i class="fas fa-server"></i> 系統狀態</h1>
+        </div>
+
+        <div class="highlight-cards">
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-server"></i></div>
+                <div class="card-label">伺服器數量</div>
+                <div class="card-value">{{ bot_status.guild_count | float | int if bot_status.guild_count else 'N/A' }}</div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-users"></i></div>
+                <div class="card-label">使用者總數</div>
+                <div class="card-value">{{ bot_status.user_count | float | int if bot_status.user_count else 'N/A' }}</div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-headphones"></i></div>
+                <div class="card-label">語音連線數</div>
+                <div class="card-value">{{ bot_status.voice_connections | float | int if bot_status.voice_connections else 'N/A' }}</div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-robot"></i></div>
+                <div class="card-label">Bot 狀態</div>
+                <div class="card-value {{ bot_status.bot | lower if bot_status.bot else '' }}">
+                    {{ '正常' if bot_status.bot | lower == 'operational' else ('錯誤' if bot_status.bot | lower == 'error' else (bot_status.bot if bot_status.bot else 'N/A')) }}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-stopwatch"></i></div>
+                <div class="card-label">延遲</div>
+                <div class="card-value">{{ (bot_status.latency_ms | float) | round(2) if bot_status.latency_ms else 'N/A' }} <span class="card-sub">ms</span></div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                <div class="card-label">運行時間</div>
+                <div class="card-value">
+                    {% set uptime_seconds = bot_status.uptime | float | int if bot_status.uptime else 0 %} {% set days = uptime_seconds // 86400 %} {% set hours = (uptime_seconds % 86400) // 3600 %} {% set minutes = (uptime_seconds % 3600) // 60 %} {% if days > 0 %}{{ days
+                    }}d {% endif %}{{ hours }}h {{ minutes }}m
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2><i class="fas fa-info-circle"></i> 詳細資訊</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Python 版本</span>
+                    <span class="info-value">{{ bot_status.python_version if bot_status.python_version else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Discord.py 版本</span>
+                    <span class="info-value">{{ bot_status.discord_py_version if bot_status.discord_py_version else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">API 狀態</span>
+                    <span class="info-value">{{ bot_status.api if bot_status.api else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">指令呼叫次數</span>
+                    <span class="info-value">{{ bot_status.command_call_time if bot_status.command_call_time else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">更新時間</span>
+                    <span class="info-value" data-iso="{{ bot_status.current_time if bot_status.current_time else '' }}">{{ bot_status.current_time if bot_status.current_time else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">命令記錄起始</span>
+                    <span class="info-value" data-iso="{{ bot_status.command_record_from if bot_status.command_record_from else '' }}">{{ bot_status.command_record_from if bot_status.command_record_from else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">手動狀態更新時間</span>
+                    <span class="info-value" data-iso="{{ bot_status.status_str_update_time if bot_status.status_str_update_time else '' }}">{{ bot_status.status_str_update_time if bot_status.status_str_update_time else 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toLocalTime(isoString) {
+            if (!isoString || isoString === 'N/A') return 'N/A';
+            const num = Number(isoString);
+            const date = isNaN(num) ? new Date(isoString) : new Date(num < 1e12 ? num * 1000 : num);
+            if (isNaN(date.getTime())) return isoString;
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const h = String(date.getHours()).padStart(2, '0');
+            const mi = String(date.getMinutes()).padStart(2, '0');
+            const s = String(date.getSeconds()).padStart(2, '0');
+            return `${y}/${m}/${d} ${h}:${mi}:${s}`;
+        }
+        document.querySelectorAll('[data-iso]').forEach(el => {
+            el.textContent = toLocalTime(el.getAttribute('data-iso'));
+        });
+    </script>
+</body>
+
+</html>
