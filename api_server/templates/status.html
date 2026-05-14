@@ -74,7 +74,7 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">API 狀態</span>
-                    <span class="info-value">{{ bot_status.api if bot_status.api else 'N/A' }}</span>
+                    <span class="info-value" data-api="{{ bot_status.api if bot_status.api else '' }}">{{ bot_status.api if bot_status.api else 'N/A' }}</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">指令呼叫次數</span>
@@ -96,23 +96,44 @@
         </div>
     </div>
 
-    <script>
-        function toLocalTime(isoString) {
-            if (!isoString || isoString === 'N/A') return 'N/A';
-            const num = Number(isoString);
-            const date = isNaN(num) ? new Date(isoString) : new Date(num < 1e12 ? num * 1000 : num);
-            if (isNaN(date.getTime())) return isoString;
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            const h = String(date.getHours()).padStart(2, '0');
-            const mi = String(date.getMinutes()).padStart(2, '0');
-            const s = String(date.getSeconds()).padStart(2, '0');
-            return `${y}/${m}/${d} ${h}:${mi}:${s}`;
+<script>
+    function toLocalTime(isoString) {
+        if (!isoString || isoString === 'N/A') return 'N/A';
+        const num = Number(isoString);
+        const date = isNaN(num) ? new Date(isoString) : new Date(num < 1e12 ? num * 1000 : num);
+        if (isNaN(date.getTime())) return isoString;
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        const h = String(date.getHours()).padStart(2, '0');
+        const mi = String(date.getMinutes()).padStart(2, '0');
+        const s = String(date.getSeconds()).padStart(2, '0');
+        return `${y}/${m}/${d} ${h}:${mi}:${s}`;
+    }
+
+    const currentTimeEl = document.querySelector('[data-iso="{% if bot_status.current_time %}{{ bot_status.current_time }}{% endif %}"]');
+    if (currentTimeEl) {
+        const ts = currentTimeEl.getAttribute('data-iso');
+        const num = Number(ts);
+        const date = isNaN(num) ? new Date(ts) : new Date(num < 1e12 ? num * 1000 : num);
+        const now = new Date();
+        const diffMs = now - date;
+        if (!isNaN(date.getTime()) && diffMs > 60000) {
+            document.querySelectorAll('.card-value').forEach(el => el.textContent = 'Offline');
+            document.querySelectorAll('.info-value').forEach(el => el.textContent = 'Offline');
         }
-        document.querySelectorAll('[data-iso]').forEach(el => {
-            el.textContent = toLocalTime(el.getAttribute('data-iso'));
-        });
+    }
+
+    document.querySelectorAll('[data-iso]').forEach(el => {
+        const val = el.getAttribute('data-iso');
+        if (val) el.textContent = toLocalTime(val);
+    });
+
+    const apiEl = document.querySelector('[data-api]');
+    if (apiEl) {
+        const val = apiEl.getAttribute('data-api');
+        if (val) apiEl.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+    }
     </script>
 </body>
 
