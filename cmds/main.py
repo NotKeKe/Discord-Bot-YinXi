@@ -231,5 +231,5 @@ class Main(Cog_Extension):
         async with ctx.typing():
             await ctx.send(str(uuid.uuid4()))
 
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Main(bot))
