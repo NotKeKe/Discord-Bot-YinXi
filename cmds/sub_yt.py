@@ -5,10 +5,9 @@ import aiohttp
 import logging
 from bs4 import BeautifulSoup
 import time
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Iterable
 from datetime import datetime
 import yt_dlp
-from concurrent.futures import ProcessPoolExecutor
 # import scrapetube
 
 from cmds.music_bot.play4.utils import is_url, get_video_id
@@ -27,7 +26,7 @@ db = MongoDB_DB.sub_yt
 # https://github.com/dermasmid/scrapetube/issues/65
 # scrapetube.scrapetube.type_property_map['shorts'] = 'reelWatchEndpoint'
 
-async def get_channel_name(url: str) -> str:
+async def get_channel_name(url: str) -> str | None:
     async with aiohttp.ClientSession() as sess:
         async with sess.get(url) as resp:
             if resp.status != 200: return None
@@ -57,7 +56,7 @@ async def get_channel_name(url: str) -> str:
 #             time.sleep(1)
 #     return current_video_ids
 
-async def fetch_video_ids(urls: dict):
+async def fetch_video_ids(urls: Iterable) -> dict[str, list[str]]:
     current_video_ids = {}
     for url in urls:
         try:
@@ -65,7 +64,7 @@ async def fetch_video_ids(urls: dict):
             shorts = scrapetube.get_channel(channel_url=url, limit=8, content_type='shorts')
             # streams = scrapetube.get_channel(channel_url=url, limit=5, content_type='streams')
             if not videos: continue
-            video_ids = [video["videoId"] async for video in videos] + [short["videoId"] async for short in shorts]
+            video_ids: list[str] = [video["videoId"] async for video in videos] + [short["videoId"] async for short in shorts]
             current_video_ids[url] = video_ids
         except:
             continue
@@ -136,6 +135,8 @@ async def get_upload_date(url: str) -> datetime | None:
                 
 
 async def sub_urls_autocomplete(inter: Interaction, current: str) -> List[app_commands.Choice[str]]:
+    if not inter.channel: return []
+
     collection = db[str(inter.channel.id)]
     data: List[Tuple[str, str]] = [(d.get('sub_url'), d.get('channelName')) async for d in collection.find()]
 
@@ -221,7 +222,7 @@ class SubYT(Cog_Extension):
 
             descrip = ', '.join( result or ['None'] )
 
-            eb = create_basic_embed(description=descrip, color=ctx.author.color, 功能=author.format(channelName=ctx.channel.name))
+            eb = create_basic_embed(description=descrip, color=ctx.author.color, 功能=author.format(channelName=ctx.channel.name)) # type: ignore
             await ctx.send(embed=eb)
 
     @tasks.loop(minutes=10)
@@ -243,67 +244,73 @@ class SubYT(Cog_Extension):
         有區別就發送訊息
         '''
 
-        # 1. 取得 data 內全部 url
-        all_urls = await db['ALL'].find_one({'urls': {'$exists': True}})
-        if not all_urls: return
-        urls = set(all_urls.get('urls'))
+        try:
+            await self.bot.wait_until_ready()
 
-        # 2. 遞迴取得每個 url 當前的 video ids
-        '''example
-        {
-            url: [video_ids...]
-        }
-        '''
-        # current_video_ids: dict = await asyncio.to_thread(fetch_video_ids, urls)
-        current_video_ids: dict = await fetch_video_ids(urls)
-        all_dc_channel_id = [item for item in (await db.list_collection_names()) if item != 'ALL']
+            # 1. 取得 data 內全部 url
+            all_urls = await db['ALL'].find_one({'urls': {'$exists': True}})
+            if not all_urls: return
+            urls = set(all_urls.get('urls'))
 
-        for cnlID in all_dc_channel_id:
-            channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
-            if not channel: continue
+            # 2. 遞迴取得每個 url 當前的 video ids
+            '''example
+            {
+                url: [video_ids...]
+            }
+            '''
+            # current_video_ids: dict = await asyncio.to_thread(fetch_video_ids, urls)
+            current_video_ids: dict = await fetch_video_ids(urls)
+            all_dc_channel_id = [item for item in (await db.list_collection_names()) if item != 'ALL']
 
-            # get prefer lang
-            guild = self.bot.get_guild(channel.guild.id) or await self.bot.fetch_guild(channel.guild.id)
-            preferred_lang = guild.preferred_locale.value if guild else 'zh-TW'
-            
-            # redis
-            redis_key = f"sub_yt_processed_videos:{str(cnlID)}"
-            # 清理過期 video ids
-            ts = int(time.time()) - (60*60*24*30)
-            await redis_client.zremrangebyscore(redis_key, 0, ts)
+            for cnlID in all_dc_channel_id:
+                channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
+                if not channel: continue
 
-            # get sub_urls
-            sub_urls = [item.get('sub_url') async for item in db[str(cnlID)].find()]
-
-            for url in sub_urls:
-                latest_video_ids = current_video_ids.get(url, [])
-                if not latest_video_ids: continue
-
-                # 判斷元素是否在 redis 當中的 redis_key 內，如果在的話(results[i] is not None)就代表已經被處理過
-                pipe = redis_client.pipeline()
-                for video_id in latest_video_ids:
-                    pipe.zscore(redis_key, video_id)
-                result: list[Optional[float]] = await pipe.execute()
-
-                new_video_ids = [latest_video_ids[i] for i, score in enumerate(result) if score is None]
-                current_ts = int(time.time())
-                if not new_video_ids: continue
-                if len(new_video_ids) >= 5: # 可能因為第一次初始化失敗而造成一次傳送5個 (畢竟應該沒有人會30秒內一次傳送5個影片)
-                    for video_id in new_video_ids:
-                        await redis_client.zadd(redis_key, {video_id: current_ts})
-                    return
+                # get prefer lang
+                guild = self.bot.get_guild(channel.guild.id) or await self.bot.fetch_guild(channel.guild.id) # type: ignore
+                preferred_lang = guild.preferred_locale.value if guild else 'zh-TW'
                 
-                for video_id in reversed(new_video_ids):
-                    sent_url = f"https://youtu.be/{video_id}"
+                # redis
+                redis_key = f"sub_yt_processed_videos:{str(cnlID)}"
+                # 清理過期 video ids
+                ts = int(time.time()) - (60*60*24*30)
+                await redis_client.zremrangebyscore(redis_key, 0, ts)
 
-                    publish_time = await get_upload_date(sent_url)
-                    if not publish_time: continue
-                    await redis_client.zadd(redis_key, {video_id: current_ts})
-                    if (datetime.now() - publish_time).total_seconds() > 60*60*24*2: # 大於2天
-                        continue
+                # get sub_urls
+                sub_urls = [item.get('sub_url') async for item in db[str(cnlID)].find()]
 
-                    sent_message: str = await get_translate('send_sub_yt_new_video', preferred_lang)
-                    await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url)))          
+                for url in sub_urls:
+                    latest_video_ids = current_video_ids.get(url, [])
+                    if not latest_video_ids: continue
+
+                    # 判斷元素是否在 redis 當中的 redis_key 內，如果在的話(results[i] is not None)就代表已經被處理過
+                    pipe = redis_client.pipeline()
+                    for video_id in latest_video_ids:
+                        pipe.zscore(redis_key, video_id)
+                    result: list[Optional[float]] = await pipe.execute()
+
+                    new_video_ids = [latest_video_ids[i] for i, score in enumerate(result) if score is None]
+                    current_ts = int(time.time())
+                    if not new_video_ids: continue
+                    if len(new_video_ids) >= 5: # 可能因為第一次初始化失敗而造成一次傳送5個 (畢竟應該沒有人會30秒內一次傳送5個影片)
+                        for video_id in new_video_ids:
+                            await redis_client.zadd(redis_key, {video_id: current_ts})
+                        return
+                    
+                    for video_id in reversed(new_video_ids):
+                        sent_url = f"https://youtu.be/{video_id}"
+
+                        publish_time = await get_upload_date(sent_url)
+                        if not publish_time: continue
+                        await redis_client.zadd(redis_key, {video_id: current_ts})
+                        if (datetime.now() - publish_time).total_seconds() > 60*60*24*2: # 大於2天
+                            continue
+
+                        sent_message: str = self.bot.tree.translator.get_translate('send_sub_yt_new_video', preferred_lang) # type: ignore
+                        await channel.send(sent_message.format(url=sent_url, name=await get_channel_name(url))) # type: ignore
+
+        except Exception: 
+            logger.error('SubYT task error: ', exc_info=True)
 
 
 
