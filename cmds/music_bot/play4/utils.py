@@ -13,7 +13,7 @@ import time
 
 from core.functions import create_basic_embed
 from core.translator import load_translated, get_translate
-from core.scrapetube import scrapetube
+import scrapetube.async_version as scrapetube
 from core.priority_queue import MyPriorityQueue
 
 if TYPE_CHECKING:

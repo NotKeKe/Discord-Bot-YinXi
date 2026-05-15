@@ -16,7 +16,7 @@ from core.functions import create_basic_embed, redis_client
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated, get_translate
 from core.mongodb import MongoDB_DB
-from core.scrapetube import scrapetube
+import scrapetube.async_version as scrapetube
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +57,16 @@ async def get_channel_name(url: str) -> str | None:
 #     return current_video_ids
 
 async def fetch_video_ids(urls: Iterable) -> dict[str, list[str]]:
+    """回傳給與list[url]，每個頻道的 video, short ids
+
+    Args:
+        urls (Iterable): _description_
+
+    Returns:
+        dict[str, list[str]]: {
+            yt_channel_url: [video_ids...]
+        }
+    """    
     current_video_ids = {}
     for url in urls:
         try:
@@ -226,6 +236,7 @@ class SubYT(Cog_Extension):
             await ctx.send(embed=eb)
 
     @tasks.loop(minutes=10)
+    # @tasks.loop(seconds=30)
     async def update_sub_yt(self):
         '''
         1. 先取得全部 url's video ids
@@ -246,11 +257,13 @@ class SubYT(Cog_Extension):
 
         try:
             await self.bot.wait_until_ready()
+            # logger.info("update_sub_yt task is running...")
 
             # 1. 取得 data 內全部 url
             all_urls = await db['ALL'].find_one({'urls': {'$exists': True}})
             if not all_urls: return
             urls = set(all_urls.get('urls'))
+            # logger.info(f'ALL urls: {urls}')
 
             # 2. 遞迴取得每個 url 當前的 video ids
             '''example
@@ -261,6 +274,7 @@ class SubYT(Cog_Extension):
             # current_video_ids: dict = await asyncio.to_thread(fetch_video_ids, urls)
             current_video_ids: dict = await fetch_video_ids(urls)
             all_dc_channel_id = [item for item in (await db.list_collection_names()) if item != 'ALL']
+            # logger.info(f"Fetched video ids for {len(current_video_ids)} YouTube channels. And all {len(current_video_ids)} discord channels.")
 
             for cnlID in all_dc_channel_id:
                 channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
@@ -275,9 +289,11 @@ class SubYT(Cog_Extension):
                 # 清理過期 video ids
                 ts = int(time.time()) - (60*60*24*30)
                 await redis_client.zremrangebyscore(redis_key, 0, ts)
+                # logger.info(f"Cleaned up expired video ids from redis key for `{cnlID}`: `{redis_key}`")
 
                 # get sub_urls
                 sub_urls = [item.get('sub_url') async for item in db[str(cnlID)].find()]
+                # logger.info(f"{cnlID} has {len(sub_urls)} sub urls.")
 
                 for url in sub_urls:
                     latest_video_ids = current_video_ids.get(url, [])
@@ -290,12 +306,13 @@ class SubYT(Cog_Extension):
                     result: list[Optional[float]] = await pipe.execute()
 
                     new_video_ids = [latest_video_ids[i] for i, score in enumerate(result) if score is None]
+                    print(f"`{cnlID}` | `{url}` has `{len(new_video_ids)}` new video ids: `{new_video_ids}` .")
                     current_ts = int(time.time())
                     if not new_video_ids: continue
                     if len(new_video_ids) >= 5: # 可能因為第一次初始化失敗而造成一次傳送5個 (畢竟應該沒有人會30秒內一次傳送5個影片)
                         for video_id in new_video_ids:
                             await redis_client.zadd(redis_key, {video_id: current_ts})
-                        return
+                        continue
                     
                     for video_id in reversed(new_video_ids):
                         sent_url = f"https://youtu.be/{video_id}"
@@ -312,6 +329,9 @@ class SubYT(Cog_Extension):
         except Exception: 
             logger.error('SubYT task error: ', exc_info=True)
 
+
+        # finally:
+        #     logger.info('Ran SubYT task.')
 
 
 async def setup(bot):
