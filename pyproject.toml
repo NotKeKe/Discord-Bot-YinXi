@@ -26,9 +26,13 @@ dependencies = [
     "pyzbar>=0.1.9",
     "qrcode==8.2",
     "redis[hiredis]>=6.4.0",
+    "scrapetube[async]",
     "selenium>=4.38.0",
     "tenacity==9.0.0",
     "yt-dlp",
     "zai-sdk>=0.0.3.4",
     "zhipuai==2.1.5.20250421",
 ]
+
+[tool.uv.sources]
+scrapetube = { git = "https://github.com/NotKeKe/scrapetube.git", rev = "master" }

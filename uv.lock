@@ -1739,6 +1739,21 @@ wheels = [
 ]
 
 [[package]]
+name = "scrapetube"
+version = "2.6.0"
+source = { git = "https://github.com/NotKeKe/scrapetube.git?rev=master#f45192f7bf90c750131297ce2067cab8d67e52aa" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+
+[package.optional-dependencies]
+async = [
+    { name = "httpx" },
+    { name = "orjson" },
+]
+
+[[package]]
 name = "selenium"
 version = "4.38.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2126,6 +2141,7 @@ dependencies = [
     { name = "pyzbar" },
     { name = "qrcode" },
     { name = "redis", extra = ["hiredis"] },
+    { name = "scrapetube", extra = ["async"] },
     { name = "selenium" },
     { name = "tenacity" },
     { name = "yt-dlp" },
@@ -2157,6 +2173,7 @@ requires-dist = [
     { name = "pyzbar", specifier = ">=0.1.9" },
     { name = "qrcode", specifier = "==8.2" },
     { name = "redis", extras = ["hiredis"], specifier = ">=6.4.0" },
+    { name = "scrapetube", extras = ["async"], git = "https://github.com/NotKeKe/scrapetube.git?rev=master" },
     { name = "selenium", specifier = ">=4.38.0" },
     { name = "tenacity", specifier = "==9.0.0" },
     { name = "yt-dlp" },
