@@ -84,6 +84,7 @@ async def fetch_video_ids(urls: Iterable) -> dict[str, list[str]]:
 
 def _get_upload_date(url: str):
     ydl_opts = {
+        'remote_components': ['ejs:github'],  # 2025.11.12 yt-dlp version
         'ignoreerrors': True,      # 忽略錯誤
         'quiet': True,             # 不輸出進度
         'skip_download': True,     # 跳過下載
@@ -306,7 +307,7 @@ class SubYT(Cog_Extension):
                     result: list[Optional[float]] = await pipe.execute()
 
                     new_video_ids = [latest_video_ids[i] for i, score in enumerate(result) if score is None]
-                    print(f"`{cnlID}` | `{url}` has `{len(new_video_ids)}` new video ids: `{new_video_ids}` .")
+                    # print(f"`{cnlID}` | `{url}` has `{len(new_video_ids)}` new video ids: `{new_video_ids}` .")
                     current_ts = int(time.time())
                     if not new_video_ids: continue
                     if len(new_video_ids) >= 5: # 可能因為第一次初始化失敗而造成一次傳送5個 (畢竟應該沒有人會30秒內一次傳送5個影片)
