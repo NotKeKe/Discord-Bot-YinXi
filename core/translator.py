@@ -96,7 +96,7 @@ async def get_translate(key: str, ctx: commands.Context | Interaction, locale: O
             result = await ctx.interaction.translate(key) # type: ignore
 
     if result is None:
-        result = await bot.tree.translator.get_translate(key, locale, ctx) # type: ignore
+        result = bot.tree.translator.get_translate(key, locale) # type: ignore
         # logger.info(f'bot tree translator get_translate, returned {str(result)}')
 
     result = result if result is not None else key
