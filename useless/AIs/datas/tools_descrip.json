@@ -1,0 +1,75 @@
+{
+    "tools": [
+        {
+            "type": "function",
+            "function": {
+                "name": "current_time",
+                "description": "此工具用來取得當前的正確時間，尤其是在使用者提到今天或明天時",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "UTC": {"type": "int", "description": "該地區時區，如對話中未提供則為8"}
+                    },
+                    "required": ["UTC"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "discord_whereAmI",
+                "description": "這個工具用來取得使用者所在的discord伺服器以及頻道",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "guild_name": {"type": "string", "description": "對話中所提供的伺服器名稱"},
+                        "channel_name": {"type": "string", "description": "對話中所提供的頻道名稱"}
+                    },
+                    "required": ["guild_name", "channel_name"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "calculate",
+                "description": "這個工具用來進行四則運算",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "expression": {"type": "string", "description": "對話中需要進行四則運算的算式，每個數字與運算符號間須相隔一個空格。除號要用/，乘號要用*"}
+                    },
+                    "required": ["expression"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search",
+                "description": "這個工具用來在你不確定答案或是使用者需要網頁搜尋時，進行網頁搜索並取得結果",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "keywords": {"type": "string", "description": "在此輸入你要搜尋的關鍵字"}
+                    },
+                    "required": ["keywords"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "image_generate",
+                "description": "這個工具用來生成圖片",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": {"type": "string", "description": "在此輸入使用者稱成圖片的需求"}
+                    },
+                    "required": ["prompt"]
+                }
+            }
+        }
+    ]
+}
