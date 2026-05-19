@@ -40,8 +40,6 @@ base_url_options = {
     }
 }
 
-MODEL_TEMP_PATH = './cmds/ai_chat/temp/models.json'
-
 with open('./cmds/ai_chat/data/prompts/base_system_prompt.md', 'r', encoding='utf-8') as f:
     base_system_prompt = f.read()
 

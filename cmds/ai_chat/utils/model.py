@@ -89,7 +89,3 @@ async def fetch_models():
         data,
         upsert=True
     )
-
-        # async with aiofiles.open(MODEL_TEMP_PATH, 'wb') as f:
-        #     await f.write(orjson.dumps(data, option=orjson.OPT_INDENT_2))
-        #     logger.info('successfully write models')
