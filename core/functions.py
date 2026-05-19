@@ -12,6 +12,7 @@ import traceback
 import inspect
 import base64
 import aiohttp
+import requests
 from urllib.parse import quote_plus
 from motor.motor_asyncio import AsyncIOMotorClient
 import redis.asyncio as redis
@@ -145,15 +146,24 @@ async def async_translate(text: str, source:str='auto', target:str='zh-TW'):
     return await asyncio.to_thread(translate, text, source, target)
 
 def get_attachment(msg: discord.Message, to_base64:bool=False) -> list:
+    def image_url_to_base64(image_url: str) -> str | None:
+        response = requests.get(image_url)
+        if response.status_code == 200:
+            base64_string = base64.b64encode(response.content).decode('utf-8')
+            return base64_string
+
     a = [
         attachment.url
         for attachment in msg.attachments
         if attachment.content_type and attachment.content_type.startswith('image/')
     ]
     if to_base64:
-        from cmds.AIsTwo.utils import image_url_to_base64
         a = [image_url_to_base64(u) for u in a]
     return a
+
+def halfToFull(content: str) -> str:
+    '''將文字中的全形標點符號轉為半形'''
+    return content.replace('，', '  ').replace('？', '? ').replace('！', '! ').replace('：', ': ')
 
 def math_round(x: float, ndigits: int = 0) -> float:
     factor = 10 ** ndigits

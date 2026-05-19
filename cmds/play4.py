@@ -368,7 +368,7 @@ class Music(Cog_Extension):
             ''''''
 
             eb = create_basic_embed(title, color=ctx.author.color)
-            eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+            eb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url if ctx.author.avatar else ctx.author.default_avatar.url)
             await ctx.send(embed=eb, view=view)
 
     @commands.hybrid_command(name=locale_str('clear_play_web'), description=locale_str('clear_play_web'))

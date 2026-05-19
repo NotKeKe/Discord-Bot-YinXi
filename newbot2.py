@@ -13,10 +13,10 @@ import sys
 from aiohttp.client_exceptions import ClientConnectorDNSError
 # import gc
 
-from core.functions import math_round, current_time, testing_guildID, create_basic_embed, thread_pool
+from core.functions import math_round, current_time, testing_guildID, create_basic_embed
 from core.translator import i18n, MockInteraction
 from core.setup_log import setup_logging, StreamToLogger
-from cmds.AIsTwo.others.decide import ActivitySelector
+from cmds.ai_chat.utils.activity_selector import ActivitySelector
 from core.classes import set_bot, Cog_Extension
 
 # get env
@@ -110,7 +110,7 @@ async def on_message(message):
 
 class UpdateStatus(Cog_Extension):
     async def cog_load(self):
-        print(f'已載入「UpdateStatus」')
+        print('已載入「UpdateStatus」')
         self.update_status.start()
         self.change_activity.start()
 

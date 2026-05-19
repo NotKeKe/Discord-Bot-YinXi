@@ -9,7 +9,7 @@ import aiosqlite
 import io
 from typing import Optional
 
-from cmds.AIsTwo.others.func import image_read
+from cmds.ai_chat.tools.ai_func import image_read
 
 from core.classes import Cog_Extension
 from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow, testing_guildID, image_to_base64
@@ -184,7 +184,7 @@ class Main(Cog_Extension):
 
                 await download_image(image.url, path=path)
 
-                result = await thread_pool(image_read, prompt, final_url)
+                result = await image_read(prompt, final_url)
                 eb.add_field(name=ai_response_field_name, value=result)
                 eb.set_footer(text='Powered by glm-4v-flash')
                 await ctx.send(embed=eb)
