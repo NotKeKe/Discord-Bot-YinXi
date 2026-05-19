@@ -346,7 +346,7 @@ class PJSK(commands.Cog):
                     lang = channel.guild.preferred_locale.value if hasattr(channel, 'guild') and channel.guild else None # type: ignore
 
                     '''i18n'''
-                    eb_text = load_translated(await get_translate('embed_pjsk_global_full_info', lang))[0] # type: ignore
+                    eb_text = load_translated(self.bot.tree.translator.get_translate('embed_pjsk_global_full_info', lang))[0] # type: ignore
                     footer = eb_text.get('footer')
                     descrip = eb_text.get('description')
                     ''''''

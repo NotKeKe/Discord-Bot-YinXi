@@ -18,7 +18,9 @@
 
 ### Translate command output
 - Use `from core.translator import get_translate` to translate the command output.
-    - get_translate will always return str (it might also return None, but it must not happend cuz we MUST already translated everything in core/locales, or we're doing translate task.)
+    - Read core/translator.py first, to make sure you understand how the code work.
+    - `get_translate` will always return str (it might also return None, but it must not happend cuz we MUST already translated everything in core/locales, or we're doing translate task.)
+    - ctx means `discord.ext.commands.Context`, do not pass in objects whose type is not `commands.Context` when you are using get_translate directly.
 
     - Example 1 (Not embed):
         ```python
