@@ -199,7 +199,7 @@ async def send_info_embed(player: 'Player', ctx: commands.Context | discord.Inte
     player: Player = player
     
     index = index or player.current_index
-    if not (0 <= index < len(player.list)): return await send(ctx, (await player.translator.get_translate('send_player_not_found_song', player.locale)).format(index=index+1), ephemeral=True)
+    if not (0 <= index < len(player.list)): return await send(ctx, (player.translator.get_translate('send_player_not_found_song', player.locale)).format(index=index+1), ephemeral=True)
 
     title = player.list[index]['title']
     video_url = player.list[index]['video_url']
@@ -210,7 +210,7 @@ async def send_info_embed(player: 'Player', ctx: commands.Context | discord.Inte
     is_current = index == player.current_index
 
     '''i18n'''
-    i18n_info_str = await player.translator.get_translate('embed_music_info', player.locale)
+    i18n_info_str = player.translator.get_translate('embed_music_info', player.locale)
     i18n_info_data = load_translated(i18n_info_str)[0]
     ''''''
 

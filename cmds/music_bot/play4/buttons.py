@@ -64,19 +64,19 @@ class MusicControlButtons(View):
             from cmds.play4 import players
             
             if not interaction.guild: return
-            if not (interaction.user.voice and interaction.user.voice.channel): return await interaction.response.send_message(await self.translator.get_translate('send_button_not_in_voice', self.locale))
-            if not interaction.guild.voice_client: return await interaction.response.send_message(await self.translator.get_translate('send_button_bot_not_in_voice', self.locale))
+            if not (interaction.user.voice and interaction.user.voice.channel): return await interaction.response.send_message(self.translator.get_translate('send_button_not_in_voice', self.locale))
+            if not interaction.guild.voice_client: return await interaction.response.send_message(self.translator.get_translate('send_button_bot_not_in_voice', self.locale))
 
             player: Player = players.get(interaction.guild.id)
             user = interaction.user.global_name
 
-            if not player: return await interaction.response.send_message(await self.translator.get_translate('send_button_player_crashed', self.locale))
+            if not player: return await interaction.response.send_message(self.translator.get_translate('send_button_player_crashed', self.locale))
             del players[interaction.guild.id]
 
             channel = interaction.guild.voice_client.channel
 
             await interaction.guild.voice_client.disconnect()
-            await interaction.response.send_message((await self.translator.get_translate('send_button_stopped_music', self.locale)).format(user=user, channel_mention=channel.mention))
+            await interaction.response.send_message((self.translator.get_translate('send_button_stopped_music', self.locale)).format(user=user, channel_mention=channel.mention))
         except Exception as e:
             await self.button_error(interaction, e)
 
@@ -87,7 +87,7 @@ class MusicControlButtons(View):
             self.player.turn_loop()
             eb, view = await send_info_embed(self.player, interaction, if_send=False)
             await msg.edit(embed=eb, view=view)
-            new_msg = await interaction.response.send_message((await self.translator.get_translate('send_button_loop_changed', self.locale)).format(loop_status=self.player.loop_status), ephemeral=True)
+            new_msg = await interaction.response.send_message((self.translator.get_translate('send_button_loop_changed', self.locale)).format(loop_status=self.player.loop_status), ephemeral=True)
             await new_msg.resource.delete(delay=30)
         except Exception as e:
             await self.button_error(interaction, e)

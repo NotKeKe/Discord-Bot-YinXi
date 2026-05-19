@@ -215,7 +215,7 @@ class Player:
         except Exception as e:
             print(f'播放錯誤: {e}')
             traceback.print_exc()
-            await self.ctx.send((await self.translator.get_translate('send_player_play_error', self.locale)).format(e=str(e)))
+            await self.ctx.send((self.translator.get_translate('send_player_play_error', self.locale)).format(e=str(e)))
 
     async def update_to_api(self):
         try:
@@ -294,13 +294,13 @@ class Player:
         ctx = ctx or self.ctx
 
         if self.voice_client.is_paused():
-            return await ctx.send(await self.translator.get_translate('send_player_already_paused', self.locale))
+            return await ctx.send(self.translator.get_translate('send_player_already_paused', self.locale))
         if not self.voice_client.is_playing():
-            return await ctx.send(await self.translator.get_translate('send_player_not_playing', self.locale))
+            return await ctx.send(self.translator.get_translate('send_player_not_playing', self.locale))
 
         self.voice_client.pause()
         self.paused = True
-        return await ctx.send(await self.translator.get_translate('send_player_paused_success', self.locale), ephemeral=True)
+        return await ctx.send(self.translator.get_translate('send_player_paused_success', self.locale), ephemeral=True)
     
     async def resume(self, ctx: commands.Context = None):
         '''Resume to play music and `SEND` message to notice user'''
@@ -316,7 +316,7 @@ class Player:
         except:
             return
         self.paused = False
-        await ctx.send(await self.translator.get_translate('send_player_resumed_success', self.locale), ephemeral=True)
+        await ctx.send(self.translator.get_translate('send_player_resumed_success', self.locale), ephemeral=True)
 
     def delete_song(self, index: int):
         '''Ensure index is index not id of song'''
@@ -345,7 +345,7 @@ class Player:
                 await asyncio.sleep(1)
                 if not self.ctx.voice_client: return
                 from cmds.play4 import players
-                await self.ctx.send(await self.translator.get_translate('send_player_finished_playlist', self.locale))
+                await self.ctx.send(self.translator.get_translate('send_player_finished_playlist', self.locale))
                 await self.voice_client.disconnect()
                 del players[self.ctx.guild.id]
                 del self
@@ -364,12 +364,12 @@ class Player:
         '''Ensure index is index not id of song'''
         index = index or self.current_index
         if not (0 <= index < len(self.list)):  # 確保索引在範圍內
-            return create_basic_embed((await self.translator.get_translate('send_player_not_found_song', self.locale)).format(index=index+1))
+            return create_basic_embed((self.translator.get_translate('send_player_not_found_song', self.locale)).format(index=index+1))
         
         '''i18n'''
-        i18n_queue_str = await self.translator.get_translate('embed_player_queue', self.locale)
+        i18n_queue_str = self.translator.get_translate('embed_player_queue', self.locale)
         i18n_queue_data = load_translated(i18n_queue_str)[0]
-        i18n_np_str = await self.translator.get_translate('embed_music_now_playing', self.locale)
+        i18n_np_str = self.translator.get_translate('embed_music_now_playing', self.locale)
         i18n_np_data = load_translated(i18n_np_str)[0]
         ''''''
         eb = create_basic_embed(color=self.user.color, 功能=i18n_queue_data['title'])
@@ -458,7 +458,7 @@ class Player:
     async def search_lyrics(self) -> str:
         query = self.list[self.current_index].get('title')
         result = await search_lyrics(query=query)
-        if not result: return await self.translator.get_translate('send_player_lyrics_not_found', self.locale)
+        if not result: return self.translator.get_translate('send_player_lyrics_not_found', self.locale)
         return result
     
     async def volume_adjust(self, volume: float = None, add: float = None, reduce: float = None) -> discord.Message | bool:
@@ -470,5 +470,5 @@ class Player:
         self.transformer.volume = self.volume
         self.voice_client.source = self.transformer
     
-        msg = await self.ctx.send((await self.translator.get_translate('send_player_volume_adjusted', self.locale)).format(volume=int(math_round(self.volume * 100))), silent=True, ephemeral=True)
+        msg = await self.ctx.send((self.translator.get_translate('send_player_volume_adjusted', self.locale)).format(volume=int(math_round(self.volume * 100))), silent=True, ephemeral=True)
         return msg
