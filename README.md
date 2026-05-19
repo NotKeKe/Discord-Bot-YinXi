@@ -50,6 +50,9 @@
     *   可在 [core/locales](core/locales) 查看與 Gemini 2.5 pro 的 `對話紀錄` 與 `提示詞`
 *   **[2025/08/06]** 將此專案接入本地 MongoDB，並將 `chat` 相關命令重寫，以支援異步 function 調用
     > 如果之後有機會能將整個 Project 改為使用 MongoDB的話，應該就可以直接用 `git clone` 的方式拿下來用
+*   **[2026/05/19]** 
+    *   因應 translator 重構，順便修復了大量的類型錯誤 (儘管還是有錯誤存在，但可以更好的讓 bot 正常運行)。
+    *   刪除大量無用代碼，並將其放入 `archive` 分支當中。
 
 ## ⚡ Quick Start
 - 儘管該專案配置了 Docker 相關設定，仍然**不建議自行部署**。
