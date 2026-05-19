@@ -88,34 +88,6 @@ docker-compose up -d
     uv run newbot2.py
     ```
 
-**選項三** 使用 **[pm2](https://pm2.keymetrics.io/)**:
-1. **確保你的設備環境內有 `node.js` 與 `npm`**
-2. **安裝 pm2**:
-    ```bash
-    npm install -g pm2
-    ```
-3. **安裝依賴與啟動Bot**:
-    ```bash
-    pip install -r requirements.txt
-    ./start_run_in_docker_pm2.sh
-    ```
-
-    - 如果**無法使用**的話 建議先使用以下指令 
-        ```bash
-        cd ENTER_YINXI_BOT_PATH
-        chmod +x start_run_in_docker_pm2.sh
-        ```
-
-**選項四** 使用 **[newbot2.bat](newbot2.bat)** (僅 windows)
-1. **安裝依賴**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-2. **啟動機器人**:
-    ```bash
-    newbot2.bat
-    ```
-
 ## ⚙️ 配置設定
 
 ### 🔑 環境變數 (`.env`)
