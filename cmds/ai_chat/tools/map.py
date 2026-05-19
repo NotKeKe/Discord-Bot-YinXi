@@ -12,5 +12,6 @@ tools = {
     'web_search': web_search,
     'wiki_search': wiki_searh,
     'image_generate': image_generate,
-    'video_generate': video_generate
+    'video_generate': video_generate,
+    'image_read': image_read
 }
