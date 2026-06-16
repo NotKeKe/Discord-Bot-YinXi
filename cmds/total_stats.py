@@ -10,6 +10,7 @@ from datetime import datetime, timezone, timedelta
 import psutil
 import platform
 import os
+from pymongo import UpdateOne
 
 from core.classes import Cog_Extension
 from core.functions import (
@@ -72,49 +73,53 @@ class BotStats(Cog_Extension):
         if not ctx.command:
             return
 
-        await collection.find_one_and_update(
-            {"type": "on_command", "name": "Command called times"},
-            {
-                "$inc": {
-                    "total_times": 1,
-                    f"data.{cog_name_of(ctx)}.{ctx.command.name}": 1,
+        ops: list[UpdateOne] = [
+            UpdateOne(
+                {"type": "on_command", "name": "Command called times"},
+                {
+                    "$inc": {
+                        "total_times": 1,
+                        f"data.{cog_name_of(ctx)}.{ctx.command.name}": 1,
+                    },
+                    "$set": {"last_update": now_utc8_iso()},
+                    "$setOnInsert": {
+                        "type": "on_command",
+                        "name": "Command called times",
+                    },
                 },
-                "$set": {"last_update": now_utc8_iso()},
-                "$setOnInsert": {
-                    "type": "on_command",
-                    "name": "Command called times",
+                upsert=True,
+            ),
+            UpdateOne(
+                {"type": "on_command", "name": "Command called times by a user"},
+                {
+                    "$inc": {f"data.{ctx.author.id}": 1},
+                    "$set": {"last_update": now_utc8_iso()},
+                    "$setOnInsert": {
+                        "type": "on_command",
+                        "name": "Command called times by a user",
+                    },
                 },
-            },
-            upsert=True,
-        )
+                upsert=True,
+            ),
+        ]
 
-        await collection.find_one_and_update(
-            {"type": "on_command", "name": "Command called times by a user"},
-            {
-                "$inc": {f"data.{ctx.author.id}": 1},
-                "$set": {"last_update": now_utc8_iso()},
-                "$setOnInsert": {
-                    "type": "on_command",
-                    "name": "Command called times by a user",
-                },
-            },
-            upsert=True,
-        )
+        if ctx.guild:
+            ops.append(
+                UpdateOne(
+                    {"type": "on_command", "name": "Command called times by a guild"},
+                    {
+                        "$inc": {f"data.{ctx.guild.id}": 1},
+                        "$set": {"last_update": now_utc8_iso()},
+                        "$setOnInsert": {
+                            "type": "on_command",
+                            "name": "Command called times by a guild",
+                        },
+                    },
+                    upsert=True,
+                )
+            )
 
-        if not ctx.guild:
-            return
-        await collection.find_one_and_update(
-            {"type": "on_command", "name": "Command called times by a guild"},
-            {
-                "$inc": {f"data.{ctx.guild.id}": 1},
-                "$set": {"last_update": now_utc8_iso()},
-                "$setOnInsert": {
-                    "type": "on_command",
-                    "name": "Command called times by a guild",
-                },
-            },
-            upsert=True,
-        )
+        await collection.bulk_write(ops, ordered=False)
 
     async def on_any_command_completion(self, ctx: commands.Context):
         await collection.find_one_and_update(
@@ -147,6 +152,7 @@ class BotStats(Cog_Extension):
     async def on_command_error(self, ctx: commands.Context, error):
         if not ctx.command:
             return
+            
         await collection.find_one_and_update(
             {"type": "on_command_error"},
             {
