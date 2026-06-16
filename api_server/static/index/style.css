@@ -1,7 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Liu+Jian+Mao+Cao&family=Zen+Maru+Gothic&display=swap');
-
-
-
 * {
     margin: 0;
     padding: 0;
@@ -59,17 +56,16 @@ a:hover {
     max-width: 1200px;
     min-height: 80vh;
     height: auto;
-    margin: auto auto;
-    padding: 40px;
+    margin: 30px auto;
+    padding: 50px;
     border-radius: 12px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-evenly;
     text-align: center;
-    gap: 20px;
+    gap: 24px;
 }
 
 .header {
@@ -227,13 +223,106 @@ p {
     color: #e0c060;
 }
 
+.top-commands {
+    margin-top: 30px;
+    width: 80%;
+}
+
+.top-commands h3 {
+    font-size: 1rem;
+    color: #e0c060;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.top-commands-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.top-command-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 18px;
+    background: #1a1d23;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.top-command-item:hover {
+    transform: translateY(-2px);
+}
+
+.top-command-item:first-child {
+    border: 2px solid #e0c060;
+    box-shadow: 0 0 20px rgba(224, 192, 96, 0.5), inset 0 0 8px rgba(224, 192, 96, 0.1);
+}
+
+.top-command-rank {
+    font-weight: 700;
+    color: #e0c060;
+    min-width: 30px;
+}
+
+.top-command-name {
+    flex: 1;
+    color: #fff;
+    font-weight: 500;
+}
+
+.top-command-count {
+    color: #8a9199;
+    font-size: 0.875rem;
+}
+
+.no-data {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.scroll-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 48px;
+    height: 48px;
+    background-color: #1a1d23;
+    border: 1px solid #2c3036;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e0c060;
+    font-size: 1.25rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    padding: 0;
+}
+
+.scroll-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.scroll-to-top:hover {
+    background-color: #1e2128;
+    border-color: #e0c060;
+    transform: scale(1.1);
+    box-shadow: none;
+}
+
 @media (max-width: 1200px) {
     img {
         width: 200px;
         height: 200px;
         margin: 40px;
     }
-
     .header-text {
         gap: 40px;
     }
@@ -246,57 +335,46 @@ p {
         min-height: 90vh;
         padding: 40px 20px;
     }
-
     .header {
         flex-direction: column;
         gap: 20px;
     }
-
     img {
         width: 150px;
         height: 150px;
         margin: 20px;
     }
-
     .header-text {
         align-items: center;
         text-align: center;
         gap: 15px;
     }
-
     h1 {
         font-size: 3.5rem;
     }
-
     h2 {
         font-size: 1.5rem;
     }
-
     p {
         width: 100%;
         font-size: 1.1rem;
         line-height: 2;
     }
-
     .button-container {
         margin-top: 30px;
         justify-content: center;
     }
-
     .navbar {
         padding: 12px 20px;
         flex-direction: column;
         gap: 12px;
     }
-
     .nav-logo {
         font-size: 1.25rem;
     }
-
     .status-preview {
         width: 100%;
     }
-
     .status-preview-grid {
         grid-template-columns: repeat(2, 1fr);
     }

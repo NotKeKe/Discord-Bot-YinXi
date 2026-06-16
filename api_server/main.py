@@ -46,7 +46,8 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {'request': request})
+    data = await redis_client.hgetall('bot_status') or {} # type: ignore
+    return templates.TemplateResponse("index.html", {'request': request, 'bot_status': data})
 
 @app.get('/robots.txt', response_class=FileResponse)
 async def robots_txt():

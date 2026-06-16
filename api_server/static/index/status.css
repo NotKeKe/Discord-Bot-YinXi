@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap');
-
 .page-title {
     text-align: center;
     margin-bottom: 40px;
@@ -113,11 +112,16 @@
     font-weight: 500;
 }
 
+.status-preview-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
 @media (max-width: 1024px) {
     .highlight-cards {
         grid-template-columns: repeat(2, 1fr);
     }
-
     .info-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -125,9 +129,14 @@
 
 @media (max-width: 600px) {
     .highlight-cards {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
-
+    .info-section {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 16px;
+    }
     .info-grid {
         grid-template-columns: 1fr;
     }
