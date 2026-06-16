@@ -36,7 +36,7 @@ class Translator(Cog_Extension):
             
             embed = create_basic_embed(description=translated, 功能=yinxi_translated, color=ctx.author.color)
             embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-            embed.set_footer(text='Powered by qwen3-1.7b')
+            embed.set_footer(text='Powered by gemma4-12b')
 
             await ctx.send(embed=embed)
 

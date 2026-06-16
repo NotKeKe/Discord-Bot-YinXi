@@ -35,8 +35,8 @@ base_url_options = {
         'api_key': 'hi'
     },
     'ai-local': {
-        'base_url': f'http://{AI_IP}:14117/v1',
-        'api_key': 'hi'
+        'base_url': f'http://{AI_IP}:4000/v1',
+        'api_key': ''
     }
 }
 

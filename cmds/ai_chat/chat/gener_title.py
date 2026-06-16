@@ -25,7 +25,7 @@ Assistant:
 
 async def gener_title(history: list, length: int = 15):
     try:
-        client = Chat(model='ai-local:qwen3-1.7b', system_prompt=gener_title_prompt)
+        client = Chat(model='ai-local:gemma4-12b', system_prompt=gener_title_prompt)
 
         # process prompt
         prompt_ls = ['The following is a conversation between a user and an AI. Please generate a title for the conversation.']

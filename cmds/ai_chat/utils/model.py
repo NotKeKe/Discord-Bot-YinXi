@@ -67,7 +67,7 @@ async def fetch_models():
         logger.error(f'Cannot fetch lmstudio models: {e}')
         lmstudio_models = []
 
-    ai_local_models = ['qwen3-1.7b']
+    ai_local_models = ['gemma4-12b']
 
     data = {
         'openrouter': openrouter_models,

@@ -57,8 +57,11 @@ class ActivitySelector:
         ```json
         {status}
         ```
-'''.format(status = orjson.dumps(cls.past_status, option=orjson.OPT_INDENT_2).decode()).strip()
-        model = 'ai-local:qwen3-1.7b'
+'''.format(status = orjson.dumps(cls.past_status[-10:], option=orjson.OPT_INDENT_2).decode()).strip()
+        # model = 'ai-local:gemma4-12b'
+        model = 'zhipu:glm-4-flash'
+
+        logger.info(f'Status will go to `{status}`, matching...')
 
         match status:
             # Playing
@@ -102,6 +105,7 @@ class ActivitySelector:
 
                             _, result, h = await client.chat(
                                 prompt='You didn\'t output anything, please OUTPUT your final answer or result after thinking.', 
+                                is_enable_tools=False,
                                 tool_choice='none',
                                 history=h
                             )
@@ -135,6 +139,7 @@ class ActivitySelector:
 
                         _, result, h = await client.chat(
                             prompt='You didn\'t output anything, please OUTPUT your final answer or result after thinking.', 
+                            is_enable_tools=False,
                             tool_choice='none',
                             history=h
                         )
@@ -157,6 +162,7 @@ class ActivitySelector:
 
                     _, result, h = await client.chat(
                         prompt='You didn\'t output anything, please OUTPUT your final answer or result after thinking.', 
+                        is_enable_tools=False,
                         tool_choice='none',
                         history=h
                     )

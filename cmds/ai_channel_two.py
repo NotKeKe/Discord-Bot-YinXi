@@ -177,7 +177,7 @@ class AIChannelTwo(Cog_Extension):
                         return await ctx.send(await get_translate('send_set_ai_channel_channel_exist', ctx))
                     
                 if model is None:
-                    model = 'ai-local:qwen3-1.7b'
+                    model = 'ai-local:gemma4-12b'
 
                 provider, model = split_provider_model(model)
                     

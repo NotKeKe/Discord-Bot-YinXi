@@ -146,44 +146,9 @@ class TestTemp(Cog_Extension):
         await ctx.send(', '.join(channels))
 
     @commands.command()
-    async def mongo_test(self, ctx: commands.Context):
-        try:
-            async with ctx.typing():
-                client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL)
-                db = client['test']
-                collection = db[str(ctx.author.id)]
-
-                await collection.insert_one({
-                    'title': 'abcdefg',
-                    'user': ctx.author.id,
-                    'messages': [
-                        {'role': 'user', 'content': 'prompt'},
-                        {'role': 'assistant', 'content': 'wdym'}
-                    ],
-                    'createAt': datetime.now().timestamp()
-                })
-
-                await ctx.send(f"現在伺服器上的資料庫: {await client.list_database_names()}")
-                await ctx.send(f"在 'test' 中的 collections: {await db.list_collection_names()}")
-                await ctx.send(f'找到 {await collection.find_one({'user': ctx.author.id})}')
-                async for d in collection.find({'user': ctx.author.id}):
-                    await ctx.send(f'找到一項數據: {d}')
-                await collection.update_one({
-                    'title': 'abcdefg'
-                },
-                {
-                    '$set': {
-                        'messages': [
-                            {'role': 'user', 'content': 'prompt2'},
-                            {'role': 'assistant', 'content': 'wdym2'}
-                        ]
-                    }
-                }
-                )
-        finally:
-            if client:
-                # client.drop_database('test')
-                client.close()
+    async def mytest(self, ctx: commands.Context):
+        assert ctx.cog
+        await ctx.send(ctx.cog.qualified_name)
 
 
 async def setup(bot):

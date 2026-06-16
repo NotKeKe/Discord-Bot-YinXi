@@ -43,7 +43,7 @@ class AIChat(Cog_Extension):
             self, 
             ctx: commands.Context, 
             prompt: str, 
-            model: str = 'ai-local:qwen3-1.7b', 
+            model: str = 'ai-local:gemma4-12b', 
             history: Optional[str] = None, 
             enable_tools: bool = True, 
             image: Optional[discord.Attachment] = None, 
