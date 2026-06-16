@@ -74,66 +74,84 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">API 狀態</span>
-                    <span class="info-value" data-api="{{ bot_status.api if bot_status.api else '' }}">{{ bot_status.api if bot_status.api else 'N/A' }}</span>
+                    <span class="info-value {{ bot_status.api | lower if bot_status.api else '' }}" data-api="{{ bot_status.api if bot_status.api else '' }}">
+                        {% if bot_status.api | lower == 'operational' %}正常
+                        {% elif bot_status.api | lower == 'maintenance' %}維護中
+                        {% elif bot_status.api | lower == 'offline' %}離線
+                        {% else %}{{ bot_status.api if bot_status.api else 'N/A' }}
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">指令呼叫次數</span>
-                    <span class="info-value">{{ bot_status.command_call_time if bot_status.command_call_time else 'N/A' }}</span>
+                    <span class="info-value">{{ bot_status.command_called_total_times if bot_status.command_called_total_times else 'N/A' }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">更新時間</span>
+                    <span class="info-label">頁面更新時間</span>
                     <span class="info-value" data-iso="{{ bot_status.current_time if bot_status.current_time else '' }}">{{ bot_status.current_time if bot_status.current_time else 'N/A' }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">命令記錄起始</span>
+                    <span class="info-label">狀態記錄起始時間</span>
                     <span class="info-value" data-iso="{{ bot_status.command_record_from if bot_status.command_record_from else '' }}">{{ bot_status.command_record_from if bot_status.command_record_from else 'N/A' }}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">手動狀態更新時間</span>
-                    <span class="info-value" data-iso="{{ bot_status.status_str_update_time if bot_status.status_str_update_time else '' }}">{{ bot_status.status_str_update_time if bot_status.status_str_update_time else 'N/A' }}</span>
+                    <span class="info-label">Bot/API狀態更新時間</span>
+                    <span class="info-value" data-iso="{{ bot_status.status_str_last_update if bot_status.status_str_last_update else '' }}">{{ bot_status.status_str_last_update if bot_status.status_str_last_update else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">熱門指令 Top 3</span>
+                    <span class="info-value" id="top-3-commands" data-json="{{ bot_status.top_3_command if bot_status.top_3_command else '' }}">N/A</span>
                 </div>
             </div>
         </div>
     </div>
 
-<script>
-    function toLocalTime(isoString) {
-        if (!isoString || isoString === 'N/A') return 'N/A';
-        const num = Number(isoString);
-        const date = isNaN(num) ? new Date(isoString) : new Date(num < 1e12 ? num * 1000 : num);
-        if (isNaN(date.getTime())) return isoString;
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        const h = String(date.getHours()).padStart(2, '0');
-        const mi = String(date.getMinutes()).padStart(2, '0');
-        const s = String(date.getSeconds()).padStart(2, '0');
-        return `${y}/${m}/${d} ${h}:${mi}:${s}`;
-    }
-
-    const currentTimeEl = document.querySelector('[data-iso="{% if bot_status.current_time %}{{ bot_status.current_time }}{% endif %}"]');
-    if (currentTimeEl) {
-        const ts = currentTimeEl.getAttribute('data-iso');
-        const num = Number(ts);
-        const date = isNaN(num) ? new Date(ts) : new Date(num < 1e12 ? num * 1000 : num);
-        const now = new Date();
-        const diffMs = now - date;
-        if (!isNaN(date.getTime()) && diffMs > 60000) {
-            document.querySelectorAll('.card-value').forEach(el => el.textContent = 'Offline');
-            document.querySelectorAll('.info-value').forEach(el => el.textContent = 'Offline');
+    <script>
+        function toLocalTime(isoString) {
+            if (!isoString || isoString === 'N/A') return 'N/A';
+            const num = Number(isoString);
+            const date = isNaN(num) ? new Date(isoString) : new Date(num < 1e12 ? num * 1000 : num);
+            if (isNaN(date.getTime())) return isoString;
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const h = String(date.getHours()).padStart(2, '0');
+            const mi = String(date.getMinutes()).padStart(2, '0');
+            const s = String(date.getSeconds()).padStart(2, '0');
+            return `${y}/${m}/${d} ${h}:${mi}:${s}`;
         }
-    }
 
-    document.querySelectorAll('[data-iso]').forEach(el => {
-        const val = el.getAttribute('data-iso');
-        if (val) el.textContent = toLocalTime(val);
-    });
+        const currentTimeEl = document.querySelector('[data-iso="{% if bot_status.current_time %}{{ bot_status.current_time }}{% endif %}"]');
+        if (currentTimeEl) {
+            const ts = currentTimeEl.getAttribute('data-iso');
+            const num = Number(ts);
+            const date = isNaN(num) ? new Date(ts) : new Date(num < 1e12 ? num * 1000 : num);
+            const now = new Date();
+            const diffMs = now - date;
+            if (!isNaN(date.getTime()) && diffMs > 60000) {
+                document.querySelectorAll('.card-value').forEach(el => el.textContent = 'Offline');
+                document.querySelectorAll('.info-value').forEach(el => el.textContent = 'Offline');
+            }
+        }
 
-    const apiEl = document.querySelector('[data-api]');
-    if (apiEl) {
-        const val = apiEl.getAttribute('data-api');
-        if (val) apiEl.textContent = val.charAt(0).toUpperCase() + val.slice(1);
-    }
+        document.querySelectorAll('[data-iso]').forEach(el => {
+            const val = el.getAttribute('data-iso');
+            if (val) el.textContent = toLocalTime(val);
+        });
+
+        const top3El = document.getElementById('top-3-commands');
+        if (top3El) {
+            const jsonStr = top3El.getAttribute('data-json');
+            if (jsonStr) {
+                try {
+                    const topCmds = JSON.parse(jsonStr);
+                    const entries = Object.entries(topCmds);
+                    if (entries.length > 0) {
+                        top3El.innerHTML = entries.map(([cmd, count]) => cmd + ': ' + count).join('<br>');
+                    }
+                } catch (e) {}
+            }
+        }
     </script>
 </body>
 
