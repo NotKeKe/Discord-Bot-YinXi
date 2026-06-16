@@ -128,6 +128,24 @@ class Status(commands.Cog):
                 upsert=True,
             )
 
+            if where == 'bot' and (update_status_cog := self.bot.get_cog("UpdateStatus")):
+                if status == 'operational':
+                    if not update_status_cog.change_activity.is_running(): # type: ignore
+                        update_status_cog.change_activity.start() # type: ignore
+                else:
+                    if update_status_cog.change_activity.is_running(): # type: ignore
+                        update_status_cog.change_activity.cancel() # type: ignore
+
+                    await self.bot.change_presence(
+                        activity=discord.Game(
+                            name=(
+                                '🛠️ 維護中... '
+                                'Bot可能會在這段時間頻繁下線或不能使用，很抱歉造成您的不便。'
+                            )
+                        )
+                    )
+
+
             ori_status: str = ori_data.get("data", {}).get(where, "Unknown")
             await ctx.send(
                 f"Done.\nChanged `{where}` status from `{ori_status}` to `{status}`",
