@@ -1,0 +1,183 @@
+{
+    "skyblock_mayor": [
+        "開始mayor更新",
+        "停止mayor更新"
+    ],
+    "QRcode": [
+        "qrcode_generator",
+        "qrcode_scanner"
+    ],
+    "SuggestReport": [
+        "suggest",
+        "report",
+        "issue_solve"
+    ],
+    "TicTacToe": [
+        "tictactoe"
+    ],
+    "BotInfoAndHelp": [
+        "botinfo",
+        "help"
+    ],
+    "ChannelHistory": [
+        "output_chat_history"
+    ],
+    "Counting": [
+        "counting"
+    ],
+    "OnJoinLeave": [
+        "join_leave_message",
+        "delete_spam_messages"
+    ],
+    "Load": [
+        "reload",
+        "全部重載",
+        "重載sync",
+        "reload_all",
+        "restart",
+        "清除日誌",
+        "系統指令",
+        "del_msg"
+    ],
+    "SubYT": [
+        "sub_yt",
+        "sub_yt_cancel",
+        "sub_yt_list"
+    ],
+    "Music": [
+        "play",
+        "add",
+        "skip",
+        "back",
+        "pause",
+        "resume",
+        "stop",
+        "loop",
+        "nowplaying",
+        "queue",
+        "remove",
+        "clear",
+        "leave",
+        "lyrics",
+        "volume",
+        "play_custom_list",
+        "add_custom_list",
+        "show_custom_list",
+        "delete_custom_list",
+        "clear_play_web",
+        "show_players",
+        "curr_player",
+        "clear_players"
+    ],
+    "Status": [
+        "change_status_str"
+    ],
+    "ApiCog": [
+        "joke",
+        "news",
+        "cat_fact",
+        "nasa",
+        "number_history",
+        "unsplash_image",
+        "get_gifs",
+        "tiangou",
+        "minecraft_server_status",
+        "yiyan",
+        "toxic_jacket_soup",
+        "lovelive",
+        "yt_downloader",
+        "codlin_meme"
+    ],
+    "ErrorHandler": [
+        "errorresponse"
+    ],
+    "CambridgeChannel": [
+        "cambridge_channel",
+        "daily_test",
+        "test_daily_test"
+    ],
+    "Giveaway": [
+        "giveaway"
+    ],
+    "Keep": [
+        "check_keepdata",
+        "keep",
+        "show_keep",
+        "del_keep"
+    ],
+    "Main": [
+        "owner_id",
+        "ping",
+        "avatar",
+        "get_system_channel",
+        "add_admin",
+        "server_info",
+        "convert_timestamp",
+        "tw_high_school_score_calculator",
+        "lang",
+        "image_to_base64",
+        "random_uuid"
+    ],
+    "PJSK": [
+        "pjsk_new_song",
+        "pjsk_search_song",
+        "pjsk_new_song_notify"
+    ],
+    "skyblock_main": [
+        "uuid",
+        "test_apikey",
+        "status",
+        "guild_name",
+        "mayor",
+        "events",
+        "hypixel_game_count",
+        "auction"
+    ],
+    "WorldChat": [
+        "world_chat",
+        "report_bad_image"
+    ],
+    "XDownloader": [
+        "x_download"
+    ],
+    "AIChannelTwo": [
+        "set_ai_channel",
+        "cancel_ai_channel",
+        "change_ai_channel_model",
+        "change_ai_channel_system_prompt",
+        "show_ai_channel_model",
+        "set_chat_human",
+        "cancel_chat_human"
+    ],
+    "AIChat": [
+        "chat",
+        "image_generate",
+        "video_generate"
+    ],
+    "Translator": [
+        "translate"
+    ],
+    "BotStats": [
+        "machine_stats",
+        "num_guilds"
+    ],
+    "TestTemp": [
+        "testtemp",
+        "取得所有指令名稱",
+        "embedtest",
+        "get_cog_name",
+        "get_command_name",
+        "errortest",
+        "systemchannel",
+        "fromidtoname",
+        "getguildid",
+        "buttontest",
+        "cmd",
+        "membernametest",
+        "getchannels",
+        "mytest"
+    ],
+    "UpdateStatus": [
+        "改變狀態"
+    ]
+}

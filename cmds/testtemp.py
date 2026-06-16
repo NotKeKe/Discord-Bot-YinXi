@@ -147,8 +147,18 @@ class TestTemp(Cog_Extension):
 
     @commands.command()
     async def mytest(self, ctx: commands.Context):
-        assert ctx.cog
-        await ctx.send(ctx.cog.qualified_name)
+        import io
+        import orjson
+
+        data = {}
+
+        for cog in self.bot.cogs.values():
+            data[cog.__cog_name__] = [command.name for command in cog.get_commands()]
+
+        mem = io.BytesIO(orjson.dumps(data, option=orjson.OPT_INDENT_2))
+        mem.seek(0)
+
+        await ctx.send(file=discord.File(mem, 'cogs.txt'))
 
 
 async def setup(bot):
