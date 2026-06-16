@@ -10,3 +10,4 @@ logs/
 *.sh
 
 api_server/
+mongodb-bot_stats-migration/
