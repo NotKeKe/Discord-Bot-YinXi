@@ -1,14 +1,16 @@
+import logging
+import platform
+import time
+from datetime import datetime, timedelta, timezone
+
 import discord
+import orjson
+import psutil
 from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands, tasks
-import logging
-from datetime import datetime, timezone
-import psutil
-import platform
-import time
 
-from core.functions import redis_client, mongo_db_client, is_KeJC, testing_guildID
+from core.functions import is_KeJC, redis_client, testing_guildID, START_TIME
 from core.mongodb import MongoDB_DB
 from core.translator import locale_str
 
@@ -16,6 +18,52 @@ logger = logging.getLogger(__name__)
 
 db = MongoDB_DB.bot_collect_stats
 coll = db["stats"]
+
+
+async def fetch_mongo_data() -> dict:
+    cursor = coll.find(
+        {
+            "$or": [
+                {"type": "custom", "name": "TOP_STATUS"},
+                {"type": "on_command", "name": "Command called times"},
+                {"type": "on_command", "name": "Command called times by a user"},
+                {"type": "custom", "name": "Status String"},
+            ]
+        }
+    )
+
+    results = {doc["name"]: doc async for doc in cursor}
+
+    return {
+        "top_status": results.get("TOP_STATUS"),
+        "command_called_times": results.get("Command called times"),
+        "command_called_by_user": results.get("Command called times by a user"),
+        "status_string": results.get("Status String"),
+    }
+
+
+def find_top_3_command(data: dict[str, dict[str, int]]) -> dict[str, int]:
+    # 這裡列舉了幾個我常用 但不該被紀錄的 command name
+    ignore_cmd_names = [
+        "restart",
+        "reload",
+        "reload_all",
+        "show_players",
+        "curr_player",
+        "clear_players",
+    ]
+
+    list_commands = data.values()  # [{'restart': 681, 'reload': 144}]
+    _commands = {
+        k: v for item in list_commands for k, v in item.items()
+    }  # {'restart': 981, 'reload': 144, 'reload2': 155}
+
+    _commands = filter(
+        lambda x: x[0] not in ignore_cmd_names and x[1] > 0, _commands.items()
+    )
+    top_three = sorted(_commands, key=lambda x: x[1], reverse=True)[:3]
+
+    return {k: v for k, v in top_three}
 
 
 class Status(commands.Cog):
@@ -67,7 +115,7 @@ class Status(commands.Cog):
             return
 
         async with ctx.typing(ephemeral=True):
-            await coll.update_one(
+            ori_data: dict = await coll.find_one_and_update(
                 {"type": "custom", "name": "Status String"},
                 {
                     "$set": {
@@ -80,64 +128,59 @@ class Status(commands.Cog):
                 upsert=True,
             )
 
-            await ctx.send("Done", ephemeral=True)
+            ori_status: str = ori_data.get("data", {}).get(where, "Unknown")
+            await ctx.send(
+                f"Done.\nChanged `{where}` status from `{ori_status}` to `{status}`",
+                ephemeral=True,
+            )
 
     @tasks.loop(seconds=30)
     async def update_bot_status(self):
         await self.bot.wait_until_ready()
 
+        # pre fetch data
+        mongo_data = await fetch_mongo_data()
+
         # system
         system = {
             "python_version": platform.python_version(),
             "discord_py_version": discord.__version__,
-            "uptime": round(time.time() - psutil.Process().create_time(), 2),
+            "uptime": round(time.time() - START_TIME, 2),
             "current_time": datetime.now(timezone.utc).astimezone().isoformat(),
         }
 
         # bot
         bot = {
             "guild_count": len(self.bot.guilds),
-            "user_count": len(self.bot.users),  # how much users i can see
+            "user_count": len(mongo_data["command_called_by_user"]["data"]),
             "voice_connections": len(self.bot.voice_clients),
             "latency_ms": round(self.bot.latency * 1000, 2),
         }
 
         # command
-        command_call_time_data: dict = (
-            await coll.find_one(
-                {
-                    "type": "on_command_completion, on_app_command_completion",
-                    "name": "Completed command times",
-                }
-            )
-            or {}
-        )
-        record_from_data: dict = (
-            await coll.find_one({"type": "custom", "name": "TOP_STATUS"}) or {}
-        )
-
-        command_call_time: int = command_call_time_data.get("data", {}).get(
-            "total_times", -1
-        )
-        record_from = datetime.fromtimestamp(
-            record_from_data.get("data", {}).get("start_time", -1)
-        )
-
+        command_called_times_data = mongo_data["command_called_times"]["data"]
+        top_3_command = find_top_3_command(command_called_times_data)
+        total_times: int = mongo_data["command_called_times"]["total_times"]
         command = {
-            "command_call_time": command_call_time,
-            "command_record_from": record_from.astimezone().isoformat(),
+            "top_3_command": orjson.dumps(top_3_command).decode("utf-8"),
+            "command_called_total_times": total_times,
+            "command_record_from": datetime.fromtimestamp(
+                mongo_data["top_status"]["data"]["start_time"]
+            )
+            .astimezone(timezone(timedelta(hours=8)))
+            .isoformat(),
         }
 
         # status str
-        status_str_data: dict = (
-            await coll.find_one({"type": "custom", "name": "Status String"}) or {}
-        )
+        status_str_data: dict = mongo_data.get("status_string", {})
         status_str_inner: dict = status_str_data.get("data", {})
 
         status_str = {
             "api": status_str_inner.get("api", "Unknown"),
             "bot": status_str_inner.get("bot", "Unknown"),
-            "status_str_update_time": status_str_inner.get("update_time", "Unknown"),
+            "status_str_last_update": status_str_data.get(
+                "last_update", "Unknown"
+            ),  # isoformat utc+8
         }
 
         # 整合進 status

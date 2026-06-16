@@ -36,3 +36,9 @@ dependencies = [
 
 [tool.uv.sources]
 scrapetube = { git = "https://github.com/NotKeKe/scrapetube.git", rev = "master" }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.0",
+    "pytest-asyncio>=1.4.0",
+]

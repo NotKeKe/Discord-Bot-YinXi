@@ -13,6 +13,7 @@ import inspect
 import base64
 import aiohttp
 import requests
+import time
 from urllib.parse import quote_plus
 from motor.motor_asyncio import AsyncIOMotorClient
 import redis.asyncio as redis
@@ -21,6 +22,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
+START_TIME = time.time()
 
 yinxi_base_url = os.getenv('yinxi_base_url') # 這是我網域的基礎連結 https://yinxi.wales.com.tw
 

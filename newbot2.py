@@ -13,7 +13,7 @@ import sys
 from aiohttp.client_exceptions import ClientConnectorDNSError
 # import gc
 
-from core.functions import math_round, current_time, testing_guildID, create_basic_embed
+from core.functions import math_round, current_time, testing_guildID, create_basic_embed, START_TIME
 from core.translator import i18n, MockInteraction
 from core.setup_log import setup_logging, StreamToLogger
 from cmds.ai_chat.utils.activity_selector import ActivitySelector
@@ -24,7 +24,6 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 KeJC_ID = int(os.getenv('KeJC_ID'))
 online_time = None
-start_time = time.time()
 
 # log setup
 setup_logging()
@@ -213,7 +212,7 @@ async def main():
         async with bot:
             await load()
             await load_another()
-            print(f'開啟共花費了: {math_round(time.time() - start_time, 2)}')
+            print(f'開啟共花費了: {math_round(time.time() - START_TIME, 2)}')
             await bot.start(TOKEN)
     except KeyboardInterrupt:
         from core.close_event import close_event
