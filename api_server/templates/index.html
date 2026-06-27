@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="音汐是一個基於 Python 所製作的 Discord 多功能機器人，主要功能包含音樂播放、記事功能、AI 聊天，以及支援多種語言。">
+    <link rel="canonical" href="https://yinxi.wales.com.tw/">
     <title>音汐 - Discord Bot</title>
     <link rel="stylesheet" href="/static/index/style.css">
     <link rel="stylesheet" href="/static/index/status.css">
@@ -73,8 +75,19 @@
 
         <div class="top-commands">
             <h3><i class="fas fa-star"></i> 熱門指令 Top 3</h3>
-            <div class="top-commands-list" id="top-commands-list" data-json="{{ bot_status.top_3_command if bot_status.top_3_command else '' }}">
-                <span class="no-data">載入中...</span>
+            <div class="top-commands-list">
+                {% set top_cmds = bot_status.top_3_command | from_json %}
+                {% if top_cmds %}
+                    {% for name, count in top_cmds.items() %}
+                    <div class="top-command-item">
+                        <span class="top-command-rank">#{{ loop.index }}</span>
+                        <span class="top-command-name">{{ name }}</span>
+                        <span class="top-command-count">{{ count }} 次</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <span class="no-data">暫無資料</span>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -82,31 +95,6 @@
     <a href="#" id="scroll-to-top" class="scroll-to-top" title="回到頂部">
         <i class="fas fa-arrow-up"></i>
     </a>
-
-    <script>
-    (function() {
-        var el = document.getElementById('top-commands-list');
-        if (!el) return;
-        var jsonStr = el.getAttribute('data-json');
-        if (!jsonStr) {
-            el.innerHTML = '<span class="no-data">暫無資料</span>';
-            return;
-        }
-        try {
-            var topCmds = JSON.parse(jsonStr);
-            var entries = Object.entries(topCmds);
-            if (entries.length === 0) {
-                el.innerHTML = '<span class="no-data">暫無資料</span>';
-                return;
-            }
-            el.innerHTML = entries.map(function(e, i) {
-                return '<div class="top-command-item"><span class="top-command-rank">#' + (i + 1) + '</span><span class="top-command-name">' + e[0] + '</span><span class="top-command-count">' + e[1] + ' 次</span></div>';
-            }).join('');
-        } catch (ex) {
-            el.innerHTML = '<span class="no-data">暫無資料</span>';
-        }
-    })();
-    </script>
 </body>
 
 </html>

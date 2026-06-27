@@ -100,7 +100,14 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">熱門指令 Top 3</span>
-                    <span class="info-value" id="top-3-commands" data-json="{{ bot_status.top_3_command if bot_status.top_3_command else '' }}">N/A</span>
+                    <span class="info-value">
+                        {% set top_cmds = bot_status.top_3_command | from_json %}
+                        {% if top_cmds %}
+                            {% for name, count in top_cmds.items() %}{{ name }}: {{ count }}{% if not loop.last %}<br>{% endif %}{% endfor %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
                 </div>
             </div>
         </div>
@@ -138,20 +145,6 @@
             const val = el.getAttribute('data-iso');
             if (val) el.textContent = toLocalTime(val);
         });
-
-        const top3El = document.getElementById('top-3-commands');
-        if (top3El) {
-            const jsonStr = top3El.getAttribute('data-json');
-            if (jsonStr) {
-                try {
-                    const topCmds = JSON.parse(jsonStr);
-                    const entries = Object.entries(topCmds);
-                    if (entries.length > 0) {
-                        top3El.innerHTML = entries.map(([cmd, count]) => cmd + ': ' + count).join('<br>');
-                    }
-                } catch (e) {}
-            }
-        }
     </script>
 </body>
 
