@@ -42,7 +42,7 @@ class ActivitySelector:
 
         # base system prompt
         system_prompt = '''
-你現在要幫助一個**人**生成一個不重複的他的狀態。
+你現在要幫助一個**人**生成一個不重複的他的狀態，不要有任何解釋。
 輸出規則:
     - 請輸出**30個字**以內的狀態
     - **請勿使用markdown格式**
