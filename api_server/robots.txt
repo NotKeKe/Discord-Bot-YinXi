@@ -1,3 +1,5 @@
 User-agent: *
 Disallow: /player/
 Allow: /
+
+Sitemap: https://yinxi.wales.com.tw/sitemap.xml

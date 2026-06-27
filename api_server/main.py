@@ -1,4 +1,5 @@
 import asyncio
+import orjson
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -41,6 +42,21 @@ ASSETS_DIR.mkdir(exist_ok=True)
 STATIC_DIR.mkdir(exist_ok=True)
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+
+def from_json(value):
+    if not value:
+        return {}
+    if isinstance(value, (dict, list)):
+        return value
+    try:
+        return orjson.loads(value)
+    except (orjson.JSONDecodeError, TypeError):
+        return {}
+
+
+templates.env.filters['from_json'] = from_json
+
 app.mount('/assets', StaticFiles(directory=ASSETS_DIR), name='assets')
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -52,6 +68,10 @@ async def home(request: Request):
 @app.get('/robots.txt', response_class=FileResponse)
 async def robots_txt():
     return FileResponse('robots.txt')
+
+@app.get('/sitemap.xml', response_class=FileResponse)
+async def sitemap_xml():
+    return FileResponse('sitemap.xml', media_type='application/xml')
 
 @app.get('/discord', response_class=RedirectResponse)
 async def direct_to_discord_server():
