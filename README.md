@@ -180,6 +180,10 @@ GENIUS_ACCESS_TOKEN = ... # `/歌詞搜尋` 的 apiKEY
 *   至 GitHub 的 [Issues](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 註明您的問題或建議。
 *   在 Discord 伺服器中對 音汐 使用 `/錯誤回報` 來回報任何問題。
 
+## ✍️ 音汐的相關網站
+- **查看音汐的狀態**: https://yinxi.wales.com.tw
+- **了解音汐的出生與特色**: https://www.wales.com.tw/posts/yinxi-discord-bot
+
 ## 📄 授權
 - [LICENSE-MIT](LICENSE)
 
