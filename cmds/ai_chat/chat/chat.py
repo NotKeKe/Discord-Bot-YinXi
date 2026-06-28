@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from typing import Tuple, Union, AsyncGenerator, Optional
+from openai import NotFoundError as OpenAINotFoundError
 from openai.types.chat import ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
 import orjson
 import logging
@@ -16,6 +17,9 @@ from core.functions import is_async, image_to_base64, current_time
 from core.classes import get_bot
 
 logger = logging.getLogger(__name__)
+
+# 懶得寫進db了 先這樣
+MODEL_WITHOUT_TOOLS = []
 
 class Chat:
     def __init__(self, model: Optional[str] = None, system_prompt: str = '', ctx: Optional[commands.Context] = None):
@@ -130,8 +134,11 @@ class Chat:
     
     async def process_completion(self, response: ChatCompletion) -> Tuple[str, str, list, int]:
         think: str = ""
-        result: str = ""
+        result: str = "Your AI has no response."
         tool_calls: list = []
+
+        if not response.choices: 
+            return think, result, tool_calls, -1
 
         message: ChatCompletionMessage = response.choices[0].message
 
@@ -261,26 +268,36 @@ class Chat:
             reasoning_effort: str = 'low'
         ) -> Tuple[str, str, list]:
         '''Return think, response, history'''
+        if not history: history = []
+
+
+        # Model & self.client
         if model:
             await self.re_model(model)
         else:
             self.client = await model_select(self.model)
 
-        if not history: history = []
-
         logger.info(f'Got model: {self.model}')
+
+        if model in MODEL_WITHOUT_TOOLS: # 強制關閉工具調用
+            is_enable_tools = False
+            tool_choice = None
 
         provider, self.model = split_provider_model(self.model)
         if not self.model: return '', f'`{self.model}` is not available.', history
 
+        if not self.client:
+            return '', f'`{provider}` with `{self.model}` is not available.', history
+
+        # System prompt & Message
         extra_user_info = self.get_extra_user_info()
         system_prompt = self.system_prompt + extra_user_info
-
         system = to_system_message(custom_system_prompt if custom_system_prompt else system_prompt)
 
         history += await self.process_user_prompt(prompt, image, text_file, url)
 
         async def call():
+            """Base on the `chat` params, to call self.client.chat.completions.create."""            
             resp = await self.client.chat.completions.create( # type: ignore
                 model=self.model,
                 messages=system + history,
@@ -294,8 +311,16 @@ class Chat:
                 **({'reasoning_effort': reasoning_effort} if 'oss' in self.model and 'gpt' in self.model else {})
             )
             return resp
-        
-        completion = await call()
+
+        try:
+            completion = await call()
+        except OpenAINotFoundError as e:
+            if 'No endpoints found that support tool use' in str(e): # some of openrouter models not support tool call
+                is_enable_tools = False
+                tool_choice = None
+                MODEL_WITHOUT_TOOLS.append(model)
+            else:
+                raise e
 
         call_times = 0
 
