@@ -1,7 +1,10 @@
 import discord
 from discord.ext import commands
 from typing import Tuple, Union, AsyncGenerator, Optional
-from openai import NotFoundError as OpenAINotFoundError
+from openai import (
+    NotFoundError as OpenAINotFoundError,
+    RateLimitError as OpenAIRateLimitError
+)
 from openai.types.chat import ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
 import orjson
 import logging
@@ -321,6 +324,8 @@ class Chat:
                 MODEL_WITHOUT_TOOLS.append(model)
             else:
                 raise e
+        except OpenAIRateLimitError as e:
+            return '', f'We\'re rate limited by `{provider}`. Please try again later.', history
 
         call_times = 0
 
