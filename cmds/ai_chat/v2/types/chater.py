@@ -45,7 +45,7 @@ class Infos(BaseModel):
     history: list[SingleHistory]
 
     def to_openai_messages(self) -> list[dict]:
-        return [m.model_dump(exclude_none=True) for m in self.history]
+        return [m.model_dump(mode="json", exclude_none=True) for m in self.history]
 
 
 

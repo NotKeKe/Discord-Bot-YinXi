@@ -25,7 +25,7 @@ class Chater:
 
 
     async def _handle_tool_call(self, tool_calls: list[ChatCompletionMessageToolCallUnion], infos: Infos):
-        
+        ...
 
     async def _handle_completion(self, response: ChatCompletion) -> CompletionResponse:
         ...
@@ -41,16 +41,16 @@ class Chater:
         client = get_openai_client(self._model.provider)
 
         self._infos.history.append(
-            SingleHistory(
+            UserMessage(
                 role='user',
-                content=self._infos.meta.ctx.message.content
+                content=f'`{self._infos.meta.ctx.author.global_name}` said: 「{self._infos.meta.ctx.message.content}」'
             )
         )
 
         while True:
             resp = await client.chat.completions.create(
                 model=self._model.model,
-                messages=cast(Iterable[ChatCompletionMessageParam], self._infos.get_format_history()),
+                messages=cast(Iterable[ChatCompletionMessageParam], self._infos.to_openai_messages()),
             )
 
             if not resp.choices:
@@ -58,7 +58,7 @@ class Chater:
 
             comp_resp = await self._handle_completion(resp)
             if comp_resp.tool_calls:
-                await self._handle_tool_call(comp_resp.tool_calls)
+                await self._handle_tool_call(comp_resp.tool_calls, self._infos)
 
         return ChatResponse(
 
