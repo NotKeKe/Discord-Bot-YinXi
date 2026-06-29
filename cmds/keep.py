@@ -22,7 +22,7 @@ from core.classes import Cog_Extension, get_bot
 from core.functions import create_basic_embed, current_time, is_testing_guild, mongo_db_client, UnixToReadable
 from core.translator import load_translated, locale_str, get_translate
 
-from cmds.ai_chat.utils.config import base_url_options
+from cmds.ai_chat.v1.utils.config import base_url_options
 
 reminder_tasks = {}
 bot = get_bot()

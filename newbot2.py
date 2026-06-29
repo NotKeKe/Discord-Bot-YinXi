@@ -16,7 +16,7 @@ from aiohttp.client_exceptions import ClientConnectorDNSError
 from core.functions import math_round, current_time, testing_guildID, create_basic_embed, START_TIME
 from core.translator import i18n, MockInteraction
 from core.setup_log import setup_logging, StreamToLogger
-from cmds.ai_chat.utils.activity_selector import ActivitySelector
+from cmds.ai_chat.v1.utils.activity_selector import ActivitySelector
 from core.classes import set_bot, Cog_Extension
 
 # get env

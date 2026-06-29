@@ -6,14 +6,15 @@ import logging
 from typing import Optional
 import openai
 
+from cmds.ai_chat.v1.utils import add_history_button, add_think_button, chat_history_autocomplete, model_autocomplete
 from core.functions import create_basic_embed, UnixNow
 from core.mongodb import MongoDB_DB
 from core.classes import Cog_Extension
 from core.translator import locale_str, load_translated, get_translate
-from cmds.ai_chat.chat.chat import Chat
-from cmds.ai_chat.chat import gener_title
-from cmds.ai_chat.tools.map import image_generate, video_generate
-from cmds.ai_chat.utils import model, chat_history_autocomplete, model_autocomplete, add_history_button, add_think_button
+from cmds.ai_chat.v1.chat.chat import Chat
+from cmds.ai_chat.v1.chat import gener_title
+from cmds.ai_chat.v1.tools.map import image_generate, video_generate
+from cmds.ai_chat.v1.utils import model
 
 logger = logging.getLogger(__name__)
 

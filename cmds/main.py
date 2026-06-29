@@ -9,7 +9,7 @@ import aiosqlite
 import io
 from typing import Optional
 
-from cmds.ai_chat.tools.ai_func import image_read
+from cmds.ai_chat.v1.tools.ai_func import image_read
 
 from core.classes import Cog_Extension
 from core.functions import thread_pool, admins, KeJCID, write_json, create_basic_embed, UnixToReadable, download_image, UnixNow, testing_guildID, image_to_base64

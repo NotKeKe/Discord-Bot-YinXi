@@ -5,7 +5,7 @@ from core.classes import Cog_Extension
 from core.functions import create_basic_embed, thread_pool
 from core.translator import load_translated, locale_str, get_translate
 # from cmds.AIsTwo.others.func import translate
-from cmds.ai_chat.chat.translate import translate
+from cmds.ai_chat.v1.chat.translate import translate
 
 class Translator(Cog_Extension):
     @commands.Cog.listener()

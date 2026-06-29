@@ -7,12 +7,13 @@ import traceback
 from io import BytesIO
 from typing import Optional
 
+from cmds.ai_chat.v1.utils import add_history_button, add_think_button, model_autocomplete, split_provider_model, to_assistant_message, to_user_message
 from core.functions import create_basic_embed, current_time, get_attachment, split_str_by_len_and_backtick, UnixNow
 from core.mongodb import MongoDB_DB
 from core.classes import Cog_Extension, get_bot
 from core.translator import locale_str, load_translated, get_translate
-from cmds.ai_chat.on_msg import ai_channel_chat, chat_human_chat
-from cmds.ai_chat.utils import model_autocomplete, to_user_message, to_assistant_message, add_think_button, add_history_button, split_provider_model, md_table_convert
+from cmds.ai_chat.v1.on_msg import ai_channel_chat, chat_human_chat
+from cmds.ai_chat.v1.utils import md_table_convert
 
 logger = logging.getLogger(__name__)
 
