@@ -46,7 +46,7 @@ class SuggestReport(commands.Cog):
 
         try:
             if self.CHANNEL is not None:
-                await self.CHANNEL.send(f'`{ctx.author.global_name} ({ctx.author.id})` 建議: \n```\n{text}\n```') # type: ignore
+                await self.CHANNEL.send(f'💡 `{ctx.author.global_name} ({ctx.author.id})` 建議: \n```\n{text}\n```') # type: ignore
             await ctx.send((await get_translate('send_suggest_succeeded', ctx)).format(suggestion=text), ephemeral=True)
         except Exception:
             logger.error("Suggest cannot send to channel.", exc_info=True)
@@ -65,7 +65,7 @@ class SuggestReport(commands.Cog):
 
         try:
             if self.CHANNEL is not None:
-                await self.CHANNEL.send(f'`{ctx.author.global_name} ({ctx.author.id})` 回報了錯誤: \n```\n{text}\n```') # type: ignore
+                await self.CHANNEL.send(f'🐛 `{ctx.author.global_name} ({ctx.author.id})` 回報了錯誤: \n```\n{text}\n```') # type: ignore
             await ctx.send((await get_translate('send_report_succeeded', ctx)).format(error=text), ephemeral=True)
         except Exception:
             logger.error("Error report cannot send to channel.", exc_info=True)
