@@ -554,8 +554,32 @@
 
         "send_suggest_succeeded": "已成功發送建議「`{suggestion}`」",
         "send_suggest_failed": "目前無法發送建議",
-        "send_report_succeeded": "問題「`{error}`」已成功回報",
-        "send_report_failed": "目前無法回報錯誤",
+
+        "embed_report_succeeded": [{
+            "title": "錯誤回報",
+            "field": [
+                { "name": "回報內容" },
+                { "name": "系統訊息", "value": "已成功回報錯誤" },
+                { "name": "UUID", "value": "可以使用此 UUID 來追蹤錯誤進度: `{uuid}`。使用方法: `/錯誤追蹤 {uuid}`。" }
+            ]
+        }],
+        "embed_report_failed": [{
+            "title": "錯誤回報",
+            "field": [
+                { "name": "回報內容" },
+                { "name": "系統訊息", "value": "錯誤已經回報並進行儲存，但是無法通知開發者。如果該錯誤在幾天後依然沒被處理，請前往 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 提出 Issue。" },
+                { "name": "UUID", "value": "可以使用此 UUID 來追蹤錯誤進度: `{uuid}`。使用方法: `/錯誤追蹤 {uuid}`。" }
+            ]
+        }],
+
+        "embed_report_trace": [{
+            "title": "錯誤回報-追蹤",
+            "field": [
+                { "name": "回報內容" },
+                { "name": "UUID" },
+                { "name": "狀態" }
+            ]
+        }],
 
         "embed_tictactoe_game": [{
             "title": "圈圈叉叉",

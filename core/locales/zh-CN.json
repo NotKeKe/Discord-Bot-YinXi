@@ -555,8 +555,31 @@
 
         "send_suggest_succeeded": "已成功发送建议「`{suggestion}`」",
         "send_suggest_failed": "目前无法发送建议",
-        "send_report_succeeded": "问题「`{error}`」已成功回报",
-        "send_report_failed": "目前无法回报错误",
+        "embed_report_succeeded": [{
+            "title": "错误回报",
+            "field": [
+                { "name": "回报内容" },
+                { "name": "系统消息", "value": "已成功回报错误" },
+                { "name": "UUID", "value": "可以使用此 UUID 来追踪错误进度: `{uuid}`。使用方法: `/错误追踪 {uuid}`。" }
+            ]
+        }],
+        "embed_report_failed": [{
+            "title": "错误回报",
+            "field": [
+                { "name": "回报内容" },
+                { "name": "系统消息", "value": "错误已经回报并进行储存，但是无法通知开发者。如果该错误在几天后依然没被处理，请前往 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 提出 Issue。" },
+                { "name": "UUID", "value": "可以使用此 UUID 来追踪错误进度: `{uuid}`。使用方法: `/错误追踪 {uuid}`。" }
+            ]
+        }],
+
+        "embed_report_trace": [{
+            "title": "错误回报-追踪",
+            "field": [
+                { "name": "回报内容" },
+                { "name": "UUID" },
+                { "name": "状态" }
+            ]
+        }],
 
         "embed_tictactoe_game": [{
             "title": "圈圈叉叉",

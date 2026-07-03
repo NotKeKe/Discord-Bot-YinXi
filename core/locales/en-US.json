@@ -554,8 +554,31 @@
 
         "send_suggest_succeeded": "Successfully sent suggestion \"`{suggestion}`\"",
         "send_suggest_failed": "Could not send suggestion at this time",
-        "send_report_succeeded": "Issue \"`{error}`\" has been successfully reported",
-        "send_report_failed": "Could not report error at this time",
+        "embed_report_succeeded": [{
+            "title": "Bug Report",
+            "field": [
+                { "name": "Report Content" },
+                { "name": "System Message", "value": "Bug report submitted successfully" },
+                { "name": "UUID", "value": "You can use this UUID to track the bug's progress: `{uuid}`. Usage: `/report_trace {uuid}`." }
+            ]
+        }],
+        "embed_report_failed": [{
+            "title": "Bug Report",
+            "field": [
+                { "name": "Report Content" },
+                { "name": "System Message", "value": "The error has been reported and saved, but the developer could not be notified. If the error is still not resolved after a few days, please open an Issue on [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new)." },
+                { "name": "UUID", "value": "You can use this UUID to track the bug's progress: `{uuid}`. Usage: `/report_trace {uuid}`." }
+            ]
+        }],
+
+        "embed_report_trace": [{
+            "title": "Bug Report - Tracking",
+            "field": [
+                { "name": "Report Content" },
+                { "name": "UUID" },
+                { "name": "Status" }
+            ]
+        }],
 
         "embed_tictactoe_game": [{
             "title": "Tic-Tac-Toe",
