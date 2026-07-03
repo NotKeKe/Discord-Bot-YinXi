@@ -5,6 +5,8 @@ import aiofiles
 import frontmatter
 import orjson
 
+from core.functions import is_async
+
 ALL_SKILLS = {}
 
 async def _function_as_openai_description(skill_md_path: Path, name: str, description: str) -> dict:
@@ -65,3 +67,9 @@ async def _load_skills():
     for path in (Path(__file__).parent / "skills").rglob("SKILL.md"):
         skill = await _load_one_skill(path)
         ALL_SKILLS[skill["name"]] = skill
+
+async def call_tool(tool_name: str, tool_args: list[Any]):
+    func = ALL_SKILLS[tool_name]["function"]
+    if is_async(func):
+        return await func(*tool_args)
+    return func(*tool_args)
