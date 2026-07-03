@@ -165,7 +165,7 @@ class SuggestReport(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_owner()
-    async def set_report_status(self, ctx: commands.Context, report_uuid: str, status: ReportStatusType, reason: str = ""):
+    async def set_report_status(self, ctx: commands.Context, report_uuid: str, status: ReportStatusType, reason: str):
         data = await self.REPORT_COLL.find_one({'uuid': report_uuid})
         if not data:
             await ctx.send(f"Report `{report_uuid}` not found.", ephemeral=True)
@@ -181,7 +181,23 @@ class SuggestReport(commands.Cog):
             update_data['closed_time'] = ""
 
         await self.REPORT_COLL.update_one({'uuid': report_uuid}, {'$set': update_data})
-        await ctx.send(f"Updated report `{report_uuid}` to `{status.value}`.", ephemeral=True)
+        await ctx.send(f"Updated report `{report_uuid}` to `{status.value}` with reason:\n```\n{reason}\n```.", ephemeral=True)
+
+    @set_report_status.autocomplete('report_uuid')
+    async def set_report_status_uuid_autocomplete(self, interaction: discord.Interaction, current: str):
+        query = {}
+        if current:
+            query = {'uuid': {'$regex': current, '$options': 'i'}}
+
+        cursor = self.REPORT_COLL.find(query).limit(25)
+        choices = []
+        async for data in cursor:
+            uuid = data.get('uuid', '')
+            text = data.get('text', '')
+            name = f"{uuid[:5]}...{uuid[-5:]} ({text[:5]})"
+            choices.append(app_commands.Choice(name=name, value=uuid))
+
+        return choices
 
 
 async def setup(bot: commands.Bot):
