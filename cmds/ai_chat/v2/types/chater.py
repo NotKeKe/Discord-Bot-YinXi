@@ -39,11 +39,11 @@ SingleHistory = Annotated[
 class Meta(BaseModel):
     model: Model
     ctx: commands.Context
-    system_prompt: str
 
 class Infos(BaseModel):
     meta: Meta
     history: list[SingleHistory]
+    system_prompt: str
 
     def to_openai_messages(self) -> list[dict]:
         return [m.model_dump(mode="json", exclude_none=True) for m in self.history]

@@ -21,8 +21,8 @@ class Chater:
             meta=Meta(
                 model=ModelDetector.detect_to_model(model) if model else Model(),
                 ctx=ctx,
-                system_prompt=""
             ),
+            system_prompt='',
             history=[]
         )
 
@@ -63,7 +63,7 @@ class Chater:
         
 
     def change_system_prompt(self, prompt: str):
-        self._infos.meta.system_prompt = prompt
+        self._infos.system_prompt = prompt
 
     def change_model(self, model: str):
         self._model = ModelDetector.detect_to_model(model)
@@ -71,7 +71,7 @@ class Chater:
     async def chat(self, ctx: commands.Context) -> ChatResponse:
         # 不同訊息會有不同的 commands.Context 物件
         self._infos.meta.ctx = ctx
-        
+
         client = get_openai_client(self._model.provider)
 
         self._infos.history.append(
