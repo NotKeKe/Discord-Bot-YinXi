@@ -137,7 +137,8 @@ class Chater:
         )
 
         call_times = 0
-        max_tool_calls = 3
+        max_tool_calls = 10
+        no_result_rounds = 0
         comp_resp: CompletionResponse | None = None
 
         while call_times < max_tool_calls:
@@ -164,6 +165,20 @@ class Chater:
             assistant_message, tool_messages = await self._handle_tool_call(comp_resp.tool_calls)
             self._infos.history.append(assistant_message)
             self._infos.history.extend(tool_messages)
+
+            if tool_messages and all(tool_message.content == "no result" for tool_message in tool_messages):
+                no_result_rounds += 1
+                if no_result_rounds == 3:
+                    self._infos.history.append(
+                        UserMessage(
+                            content="This message is from system: "
+                            "<>The tool has produced no output for 3 consecutive times. "
+                            "Try canceling the next tool call and inform the user that the tool is unavailable.</>"
+                        )
+                    )
+                    break
+            else:
+                no_result_rounds = 0
 
             call_times += 1
 
