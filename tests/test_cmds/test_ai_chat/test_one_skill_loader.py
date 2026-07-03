@@ -23,7 +23,7 @@ async def test_load_one_skill(tmp_path):
     export_py = scripts_dir / "export.py"
     export_py.write_text(
         "class Tool:\n"
-        "    def call(value: int = 0) -> int:\n"
+        "    def call(self, value: int = 0) -> int:\n"
         "        return value + 1\n",
         encoding="utf-8",
     )

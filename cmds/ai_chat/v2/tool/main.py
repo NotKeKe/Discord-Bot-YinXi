@@ -15,7 +15,8 @@ async def _load_one_skill(path: Path) -> dict:
 
     function = None
     export_path = path.parent / "scripts" / "export.py"
-    if export_path.is_file():
+
+    if export_path.exists() and export_path.is_file():
         module_name = f"tool_skill_{path.parent.stem}"
         spec = importlib.util.spec_from_file_location(module_name, export_path)
         if spec is not None and spec.loader is not None:
@@ -23,7 +24,7 @@ async def _load_one_skill(path: Path) -> dict:
             spec.loader.exec_module(module)
             tool_class = getattr(module, "Tool", None)
             if tool_class is not None:
-                function = getattr(tool_class, "call", None)
+                function = getattr(tool_class(), "call", None)
 
     return {
         "name": skill.get("name", path.stem), # 名稱
