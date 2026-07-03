@@ -64,7 +64,19 @@ async def close_event():
 
     try:
         from cmds.play4 import players
-        for player in players.values():
+        for player in list(players.values()):
+            voice_client = player.voice_client
+            if voice_client and voice_client.is_connected(): # type: ignore
+                try:
+                    await voice_client.disconnect(force=True)
+                except Exception: 
+                    pass
+                
+                try:
+                    await player.ctx.send(f'Bot is currently restarting, we sincerely apologize for the inconvenience. You may need to manually re-add YinXi to voice channel later.')
+                except Exception:
+                    pass
+            
             await player._cleanup()
         players.clear()
         logger.info('Closed players')

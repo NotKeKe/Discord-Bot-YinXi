@@ -1,120 +1,204 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+import logging
+from datetime import datetime, timezone
+import uuid
+from enum import Enum
 
-from core.functions import read_json, write_json, settings
-from core.classes import Cog_Extension
-from core.translator import locale_str, get_translate
+from core.functions import settings, create_basic_embed
+from core.mongodb import MongoDB_DB
+from core.translator import locale_str, get_translate, load_translated
 
-s_path = './Suggest_Report/suggests.json'
-r_path = './Suggest_Report/reports.json'
+logger = logging.getLogger(__name__)
 
-suggest_channel = int(settings['suggest_channel'])
-report_channel = int(settings['report_channel'])
 
-class SuggestReport(Cog_Extension):
-    @commands.Cog.listener()
-    async def on_ready(self):
+CHANNEL_ID = None
+try:    
+    CHANNEL_ID = settings.get('suggest_report_channel') # type: ignore
+except Exception:
+    pass
+
+if CHANNEL_ID is None:
+    logger.warning('`suggest_report_channel` is not set in settings.json, suggest report will not work.')
+
+
+class ReportStatusType(Enum):
+    PENDING = "pending" # 已接收，但開發者未看到
+    CONFIRMED = "confirmed" # 已接收，開發者已看到
+    IN_PROGRESS = "in_progress" # 修復中
+    RESOLVED = "resolved" # 已修復，等待部署至正式環境
+    CLOSED = "closed" # 已部署
+
+
+class SuggestReport(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+        self.DB = MongoDB_DB.suggest_report
+        self.CHANNEL = None
+
+        self.SUGGEST_COLL = self.DB.suggest
+        self.REPORT_COLL = self.DB.report
+
+    async def cog_load(self):
         print(f'已載入「{__name__}」')
 
-    @commands.hybrid_command(name=locale_str('suggest'), description=locale_str('suggest'))
-    @app_commands.describe(建議=locale_str('suggest_suggestion'))
-    async def suggest(self, ctx:commands.Context, * , 建議: str):
-        '''
-        [建議 建議(輸入文字) 或是 [suggest 建議(輸入文字)
-        回報給我你的建議
-        我會在自己的群創建一個討論串
-        '''
-        data = read_json(s_path)
-        data[建議] = ctx.author.id
-        write_json(data, s_path)
 
-        channel = await self.bot.fetch_channel(suggest_channel)
-        if channel is None:
-            await ctx.send(await get_translate('send_suggest_channel_not_found', ctx))
-            return
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if CHANNEL_ID is not None and self.CHANNEL is None:
+            self.CHANNEL = await self.bot.fetch_channel(CHANNEL_ID)
+
+    @commands.hybrid_command(name=locale_str('suggest'), description=locale_str('suggest'))
+    @app_commands.describe(text=locale_str('suggest_text'))
+    async def suggest(self, ctx: commands.Context, *, text: str):
+        await self.SUGGEST_COLL.insert_one({
+            'user_global_name': ctx.author.global_name,
+            'user_id': ctx.author.id,
+            'text': text,
+            'create_time': datetime.now().astimezone(timezone.utc).isoformat()
+        })
 
         try:
-            await channel.create_thread(name=建議, content=f'{ctx.author.name} ({ctx.author.id}) 建議: {建議}')
-            await ctx.send((await get_translate('send_suggest_success', ctx)).format(suggestion=建議), ephemeral=True)
-        except discord.HTTPException:
-            await ctx.send(await get_translate('send_suggest_fail', ctx), ephemeral=True)
-        except discord.Forbidden:
-            await ctx.send(await get_translate('send_suggest_no_permission', ctx))
-        except Exception as exception:
-            await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
+            if self.CHANNEL is not None:
+                await self.CHANNEL.send(f'💡 `{ctx.author.global_name} ({ctx.author.id})` 建議: \n```\n{text}\n```') # type: ignore
+            await ctx.send((await get_translate('send_suggest_succeeded', ctx)).format(suggestion=text), ephemeral=True)
+        except Exception:
+            logger.error("Suggest cannot send to channel.", exc_info=True)
+            await ctx.send(await get_translate('send_suggest_failed', ctx), ephemeral=True)
+
 
     @commands.hybrid_command(name=locale_str('report'), description=locale_str('report'), aliases=['error'])
-    @app_commands.describe(錯誤=locale_str('report_error'))
-    async def report(self, ctx:commands.Context, * , 錯誤: str):
-        '''
-        [錯誤回報 錯誤(輸入文字) 或是 [report 建議(輸入文字) 或是 [error 建議(輸入文字)
-        回報錯誤給我
-        我會在自己的群創建一個討論串
-        '''
-        data = read_json(r_path)
-        data[錯誤] = ctx.author.id
-        write_json(data, r_path)
+    @app_commands.describe(text=locale_str('report_text'))
+    async def report(self, ctx: commands.Context, *, text: str):
+        _uuid = uuid.uuid4().hex
+        await self.REPORT_COLL.insert_one({
+            "uuid": _uuid,
+            'user_global_name': ctx.author.global_name,
+            'user_id': ctx.author.id,
+            'text': text,
+            'create_time': datetime.now().astimezone(timezone.utc).isoformat(),
 
-        channel = await self.bot.fetch_channel(report_channel)
-        if channel is None:
-            await ctx.send(await get_translate('send_report_channel_not_found', ctx))
-            return
+            'status': ReportStatusType.PENDING.value,
+            'reason': "PENDING",
+            "closed_time": ""
+        })
+
+        """i18n"""
+        report_eb_suc_text = await get_translate('embed_report_succeeded', ctx)
+        report_eb_fail_text = await get_translate('embed_report_failed', ctx)
+
+        report_eb_suc_d = load_translated(report_eb_suc_text)
+        report_eb_fail_d = load_translated(report_eb_fail_text)
+
+        title = report_eb_suc_d[0].get('title')
+
+        suc_fields = report_eb_suc_d[0].get('field')
+        fail_fields = report_eb_fail_d[0].get('field')
+
+        suc_field_1 = suc_fields[0] # 回報內容
+        suc_field_2 = suc_fields[1] # 系統訊息
+        suc_field_3 = suc_fields[2] # UUID
+
+        fail_field_1 = fail_fields[0] # 回報內容
+        fail_field_2 = fail_fields[1] # 系統訊息
+        fail_field_3 = fail_fields[2] # UUID
+        """"""
+        
+        eb = create_basic_embed(
+            title=title,
+        )
 
         try:
-            await channel.create_thread(name=錯誤, content=f'{ctx.author.name} ({ctx.author.id}) 建議: {錯誤}')
-            await ctx.send((await get_translate('send_report_success', ctx)).format(error=錯誤), ephemeral=True)
-        except discord.HTTPException:
-            await ctx.send(await get_translate('send_report_fail', ctx), ephemeral=True)
-        except discord.Forbidden:
-            await ctx.send(await get_translate('send_report_no_permission', ctx))
-        except Exception as exception:
-            await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=exception, user_send=False, ephemeral=False)
+            # send to own channel
+            if self.CHANNEL is not None:
+                await self.CHANNEL.send(f'🐛 `{ctx.author.global_name} ({ctx.author.id})` 回報了錯誤: \n```\n{text}\n```') # type: ignore
 
-    @commands.command()
-    async def issue_solve(self, ctx:commands.Context):
-        '''
-        只有克克能用的話  還需要幫助嗎:thinking:
-        '''
-        if not isinstance(ctx.channel, discord.Thread): await ctx.send(await get_translate('send_issue_solve_not_thread', ctx)); return
-        if ctx.channel.parent.name == '建議':
-            data = read_json(s_path)
-
-            if str(ctx.channel.name) in data:
-                del data[str(ctx.channel.name)]
-                write_json(data, s_path)
-                await ctx.channel.edit(name=str(ctx.channel.name)+' SOLVE')
-
-                # if isinstance(ctx.channel, discord.Thread): 
-                #     await ctx.channel.delete() 
-                # else: 
-                #     await ctx.send("This is not a thread.")
-                #     return
-
-                await ctx.send(await get_translate('send_issue_solve_success', ctx))
-            else:
-                await ctx.send(await get_translate('send_issue_solve_not_found', ctx))
-                
-        elif ctx.channel.parent.name == '錯誤回報':
-            data = read_json(r_path)
-
-            if str(ctx.channel.name) in data:
-                del data[str(ctx.channel.name)]
-                write_json(data, r_path)
-                await ctx.channel.edit(name=str(ctx.channel.name)+' SOLVE')
-
-                # if isinstance(ctx.channel, discord.Thread): 
-                #     await ctx.channel.edit(archived)
-                # else: 
-                #     await ctx.send("This is not a thread.")
-                #     return
-                    
-                await ctx.send(await get_translate('send_issue_solve_success', ctx))
-            else:
-                await ctx.send(await get_translate('send_issue_solve_not_found', ctx))
         
+            eb.color = discord.Color.green()
+            eb.add_field(name=suc_field_1.get('name'), value=text)
+            eb.add_field(name=suc_field_2.get('name'), value=suc_field_2.get('value'))
+            eb.add_field(name=suc_field_3.get('name'), value=_uuid, inline=False)
+        except Exception:
+            logger.error("Error report cannot send to channel.", exc_info=True)
+            
+            eb.color = discord.Color.orange()
+            eb.add_field(name=fail_field_1.get('name'), value=text)
+            eb.add_field(name=fail_field_2.get('name'), value=fail_field_2.get('value'))
+            eb.add_field(name=fail_field_3.get('name'), value=_uuid, inline=False)
+
+        # send to user channel
+        await ctx.send(embed=eb, ephemeral=True)
 
 
+    @commands.hybrid_command(name=locale_str('report_trace'), description=locale_str('report_trace'))
+    async def report_trace(self, ctx: commands.Context, report_uuid: str):
+        # check report uuid in DB
+        data = await self.REPORT_COLL.find_one({'uuid': report_uuid})
+        if not data:
+            await ctx.send(await get_translate('send_report_trace_not_exist', ctx), ephemeral=True)
+            return
 
-async def setup(bot):
+        # send report trace
+        """i18n"""
+        trace_eb_text = await get_translate('embed_report_trace', ctx)
+        trace_eb_d = load_translated(trace_eb_text)[0]
+
+        title = trace_eb_d.get('title')
+        fileds = trace_eb_d.get('field')
+
+        field_1 = fileds[0] # 回報內容
+        field_2 = fileds[1] # UUID
+        field_3 = fileds[2] # 狀態
+        """"""
+
+        eb = create_basic_embed(
+            title=title
+        )
+
+        eb.add_field(name=field_1.get('name'), value=data.get('text'))
+        eb.add_field(name=field_2.get('name'), value=data.get('uuid'))
+        eb.add_field(name=field_3.get('name'), value=f"{data.get('status').upper()}: `{data.get('reason')}`", inline=False)
+
+        await ctx.send(embed=eb, ephemeral=True)
+
+    @commands.hybrid_command()
+    @commands.is_owner()
+    async def set_report_status(self, ctx: commands.Context, report_uuid: str, status: ReportStatusType, reason: str):
+        data = await self.REPORT_COLL.find_one({'uuid': report_uuid})
+        if not data:
+            await ctx.send(f"Report `{report_uuid}` not found.", ephemeral=True)
+            return
+
+        update_data = {
+            'status': status.value,
+            'reason': reason
+        }
+        if status == ReportStatusType.CLOSED:
+            update_data['closed_time'] = datetime.now().astimezone(timezone.utc).isoformat()
+        else:
+            update_data['closed_time'] = ""
+
+        await self.REPORT_COLL.update_one({'uuid': report_uuid}, {'$set': update_data})
+        await ctx.send(f"Updated report `{report_uuid}` to `{status.value}` with reason:\n```\n{reason}\n```.", ephemeral=True)
+
+    @set_report_status.autocomplete('report_uuid')
+    async def set_report_status_uuid_autocomplete(self, interaction: discord.Interaction, current: str):
+        query = {}
+        if current:
+            query = {'uuid': {'$regex': current, '$options': 'i'}}
+
+        cursor = self.REPORT_COLL.find(query).limit(25)
+        choices = []
+        async for data in cursor:
+            uuid = data.get('uuid', '')
+            text = data.get('text', '')
+            name = f"{uuid[:5]}...{uuid[-5:]} ({text[:5]})"
+            choices.append(app_commands.Choice(name=name, value=uuid))
+
+        return choices
+
+
+async def setup(bot: commands.Bot):
     await bot.add_cog(SuggestReport(bot))

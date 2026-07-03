@@ -26,6 +26,7 @@
         "random_number": "random_number",
         "suggest": "suggest",
         "report": "report",
+        "report_trace": "report_trace",
         "tictactoe": "tictactoe",
         "world_chat": "world_chat",
         "report_bad_image": "report_bad_image",
@@ -115,6 +116,7 @@
         "random_number": "Generate a random number within a specified range",
         "suggest": "Send a suggestion to the developer",
         "report": "Report a bug to the developer",
+        "report_trace": "Track a bug you previously reported",
         "tictactoe": "Start a game of Tic-Tac-Toe",
         "world_chat": "Set the current channel as a world chat channel",
         "report_bad_image": "Report a user who sent an inappropriate image in the world chat",
@@ -218,8 +220,8 @@
         "lyrics_artist": "Artist name (optional)",
         "lyrics_lrc": "Whether to show lyrics with a timeline (default no)",
         "volume_volume": "Set the volume (0-200), or use the buttons to fine-tune",
-        "suggest_suggestion": "Your suggestion",
-        "report_error": "The error you encountered",
+        "suggest_text": "Your suggestion",
+        "report_text": "The error you encountered. Include time and how it happened.",
         "world_chat_cancel": "Whether to cancel the world chat setting",
         "report_bad_image_author": "The username of the user who sent the inappropriate image",
         "report_bad_image_reason": "The reason for your report",
@@ -359,7 +361,7 @@
             "embed_fields": "Embed Fields",
             "embed_image": "Embed Image"
         }],
-        "send_error_occurred": "An error occurred with this command.",
+        "send_error_occurred": "An error occurred with this command, try calling it with different parameters.\nOr use `/report` and [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) to report the error to the developer.",
         "embed_events_recording_message_edit_before": "Before edit",
         "embed_events_recording_message_edit_after": "After edit",
         "embed_events_recording_message_delete": "Deleted message",
@@ -551,17 +553,35 @@
         "send_player_finished_playlist": "I've finished playing all the songs! I'm leaving now",
         "send_player_lyrics_not_found": "No search results found, it is recommended to use `/lyrics {query} {artist}` to search for lyrics",
         "send_player_volume_adjusted": "Volume has been adjusted to `{volume}%`",
-        "send_suggest_channel_not_found": "Suggestion channel not found.",
-        "send_suggest_success": "Successfully sent suggestion \"{suggestion}\"",
-        "send_suggest_fail": "Could not send suggestion at this time",
-        "send_suggest_no_permission": "I do not have permission to create a thread in this channel.",
-        "send_report_channel_not_found": "Report channel not found.",
-        "send_report_success": "Issue \"{error}\" has been successfully reported",
-        "send_report_fail": "Could not report error at this time",
-        "send_report_no_permission": "I do not have permission to create a thread in this channel.",
-        "send_issue_solve_not_thread": "This isn't a thread, what are you doing",
-        "send_issue_solve_success": "Issue Solved",
-        "send_issue_solve_not_found": "Event not found",
+
+        "send_suggest_succeeded": "Successfully sent suggestion \"`{suggestion}`\"",
+        "send_suggest_failed": "Could not send suggestion at this time",
+        "embed_report_succeeded": [{
+            "title": "Bug Report",
+            "field": [
+                { "name": "Report Content" },
+                { "name": "System Message", "value": "Bug report submitted successfully.\nUse the UUID to track the fix progress: `/report_trace {uuid}`." },
+                { "name": "UUID" }
+            ]
+        }],
+        "embed_report_failed": [{
+            "title": "Bug Report",
+            "field": [
+                { "name": "Report Content" },
+                { "name": "System Message", "value": "The error has been reported and saved, but the developer could not be notified.\nIf the error is still not resolved after a few days, please open an Issue on [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new).\n\nUse the UUID to track the fix progress: `/report_trace {uuid}`." },
+                { "name": "UUID" }
+            ]
+        }],
+
+        "embed_report_trace": [{
+            "title": "Bug Report - Tracking",
+            "field": [
+                { "name": "Report Content" },
+                { "name": "UUID" },
+                { "name": "Status: Reason" }
+            ]
+        }],
+
         "embed_tictactoe_game": [{
             "title": "Tic-Tac-Toe",
             "field": [

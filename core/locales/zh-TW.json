@@ -26,6 +26,7 @@
         "random_number": "隨機數字",
         "suggest": "建議",
         "report": "錯誤回報",
+        "report_trace": "錯誤追蹤",
         "tictactoe": "圈圈叉叉",
         "world_chat": "世界頻道",
         "report_bad_image": "不良圖片檢舉",
@@ -115,6 +116,7 @@
         "random_number": "在指定範圍內產生隨機數字",
         "suggest": "向開發者發送建議",
         "report": "向開發者回報錯誤",
+        "report_trace": "追蹤你之前回報的錯誤",
         "tictactoe": "開始一場圈圈叉叉遊戲",
         "world_chat": "將目前頻道設定為世界頻道",
         "report_bad_image": "檢舉在世界頻道發送不良圖片的使用者",
@@ -218,8 +220,8 @@
         "lyrics_artist": "歌手名稱 (選填)",
         "lyrics_lrc": "是否顯示帶有時間軸的歌詞 (預設為否)",
         "volume_volume": "設定音量 (0-200)，或使用按鈕微調",
-        "suggest_suggestion": "你的建議內容",
-        "report_error": "你遇到的錯誤資訊",
+        "suggest_text": "你的建議內容",
+        "report_text": "你遇到的錯誤資訊。請詳細描述你遇到的錯誤，包括時間，在何種狀況下發生......",
         "world_chat_cancel": "是否要取消世界頻道設定",
         "report_bad_image_author": "發送不良圖片的使用者名稱",
         "report_bad_image_reason": "你檢舉的原因",
@@ -359,7 +361,7 @@
             "embed_fields": "嵌入欄位",
             "embed_image": "嵌入圖片"
         }],
-        "send_error_occurred": "此指令發生了一個錯誤。",
+        "send_error_occurred": "此指令發生了一個錯誤，試著使用不同的參數呼叫指令。\n或者使用 `/錯誤回報` 與 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 來向開發者回報錯誤。",
         "embed_events_recording_message_edit_before": "編輯前",
         "embed_events_recording_message_edit_after": "編輯後",
         "embed_events_recording_message_delete": "刪除的訊息",
@@ -551,17 +553,36 @@
         "send_player_finished_playlist": "我已經播完所有歌曲啦！ 我就離開囉",
         "send_player_lyrics_not_found": "沒有搜尋結果，建議使用 `/lyrics {query} {artist}` 來搜尋歌詞",
         "send_player_volume_adjusted": "已將音量調整為 `{volume}%`",
-        "send_suggest_channel_not_found": "建議頻道未找到。",
-        "send_suggest_success": "已成功發送建議「{suggestion}」",
-        "send_suggest_fail": "目前無法發送建議",
-        "send_suggest_no_permission": "我沒有權限在此頻道建立討論串。",
-        "send_report_channel_not_found": "回報頻道未找到。",
-        "send_report_success": "問題「{error}」已成功回報",
-        "send_report_fail": "目前無法回報錯誤",
-        "send_report_no_permission": "我沒有權限在此頻道建立討論串。",
-        "send_issue_solve_not_thread": "這不是Thread啊 你在幹嘛",
-        "send_issue_solve_success": "Issue Solve",
-        "send_issue_solve_not_found": "事件不存在",
+
+        "send_suggest_succeeded": "已成功發送建議「`{suggestion}`」",
+        "send_suggest_failed": "目前無法發送建議",
+
+        "embed_report_succeeded": [{
+            "title": "錯誤回報",
+            "field": [
+                { "name": "回報內容" },
+                { "name": "系統訊息", "value": "已成功回報錯誤。\n使用 UUID 來追蹤錯誤維修進度: `/錯誤追蹤 {uuid}`。" },
+                { "name": "UUID" }
+            ]
+        }],
+        "embed_report_failed": [{
+            "title": "錯誤回報",
+            "field": [
+                { "name": "回報內容" },
+                { "name": "系統訊息", "value": "錯誤已經回報並進行儲存，但是無法通知開發者。\n如果該錯誤在幾天後依然沒被處理，請前往 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 提出 Issue。\n\n使用 UUID 來追蹤錯誤維修進度: `/錯誤追蹤 {uuid}`。" },
+                { "name": "UUID" }
+            ]
+        }],
+
+        "embed_report_trace": [{
+            "title": "錯誤回報-追蹤",
+            "field": [
+                { "name": "回報內容" },
+                { "name": "UUID" },
+                { "name": "狀態: 原因" }
+            ]
+        }],
+
         "embed_tictactoe_game": [{
             "title": "圈圈叉叉",
             "field": [

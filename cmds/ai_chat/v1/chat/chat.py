@@ -247,7 +247,7 @@ class Chat:
         prompt = (
             user_prompt,
             f'The following is the `image` provided by the user: ```{image_content}```' if image_content else '',
-            f'The following is the `url` provided by the user: `{url}`' if url else ''
+            f'The following is the `url` provided by the user: `{url}`' if url else '',
             f'The following is the `file` provided by the user: ```{text_file_content}```' if text_file_content else ''
         )
 

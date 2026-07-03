@@ -198,7 +198,7 @@ async def create_KeepTask():
 
                 try:
                     channel = bot.get_channel(int(channelID)) or await bot.fetch_channel(int(channelID))
-                except dc_errors.NotFound: # 找不到
+                except (dc_errors.NotFound, dc_errors.Forbidden): # 找不到
                     await collection.delete_one({
                         'uuid': u,
                         'channelID': channelID
