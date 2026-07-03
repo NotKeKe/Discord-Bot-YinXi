@@ -32,7 +32,6 @@ async def _function_as_openai_description(skill_md_path: Path, name: str, descri
 
 async def _load_one_skill(skill_md_path: Path) -> dict:
     async with aiofiles.open(skill_md_path, 'r', encoding="utf-8") as f:
-        f: Any = f
         raw = await f.read()
 
     skill = frontmatter.loads(raw)
