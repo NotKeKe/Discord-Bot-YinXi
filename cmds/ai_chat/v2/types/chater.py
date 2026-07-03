@@ -13,20 +13,20 @@ class Model(BaseModel):
 
 
 class UserMessage(BaseModel):
-    role: Literal["user"]
+    role: Literal["user"] = "user"
     content: str
 
 class AssistantMessage(BaseModel):
-    role: Literal["assistant"]
+    role: Literal["assistant"] = "assistant"
     content: str | None = None
     tool_calls: list[ChatCompletionMessageToolCallUnion] | None = None
 
 class SystemMessage(BaseModel):
-    role: Literal["system"]
+    role: Literal["system"] = "system"
     content: str
 
 class ToolMessage(BaseModel):
-    role: Literal["tool"]
+    role: Literal["tool"] = "tool"
     name: str # function name
     content: str
     tool_call_id: str
@@ -39,6 +39,7 @@ SingleHistory = Annotated[
 class Meta(BaseModel):
     model: Model
     ctx: commands.Context
+    system_prompt: str
 
 class Infos(BaseModel):
     meta: Meta
@@ -59,5 +60,5 @@ class ChatResponse(BaseModel):
 class CompletionResponse(BaseModel):
     think: str
     result: str
-    tool_calls: list[ChatCompletionMessageToolCallUnion]
+    tool_calls: list[ChatCompletionMessageToolCallUnion] | None
     token_count: int
