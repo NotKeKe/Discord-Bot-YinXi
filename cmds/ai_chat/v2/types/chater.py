@@ -44,6 +44,7 @@ class Infos(BaseModel):
     meta: Meta
     history: list[SingleHistory]
     system_prompt: str
+    is_enable_tools: bool
 
     def to_openai_messages(self) -> list[dict]:
         return [m.model_dump(mode="json", exclude_none=True) for m in self.history]

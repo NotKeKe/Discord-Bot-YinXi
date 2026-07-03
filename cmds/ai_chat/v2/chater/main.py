@@ -1,15 +1,20 @@
-import openai
+import orjson
 from discord.ext import commands
-from typing import Optional, cast, Iterable
-from openai.types.chat import ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
+from typing import Optional, cast, Iterable, Callable, Any
+from openai.types.chat import ChatCompletion
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
-from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCallUnion
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCallUnion,
+    ChatCompletionMessageFunctionToolCall,
+)
 
 from ..types.chater import *
 from ..ai_model.detector import ModelDetector
 from ..data_keeper.clients import get_openai_client
 
 from .utils import get_think, clean_text
+from cmds.ai_chat.v1.tools import tool_map
+from core.functions import is_async
 
 class Chater:
     def __init__(
@@ -23,22 +28,15 @@ class Chater:
                 ctx=ctx,
             ),
             system_prompt='',
+            is_enable_tools=True,
             history=[]
         )
 
 
-    async def _handle_tool_call(self, tool_calls: list[ChatCompletionMessageToolCallUnion], infos: Infos):
-        ...
-
     async def _handle_completion(self, response: ChatCompletion) -> CompletionResponse:
-        if not response or not response.choices:
-            raise ValueError('AI has no response (no response or no response.choices[0])')
-
         message = response.choices[0].message
 
-
-        if message.content:
-            result = message.content
+        result = message.content or ""
 
         think = ""
         if (hasattr(message, 'reasoning_content')):
@@ -66,13 +64,74 @@ class Chater:
         self._infos.system_prompt = prompt
 
     def change_model(self, model: str):
-        self._model = ModelDetector.detect_to_model(model)
+        self._infos.meta.model = ModelDetector.detect_to_model(model)
 
-    async def chat(self, ctx: commands.Context) -> ChatResponse:
+    async def _handle_tool_call(
+        self,
+        tool_calls: list[ChatCompletionMessageToolCallUnion]
+    ) -> tuple[AssistantMessage, list[ToolMessage]] | None:
+        if not tool_calls:
+            return None
+
+        valid_tool_calls = [
+            tc for tc in tool_calls
+            if isinstance(tc, ChatCompletionMessageFunctionToolCall) and tc.id and tc.function and tc.function.name
+        ]
+        if not valid_tool_calls:
+            return None
+
+        assistant_message = AssistantMessage(
+            content=None,
+            tool_calls=cast(list[ChatCompletionMessageToolCallUnion], valid_tool_calls)
+        )
+
+        tool_messages: list[ToolMessage] = []
+        for tool_call in valid_tool_calls:
+            tool_call_id = tool_call.id
+            function_name = tool_call.function.name
+            function_response = "Error: An unknown error occurred."
+
+            try:
+                function_to_call = cast(Callable[..., Any] | None, tool_map.get(function_name))
+                if not function_to_call:
+                    function_response = f"Function '{function_name}' not found in tool map."
+                else:
+                    function_args = orjson.loads(tool_call.function.arguments)
+                    if not isinstance(function_args, dict):
+                        raise TypeError("Function arguments must be a dictionary.")
+
+                    if is_async(function_to_call):
+                        function_response = await function_to_call(**function_args)
+                    else:
+                        function_response = function_to_call(**function_args)
+
+            except orjson.JSONDecodeError:
+                function_response = f"Error: Failed to parse arguments for '{function_name}'. Arguments must be valid JSON."
+            except (TypeError, ValueError) as e:
+                function_response = f"Error: Failed to call '{function_name}'. Details: {e}"
+            except Exception as e:
+                function_response = f"Error: An unexpected error occurred while calling '{function_name}'. Details: {e}"
+
+            tool_messages.append(
+                ToolMessage(
+                    tool_call_id=tool_call_id,
+                    name=function_name,
+                    content=str(function_response)
+                )
+            )
+
+        return assistant_message, tool_messages
+
+    async def chat(
+        self, 
+        ctx: commands.Context,
+        is_enable_tools: bool = True
+    ) -> ChatResponse:
         # 不同訊息會有不同的 commands.Context 物件
         self._infos.meta.ctx = ctx
+        self._infos.is_enable_tools = is_enable_tools
 
-        client = get_openai_client(self._model.provider)
+        client = get_openai_client(self._infos.meta.model.provider)
 
         self._infos.history.append(
             UserMessage(
@@ -80,10 +139,20 @@ class Chater:
             )
         )
 
-        while True:
+        call_times = 0
+        max_tool_calls = 3
+        comp_resp: CompletionResponse | None = None
+
+        while call_times < max_tool_calls:
+            messages: list[dict] = []
+            if self._infos.system_prompt:
+                messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
+            messages.extend(self._infos.to_openai_messages())
+
             resp = await client.chat.completions.create(
-                model=self._model.model,
-                messages=cast(Iterable[ChatCompletionMessageParam], self._infos.to_openai_messages()),
+                model=self._infos.meta.model.model,
+                messages=cast(Iterable[ChatCompletionMessageParam], messages),
+                
             )
 
             if not resp.choices:
@@ -95,8 +164,21 @@ class Chater:
             if not comp_resp.tool_calls:
                 break
 
-            await self._handle_tool_call(comp_resp.tool_calls, self._infos)
+            tool_result = await self._handle_tool_call(comp_resp.tool_calls)
+            if not tool_result:
+                break
+
+            assistant_message, tool_messages = tool_result
+            self._infos.history.append(assistant_message)
+            self._infos.history.extend(tool_messages)
+
+            call_times += 1
+
+        if comp_resp is None:
+            raise ValueError('AI has no response')
 
         return ChatResponse(
-
+            think=comp_resp.think,
+            result=comp_resp.result,
+            infos=self._infos
         )
