@@ -11,6 +11,7 @@ from openai.types.chat.chat_completion_message_tool_call import (
 from ..types.chater import *
 from ..ai_model.detector import ModelDetector
 from ..data_keeper.clients import get_openai_client
+from ..tool.main import load_skills, get_tool_descriptions
 
 from .utils import get_think, clean_text
 from cmds.ai_chat.v1.tools import tool_map
@@ -69,48 +70,42 @@ class Chater:
     async def _handle_tool_call(
         self,
         tool_calls: list[ChatCompletionMessageToolCallUnion]
-    ) -> tuple[AssistantMessage, list[ToolMessage]] | None:
-        if not tool_calls:
-            return None
-
-        valid_tool_calls = [
-            tc for tc in tool_calls
-            if isinstance(tc, ChatCompletionMessageFunctionToolCall) and tc.id and tc.function and tc.function.name
-        ]
-        if not valid_tool_calls:
-            return None
-
+    ) -> tuple[AssistantMessage, list[ToolMessage]]:
         assistant_message = AssistantMessage(
             content=None,
-            tool_calls=cast(list[ChatCompletionMessageToolCallUnion], valid_tool_calls)
+            tool_calls=tool_calls
         )
 
         tool_messages: list[ToolMessage] = []
-        for tool_call in valid_tool_calls:
-            tool_call_id = tool_call.id
-            function_name = tool_call.function.name
-            function_response = "Error: An unknown error occurred."
+        for tool_call in tool_calls:
+            tool_call_id = ""
+            function_name = "unknown"
+            function_response = "no result"
 
-            try:
-                function_to_call = cast(Callable[..., Any] | None, tool_map.get(function_name))
-                if not function_to_call:
-                    function_response = f"Function '{function_name}' not found in tool map."
-                else:
-                    function_args = orjson.loads(tool_call.function.arguments)
-                    if not isinstance(function_args, dict):
-                        raise TypeError("Function arguments must be a dictionary.")
+            if isinstance(tool_call, ChatCompletionMessageFunctionToolCall) and tool_call.id and tool_call.function and tool_call.function.name:
+                tool_call_id = tool_call.id
+                function_name = tool_call.function.name
 
-                    if is_async(function_to_call):
-                        function_response = await function_to_call(**function_args)
+                try:
+                    function_to_call = cast(Callable[..., Any] | None, tool_map.get(function_name))
+                    if not function_to_call:
+                        function_response = f"Function '{function_name}' not found in tool map."
                     else:
-                        function_response = function_to_call(**function_args)
+                        function_args = orjson.loads(tool_call.function.arguments)
+                        if not isinstance(function_args, dict):
+                            raise TypeError("Function arguments must be a dictionary.")
 
-            except orjson.JSONDecodeError:
-                function_response = f"Error: Failed to parse arguments for '{function_name}'. Arguments must be valid JSON."
-            except (TypeError, ValueError) as e:
-                function_response = f"Error: Failed to call '{function_name}'. Details: {e}"
-            except Exception as e:
-                function_response = f"Error: An unexpected error occurred while calling '{function_name}'. Details: {e}"
+                        if is_async(function_to_call):
+                            function_response = await function_to_call(**function_args)
+                        else:
+                            function_response = function_to_call(**function_args)
+
+                except orjson.JSONDecodeError:
+                    function_response = f"Error: Failed to parse arguments for '{function_name}'. Arguments must be valid JSON."
+                except (TypeError, ValueError) as e:
+                    function_response = f"Error: Failed to call '{function_name}'. Details: {e}"
+                except Exception as e:
+                    function_response = f"Error: An unexpected error occurred while calling '{function_name}'. Details: {e}"
 
             tool_messages.append(
                 ToolMessage(
@@ -127,6 +122,8 @@ class Chater:
         ctx: commands.Context,
         is_enable_tools: bool = True
     ) -> ChatResponse:
+        await load_skills()
+
         # 不同訊息會有不同的 commands.Context 物件
         self._infos.meta.ctx = ctx
         self._infos.is_enable_tools = is_enable_tools
@@ -149,10 +146,10 @@ class Chater:
                 messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
             messages.extend(self._infos.to_openai_messages())
 
-            resp = await client.chat.completions.create(
+            resp: ChatCompletion = await client.chat.completions.create(
                 model=self._infos.meta.model.model,
                 messages=cast(Iterable[ChatCompletionMessageParam], messages),
-                
+                tools=get_tool_descriptions() if is_enable_tools else None, # type: ignore
             )
 
             if not resp.choices:
@@ -164,11 +161,7 @@ class Chater:
             if not comp_resp.tool_calls:
                 break
 
-            tool_result = await self._handle_tool_call(comp_resp.tool_calls)
-            if not tool_result:
-                break
-
-            assistant_message, tool_messages = tool_result
+            assistant_message, tool_messages = await self._handle_tool_call(comp_resp.tool_calls)
             self._infos.history.append(assistant_message)
             self._infos.history.extend(tool_messages)
 
