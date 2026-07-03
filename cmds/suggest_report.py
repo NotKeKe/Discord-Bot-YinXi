@@ -36,7 +36,7 @@ class SuggestReport(commands.Cog):
 
     @commands.hybrid_command(name=locale_str('suggest'), description=locale_str('suggest'))
     @app_commands.describe(text=locale_str('suggest_text'))
-    async def suggest(self, ctx: commands.Context, * , text: str):
+    async def suggest(self, ctx: commands.Context, *, text: str):
         await self.SUGGEST_COLL.insert_one({
             'user_global_name': ctx.author.global_name,
             'user_id': ctx.author.id,
@@ -55,7 +55,7 @@ class SuggestReport(commands.Cog):
 
     @commands.hybrid_command(name=locale_str('report'), description=locale_str('report'), aliases=['error'])
     @app_commands.describe(text=locale_str('report_text'))
-    async def report(self, ctx: commands.Context, * , text: str):
+    async def report(self, ctx: commands.Context, *, text: str):
         await self.REPORT_COLL.insert_one({
             'user_global_name': ctx.author.global_name,
             'user_id': ctx.author.id,
