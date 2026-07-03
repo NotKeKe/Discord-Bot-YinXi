@@ -8,6 +8,7 @@ class MongoDB_DB:
     chat_human_setting = mongo_db_client['chat_human_setting']
     keep = mongo_db_client['keep']
     sub_yt = mongo_db_client['sub_yt']
+    suggest_report = mongo_db_client['suggest_report']
     pjsk = mongo_db_client['pjsk']
     music = mongo_db_client['music']
     cambrdige = mongo_db_client['cambrdige']
