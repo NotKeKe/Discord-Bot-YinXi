@@ -67,7 +67,7 @@ class SuggestReport(commands.Cog):
         except Exception:
             logger.error("Suggest cannot send to channel.", exc_info=True)
             await ctx.send(await get_translate('send_suggest_failed', ctx), ephemeral=True)
-            
+
 
     @commands.hybrid_command(name=locale_str('report'), description=locale_str('report'), aliases=['error'])
     @app_commands.describe(text=locale_str('report_text'))
@@ -119,14 +119,14 @@ class SuggestReport(commands.Cog):
             eb.color = discord.Color.green()
             eb.add_field(name=suc_field_1.get('name'), value=text)
             eb.add_field(name=suc_field_2.get('name'), value=suc_field_2.get('value'))
-            eb.add_field(name=suc_field_3.get('name'), value=suc_field_3.get('value'))
+            eb.add_field(name=suc_field_3.get('name'), value=_uuid, inline=False)
         except Exception:
             logger.error("Error report cannot send to channel.", exc_info=True)
             
             eb.color = discord.Color.orange()
             eb.add_field(name=fail_field_1.get('name'), value=text)
             eb.add_field(name=fail_field_2.get('name'), value=fail_field_2.get('value'))
-            eb.add_field(name=fail_field_3.get('name'), value=fail_field_3.get('value'))
+            eb.add_field(name=fail_field_3.get('name'), value=_uuid, inline=False)
 
         # send to user channel
         await ctx.send(embed=eb, ephemeral=True)
@@ -159,7 +159,7 @@ class SuggestReport(commands.Cog):
 
         eb.add_field(name=field_1.get('name'), value=data.get('text'))
         eb.add_field(name=field_2.get('name'), value=data.get('uuid'))
-        eb.add_field(name=field_3.get('name'), value=f"{data.get('status').upper()}: `{data.get('reason')}`")
+        eb.add_field(name=field_3.get('name'), value=f"{data.get('status').upper()}: `{data.get('reason')}`", inline=False)
 
         await ctx.send(embed=eb, ephemeral=True)
 

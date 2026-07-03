@@ -558,16 +558,16 @@
             "title": "Bug Report",
             "field": [
                 { "name": "Report Content" },
-                { "name": "System Message", "value": "Bug report submitted successfully" },
-                { "name": "UUID", "value": "You can use this UUID to track the bug's progress: `{uuid}`. Usage: `/report_trace {uuid}`." }
+                { "name": "System Message", "value": "Bug report submitted successfully.\nUse the UUID to track the fix progress: `/report_trace {uuid}`." },
+                { "name": "UUID" }
             ]
         }],
         "embed_report_failed": [{
             "title": "Bug Report",
             "field": [
                 { "name": "Report Content" },
-                { "name": "System Message", "value": "The error has been reported and saved, but the developer could not be notified. If the error is still not resolved after a few days, please open an Issue on [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new)." },
-                { "name": "UUID", "value": "You can use this UUID to track the bug's progress: `{uuid}`. Usage: `/report_trace {uuid}`." }
+                { "name": "System Message", "value": "The error has been reported and saved, but the developer could not be notified.\nIf the error is still not resolved after a few days, please open an Issue on [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new).\n\nUse the UUID to track the fix progress: `/report_trace {uuid}`." },
+                { "name": "UUID" }
             ]
         }],
 
@@ -576,7 +576,7 @@
             "field": [
                 { "name": "Report Content" },
                 { "name": "UUID" },
-                { "name": "Status" }
+                { "name": "Status: Reason" }
             ]
         }],
 

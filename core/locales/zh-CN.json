@@ -559,16 +559,16 @@
             "title": "错误回报",
             "field": [
                 { "name": "回报内容" },
-                { "name": "系统消息", "value": "已成功回报错误" },
-                { "name": "UUID", "value": "可以使用此 UUID 来追踪错误进度: `{uuid}`。使用方法: `/错误追踪 {uuid}`。" }
+                { "name": "系统消息", "value": "已成功回报错误。\n使用 UUID 来追踪错误维修进度: `/错误追踪 {uuid}`。" },
+                { "name": "UUID" }
             ]
         }],
         "embed_report_failed": [{
             "title": "错误回报",
             "field": [
                 { "name": "回报内容" },
-                { "name": "系统消息", "value": "错误已经回报并进行储存，但是无法通知开发者。如果该错误在几天后依然没被处理，请前往 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 提出 Issue。" },
-                { "name": "UUID", "value": "可以使用此 UUID 来追踪错误进度: `{uuid}`。使用方法: `/错误追踪 {uuid}`。" }
+                { "name": "系统消息", "value": "错误已经回报并进行储存，但是无法通知开发者。\n如果该错误在几天后依然没被处理，请前往 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 提出 Issue。\n\n使用 UUID 来追踪错误维修进度: `/错误追踪 {uuid}`。" },
+                { "name": "UUID" }
             ]
         }],
 
@@ -577,7 +577,7 @@
             "field": [
                 { "name": "回报内容" },
                 { "name": "UUID" },
-                { "name": "状态" }
+                { "name": "状态: 原因" }
             ]
         }],
 
