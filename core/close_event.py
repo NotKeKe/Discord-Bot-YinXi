@@ -64,7 +64,7 @@ async def close_event():
 
     try:
         from cmds.play4 import players
-        for player in players.values():
+        for player in list(players.values()):
             voice_client = player.voice_client
             if voice_client and voice_client.is_connected(): # type: ignore
                 try:
