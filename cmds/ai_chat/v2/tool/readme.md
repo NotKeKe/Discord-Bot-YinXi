@@ -19,3 +19,19 @@ description: asdasd
 ---
 ```
 但可能沒有內文
+
+### tool.json
+由於要將工具轉為 openai 可用工具，所以額外多了 tool.json，用來儲存 params 的說明 (name 跟 description 已經有在 SKILL.md 內了)
+格式如下: 
+```json
+{
+    "type": "object",
+    "properties": {
+        "time_offset": {
+            "type": "integer",
+            "description": "Timezone offset in hours; defaults to 8 if not provided"
+        }
+    },
+    "required": []
+}
+```
