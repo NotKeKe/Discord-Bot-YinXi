@@ -1,0 +1,10 @@
+{
+    "type": "object",
+    "properties": {
+        "time_offset": {
+            "type": "integer",
+            "description": "Timezone offset in hours; defaults to 8 if not provided"
+        }
+    },
+    "required": []
+}
