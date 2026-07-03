@@ -140,8 +140,9 @@ class Chater:
         max_tool_calls = 10
         no_result_rounds = 0
         comp_resp: CompletionResponse | None = None
+        run_last = False # 如果工具調用到第10輪，就將這個設為 True，並停用工具，讓 AI 做最終回覆
 
-        while call_times < max_tool_calls:
+        while call_times < max_tool_calls or run_last:
             messages: list[dict] = []
             if self._infos.system_prompt:
                 messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
@@ -176,11 +177,15 @@ class Chater:
                             "Try canceling the next tool call and inform the user that the tool is unavailable.</>"
                         )
                     )
-                    break
             else:
                 no_result_rounds = 0
 
             call_times += 1
+
+            if call_times >= max_tool_calls: # 超過工具調用次數了
+                run_last = True
+                is_enable_tools = False
+                
 
         if comp_resp is None:
             raise ValueError('AI has no response')
