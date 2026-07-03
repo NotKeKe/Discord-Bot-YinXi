@@ -359,7 +359,7 @@
             "embed_fields": "嵌入欄位",
             "embed_image": "嵌入圖片"
         }],
-        "send_error_occurred": "此指令發生了一個錯誤。",
+        "send_error_occurred": "此指令發生了一個錯誤，試著使用不同的參數呼叫指令。\n或者使用 `/錯誤回報` 與 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 來向開發者回報錯誤。",
         "embed_events_recording_message_edit_before": "編輯前",
         "embed_events_recording_message_edit_after": "編輯後",
         "embed_events_recording_message_delete": "刪除的訊息",

@@ -360,7 +360,7 @@
             "embed_fields": "嵌入字段",
             "embed_image": "嵌入图片"
         }],
-        "send_error_occurred": "此指令发生了一个错误。",
+        "send_error_occurred": "此指令发生了一个错误，试着使用不同的参数调用指令。\n或者使用 `/错误回报` 与 [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) 来向开发者回报错误。",
         "embed_events_recording_message_edit_before": "编辑前",
         "embed_events_recording_message_edit_after": "编辑后",
         "embed_events_recording_message_delete": "删除的消息",

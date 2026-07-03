@@ -359,7 +359,7 @@
             "embed_fields": "Embed Fields",
             "embed_image": "Embed Image"
         }],
-        "send_error_occurred": "An error occurred with this command.",
+        "send_error_occurred": "An error occurred with this command, try calling it with different parameters.\nOr use `/report` and [GitHub](https://github.com/NotKeKe/Discord-Bot-YinXi/issues/new) to report the error to the developer.",
         "embed_events_recording_message_edit_before": "Before edit",
         "embed_events_recording_message_edit_after": "After edit",
         "embed_events_recording_message_delete": "Deleted message",
