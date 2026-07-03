@@ -31,6 +31,9 @@ class SuggestReport(commands.Cog):
     async def cog_load(self):
         print(f'已載入「{__name__}」')
 
+
+    @commands.Cog.listener()
+    async def on_ready(self):
         if CHANNEL_ID is not None and self.CHANNEL is None:
             self.CHANNEL = await self.bot.fetch_channel(CHANNEL_ID)
 
