@@ -7,7 +7,7 @@
 - Write in accordance with the original program code style.
 
 ### Type Checking
-- Use `uvx ty check` to type check a file(after you edited any file) or the entire folder(after you finish the task request by user).
+- Use `uvx ty check` to type check a file(after you edited any **Python** file) or the entire folder(after you finish the task request by user).
 
 ### Edit rule
 - You may only modify the code "snippets" (the areas specified by the user).
