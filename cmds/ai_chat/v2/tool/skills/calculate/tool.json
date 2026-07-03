@@ -1,0 +1,10 @@
+{
+    "type": "object",
+    "properties": {
+        "expression": {
+            "type": "string",
+            "description": "Arithmetic expression to evaluate, e.g. 1 + 2 * 3"
+        }
+    },
+    "required": ["expression"]
+}

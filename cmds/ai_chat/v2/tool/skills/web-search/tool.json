@@ -1,0 +1,18 @@
+{
+    "type": "object",
+    "properties": {
+        "keywords": {
+            "type": "string",
+            "description": "Search keywords"
+        },
+        "time_range": {
+            "type": "string",
+            "description": "Time range for search results; options are year, month, week, day; defaults to year"
+        },
+        "language": {
+            "type": "string",
+            "description": "Language for search results; defaults to zh-TW"
+        }
+    },
+    "required": ["keywords"]
+}
