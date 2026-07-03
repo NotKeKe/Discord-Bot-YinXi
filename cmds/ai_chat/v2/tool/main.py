@@ -4,9 +4,13 @@ from typing import Any
 import aiofiles
 import frontmatter
 import orjson
+import logging
 
 from core.functions import is_async
 
+logger = logging.getLogger(__name__)
+
+_SKILL_LOADED = False
 ALL_SKILLS = {}
 
 async def _function_as_openai_description(skill_md_path: Path, name: str, description: str) -> dict:
@@ -63,13 +67,29 @@ async def _load_one_skill(skill_md_path: Path) -> dict:
         ),
     }
 
-async def _load_skills():
-    for path in (Path(__file__).parent / "skills").rglob("SKILL.md"):
-        skill = await _load_one_skill(path)
-        ALL_SKILLS[skill["name"]] = skill
+async def load_skills():
+    global _SKILL_LOADED
+    if _SKILL_LOADED: return
+
+    _SKILL_LOADED = True
+
+    try:
+        for path in (Path(__file__).parent / "skills").rglob("SKILL.md"):
+            skill = await _load_one_skill(path)
+            ALL_SKILLS[skill["name"]] = skill
+    except Exception:
+        logger.exception("Failed to load skills")
+        _SKILL_LOADED = False
 
 async def call_tool(tool_name: str, tool_args: list[Any]):
     func = ALL_SKILLS[tool_name]["function"]
     if is_async(func):
         return await func(*tool_args)
     return func(*tool_args)
+
+def get_tool_descriptions() -> list[dict]:
+    if not _SKILL_LOADED: 
+        logger.warning("Skills is not loaded yet")
+        return []
+    else:
+        return [s["function_as_openai_description"] for s in ALL_SKILLS.values()]
