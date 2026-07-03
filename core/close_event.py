@@ -73,7 +73,7 @@ async def close_event():
                     pass
                 
                 try:
-                    await player.ctx.send(f'Bot is currently restarting, we sincerely apologize for the inconvenience. You may need to manually re-invite YinXi later.')
+                    await player.ctx.send(f'Bot is currently restarting, we sincerely apologize for the inconvenience. You may need to manually re-add YinXi to voice channel later.')
                 except Exception:
                     pass
             
