@@ -1,0 +1,19 @@
+{
+    "type": "object",
+    "properties": {
+        "action": {
+            "type": "string",
+            "enum": ["list_cogs", "list_commands", "search", "get_command_info"],
+            "description": "Action to perform: list_cogs(list all cogs), list_commands(list all cogs and their commands), search(search cog/command names by keyword), get_command_info(get detailed info of a specific command)"
+        },
+        "keyword": {
+            "type": "string",
+            "description": "Search keyword, matches against cog names and command names (only needed for search action)"
+        },
+        "command_name": {
+            "type": "string",
+            "description": "Command name (only needed for get_command_info action)"
+        }
+    },
+    "required": ["action"]
+}
