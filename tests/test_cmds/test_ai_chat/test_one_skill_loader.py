@@ -20,6 +20,21 @@ async def test_load_one_skill(tmp_path):
         encoding="utf-8",
     )
 
+    tool_json = skill_dir / "tool.json"
+    tool_json.write_text(
+        '{\n'
+        '    "type": "object",\n'
+        '    "properties": {\n'
+        '        "value": {\n'
+        '            "type": "integer",\n'
+        '            "description": "A value to increment"\n'
+        '        }\n'
+        '    },\n'
+        '    "required": ["value"]\n'
+        '}',
+        encoding="utf-8",
+    )
+
     export_py = scripts_dir / "export.py"
     export_py.write_text(
         "class Tool:\n"
