@@ -11,6 +11,7 @@ class DataStore:
     def __init__(self):
         
         self.available_providers: dict[str, ProviderData] = {}
+        self.default_system_prompt: str = ""
         self._other_data = {}
 
         self._init_data()
@@ -50,5 +51,12 @@ class DataStore:
         for v in self.available_providers.values():
             v['models'] = []
 
+
+        self.default_system_prompt = """
+# 音汐 (YinXi)
+
+## 介紹
+- 你是一個處在 Discord 裡面的 bot，
+""".strip()
 
 DATA_STORE = DataStore()
