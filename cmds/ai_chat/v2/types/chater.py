@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Annotated, Literal
 from enum import StrEnum
 from discord.ext import commands
+from datetime import datetime
 
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCallUnion
 from openai.types.chat.chat_completion_content_part_param import ChatCompletionContentPartParam
@@ -52,15 +53,24 @@ class Infos(BaseModel):
         return [m.model_dump(mode="json", exclude_none=True) for m in self.history]
 
 
+
 class StatusEnum(StrEnum):
-    RECEVING = "receiving"
+    INIT = "init"
+    RECEVING_THINK = "Receving stream think"
+    RECEVING_CONTENT = "Receving stream content"
+    RECEVING_TOOL_CALLS = "Receving tool calls"
+    TOOL_CALLING = "Tool calling" # 工具正在被調用
+    TOOL_CALLING_DONE = "Tool calling done"
     DONE = "done"
     ERROR = "error"
 
 class Status(BaseModel):
-    status: str
-    readable: str
+    status: StatusEnum
+    detail_string: str = ""
+    update_time: datetime
 
+    def format_time(self):
+        return self.update_time.strftime("%Y-%m-%d %a %H:%M:%S %z")
 
 
 class ChatResponse(BaseModel):

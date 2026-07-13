@@ -18,7 +18,7 @@ from ..prompts import get_default_system_prompt
 
 from .utils import get_think, clean_text
 from cmds.ai_chat.v1.tools import tool_map
-from core.functions import is_async
+from core.functions import is_async, current_datetime
 
 class Chater:
     def __init__(
@@ -34,6 +34,10 @@ class Chater:
             system_prompt=get_default_system_prompt(ctx),
             is_enable_tools=True,
             history=[]
+        )
+        self.status = Status(
+            status=StatusEnum.INIT,
+            update_time=current_datetime()
         )
 
     def change_system_prompt(self, system_prompt: str):
@@ -57,13 +61,19 @@ class Chater:
             finish_reason = choice.finish_reason or finish_reason
 
             if delta.content is not None:
+                self.status.status = StatusEnum.RECEVING_CONTENT
+                self.status.update_time = current_datetime()
                 content_chunks.append(delta.content)
 
             reasoning = getattr(delta, 'reasoning_content', None)
             if reasoning is not None:
+                self.status.status = StatusEnum.RECEVING_THINK
+                self.status.update_time = current_datetime()
                 reasoning_chunks.append(reasoning)
 
             if delta.tool_calls:
+                self.status.status = StatusEnum.RECEVING_TOOL_CALLS
+                self.status.update_time = current_datetime()
                 for tc in delta.tool_calls:
                     index = tc.index
                     if index not in tool_calls_deltas:
@@ -118,6 +128,9 @@ class Chater:
         self,
         tool_calls: list[ChatCompletionMessageToolCallUnion]
     ) -> tuple[AssistantMessage, list[ToolMessage]]:
+        self.status.status = StatusEnum.TOOL_CALLING
+        self.status.update_time = current_datetime()
+
         assistant_message = AssistantMessage(
             content=None,
             tool_calls=tool_calls
@@ -128,6 +141,9 @@ class Chater:
             tool_call_id = ""
             function_name = "unknown"
             function_response = "no result"
+
+            self.status.detail_string = f"Calling function: `{function_name}`"
+            self.status.update_time = current_datetime()
 
             if isinstance(tool_call, ChatCompletionMessageFunctionToolCall) and tool_call.id and tool_call.function and tool_call.function.name:
                 tool_call_id = tool_call.id
@@ -161,6 +177,10 @@ class Chater:
                     content=str(function_response)
                 )
             )
+        
+        self.status.status = StatusEnum.TOOL_CALLING_DONE
+        self.status.detail_string = ""
+        self.status.update_time = current_datetime()
 
         return assistant_message, tool_messages
 
@@ -236,7 +256,10 @@ class Chater:
                 
 
         if comp_resp is None:
+            self.status.status = StatusEnum.ERROR
             raise ValueError('AI has no response')
+
+        self.status.status = StatusEnum.DONE
 
         return ChatResponse(
             think=comp_resp.think,
