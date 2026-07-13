@@ -56,11 +56,11 @@ class Chater:
             delta = choice.delta
             finish_reason = choice.finish_reason or finish_reason
 
-            if delta.content:
+            if delta.content is not None:
                 content_chunks.append(delta.content)
 
             reasoning = getattr(delta, 'reasoning_content', None)
-            if reasoning:
+            if reasoning is not None:
                 reasoning_chunks.append(reasoning)
 
             if delta.tool_calls:
