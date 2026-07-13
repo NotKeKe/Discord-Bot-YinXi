@@ -118,9 +118,19 @@ def FormatTime(time: datetime) -> str:
     return time.strftime('%Y/%m/%d %H:%M:%S %A')
 
 def current_time(UTC: int = 8) -> str:
-    '''回傳現在時間(str)，arg: UTC: 使用者所提供的時區'''
+    """回傳現在時間
+
+    Args:
+        UTC (int, optional): _description_. Defaults to 8.
+
+    Returns:
+        str: format to: `%Y-%m-%d %a %H:%M:%S %z`, ex.: `2023-05-15 Mon 12:00:00 +0800`
+    """    
     time = datetime.now(timezone(timedelta(hours=UTC)))
-    return FormatTime(time)
+    return time.strftime('%Y-%m-%d %a %H:%M:%S %z')
+
+def current_datetime() -> datetime:
+    return datetime.now().astimezone(timezone(timedelta(hours=8)))
 
 async def thread_pool(func, *args, **kwargs):
     loop = asyncio.get_event_loop()
