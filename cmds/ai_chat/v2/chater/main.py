@@ -15,10 +15,12 @@ from ..ai_model.detector import ModelDetector
 from ..data_keeper.clients import get_openai_client
 from ..tool.main import load_skills, get_tool_descriptions
 from ..prompts import get_default_system_prompt
+from ..rate_limiter import rate_limiter
 
 from .utils import get_think, clean_text
+
 from cmds.ai_chat.v1.tools import tool_map
-from core.functions import is_async, current_datetime
+from core.functions import is_async, current_datetime, admins
 
 class Chater:
     def __init__(
@@ -195,6 +197,8 @@ class Chater:
         self._infos.meta.ctx = ctx
         self._infos.is_enable_tools = is_enable_tools
 
+        is_admin = ctx.author.id in admins
+
         client = get_openai_client(self._infos.meta.model.provider)
 
         self._infos.history.append(
@@ -216,15 +220,27 @@ class Chater:
             messages.extend(self._infos.to_openai_messages())
 
             # call openai api (stream)
-            stream: AsyncStream[ChatCompletionChunk] = await client.chat.completions.create( # type: ignore
+            async with rate_limiter(
+                user_id=ctx.author.id,
+                provider=self._infos.meta.model.provider,
                 model=self._infos.meta.model.model,
-                messages=cast(Iterable[ChatCompletionMessageParam], messages),
-                tools=get_tool_descriptions() if is_enable_tools else None,
-                stream=True,
-                stream_options={"include_usage": True},
-            )
+                is_admin=is_admin,
+            ):
+                stream: AsyncStream[ChatCompletionChunk] = await client.chat.completions.create( # type: ignore
+                    model=self._infos.meta.model.model,
+                    messages=cast(Iterable[ChatCompletionMessageParam], messages),
+                    tools=get_tool_descriptions() if is_enable_tools else None,
+                    stream=True,
+                    stream_options={"include_usage": True},
+                )
 
             comp_resp = await self._handle_stream(stream)
+
+            if not is_admin and comp_resp.token_count > 0:
+                await rate_limiter.record_usage(
+                    ctx.author.id,
+                    comp_resp.token_count,
+                )
 
             # 沒有工具調用就跳出迴圈
             if not comp_resp.tool_calls:

@@ -12,3 +12,4 @@ class MongoDB_DB:
     pjsk = mongo_db_client['pjsk']
     music = mongo_db_client['music']
     cambrdige = mongo_db_client['cambrdige']
+    rate_limit_daily = mongo_db_client['rate_limit_daily']
