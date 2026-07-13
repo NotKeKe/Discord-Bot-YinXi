@@ -12,6 +12,7 @@ from ..types.chater import *
 from ..ai_model.detector import ModelDetector
 from ..data_keeper.clients import get_openai_client
 from ..tool.main import load_skills, get_tool_descriptions
+from ..prompts import get_default_system_prompt
 
 from .utils import get_think, clean_text
 from cmds.ai_chat.v1.tools import tool_map
@@ -28,7 +29,7 @@ class Chater:
                 model=ModelDetector.detect_to_model(model) if model else Model(),
                 ctx=ctx,
             ),
-            system_prompt='',
+            # system_prompt='',
             is_enable_tools=True,
             history=[]
         )
@@ -59,10 +60,7 @@ class Chater:
             tool_calls=message.tool_calls,
             token_count=total_tokens
         )
-        
 
-    def change_system_prompt(self, prompt: str):
-        self._infos.system_prompt = prompt
 
     def change_model(self, model: str):
         self._infos.meta.model = ModelDetector.detect_to_model(model)
@@ -144,8 +142,9 @@ class Chater:
 
         while call_times < max_tool_calls or run_last:
             messages: list[dict] = []
-            if self._infos.system_prompt:
-                messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
+            # if self._infos.system_prompt:
+            #     messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
+            messages.append(SystemMessage(content=get_default_system_prompt(self._infos.meta.ctx)).model_dump(mode="json", exclude_none=True))
             messages.extend(self._infos.to_openai_messages())
 
             resp: ChatCompletion = await client.chat.completions.create(
@@ -172,9 +171,9 @@ class Chater:
                 if no_result_rounds == 3:
                     self._infos.history.append(
                         UserMessage(
-                            content="This message is from system: "
-                            "<>The tool has produced no output for 3 consecutive times. "
-                            "Try canceling the next tool call and inform the user that the tool is unavailable.</>"
+                            content="This message is from system: \n"
+                            "<>\nThe tool has produced no output for 3 consecutive times. \n"
+                            "Try canceling the next tool call and inform the user that the tool is unavailable.\n</>"
                         )
                     )
             else:
