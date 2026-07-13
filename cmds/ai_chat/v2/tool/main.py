@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 _SKILL_LOADED = False
 ALL_SKILLS = {}
 
+def is_skill_loaded() -> bool: return _SKILL_LOADED
+
 async def _function_as_openai_description(skill_md_path: Path, name: str, description: str) -> dict:
     """將 function 轉為 openai 傳統工具的格式
 

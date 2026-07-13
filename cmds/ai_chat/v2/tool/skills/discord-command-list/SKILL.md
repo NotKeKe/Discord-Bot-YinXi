@@ -9,6 +9,7 @@ description: Explore YinXi's commands. List all cogs/commands, search by keyword
 
 此工具用來查詢音汐（你）的 Discord 指令資訊。你可以透過四個操作來取得不同層級的資訊。
 注意，由該 SKILL 提供的任何指令(commands)列表，並非你可直接使用的工具，這些是使用者可以使用該 Discord bot 的工具。
+你可以利用這個工具所提供的資訊，去教導使用者如何使用某個指令。
 
 ### Actions
 
