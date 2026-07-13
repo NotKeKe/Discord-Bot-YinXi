@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Annotated, Literal
+from enum import StrEnum
 from discord.ext import commands
 
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCallUnion
@@ -49,6 +50,16 @@ class Infos(BaseModel):
 
     def to_openai_messages(self) -> list[dict]:
         return [m.model_dump(mode="json", exclude_none=True) for m in self.history]
+
+
+class StatusEnum(StrEnum):
+    RECEVING = "receiving"
+    DONE = "done"
+    ERROR = "error"
+
+class Status(BaseModel):
+    status: str
+    readable: str
 
 
 
