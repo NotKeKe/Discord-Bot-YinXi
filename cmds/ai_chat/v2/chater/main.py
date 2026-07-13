@@ -29,11 +29,13 @@ class Chater:
                 model=ModelDetector.detect_to_model(model) if model else Model(),
                 ctx=ctx,
             ),
-            # system_prompt='',
+            system_prompt=get_default_system_prompt(ctx),
             is_enable_tools=True,
             history=[]
         )
 
+    def change_system_prompt(self, system_prompt: str):
+        self._infos.system_prompt = system_prompt
 
     async def _handle_completion(self, response: ChatCompletion) -> CompletionResponse:
         message = response.choices[0].message
@@ -142,9 +144,8 @@ class Chater:
 
         while call_times < max_tool_calls or run_last:
             messages: list[dict] = []
-            # if self._infos.system_prompt:
-            #     messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
-            messages.append(SystemMessage(content=get_default_system_prompt(self._infos.meta.ctx)).model_dump(mode="json", exclude_none=True))
+            if self._infos.system_prompt:
+                messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
             messages.extend(self._infos.to_openai_messages())
 
             resp: ChatCompletion = await client.chat.completions.create(
@@ -160,6 +161,7 @@ class Chater:
 
             # 沒有工具調用就跳出迴圈
             if not comp_resp.tool_calls:
+                self._infos.history.append(AssistantMessage(content=comp_resp.result))
                 break
 
             assistant_message, tool_messages = await self._handle_tool_call(comp_resp.tool_calls)
@@ -191,6 +193,6 @@ class Chater:
 
         return ChatResponse(
             think=comp_resp.think,
-            result=comp_resp.result,
+            result=comp_resp.result.strip(),
             infos=self._infos
         )
