@@ -48,6 +48,7 @@ class Infos(BaseModel):
     history: list[SingleHistory]
     system_prompt: str
     is_enable_tools: bool
+    activated_tools: list[str] = Field(default_factory=list)
 
     def to_openai_messages(self) -> list[dict]:
         return [m.model_dump(mode="json", exclude_none=True) for m in self.history]

@@ -89,7 +89,19 @@ async def call_tool(tool_name: str, tool_args: list[Any]):
         return await func(*tool_args)
     return func(*tool_args)
 
-def get_tool_descriptions() -> list[dict]:
+def get_tool_descriptions(tools: list[str] | None = None) -> list[dict]:
+    # TODO: add default tool(use-skill) logic
+    result = [{
+        "type": "function",
+        "function": {
+            "name": "use-skill",
+            "description": "",
+            "parameters": {
+
+            }
+        }
+    }]
+
     if not _SKILL_LOADED: 
         logger.warning("Skills is not loaded yet")
         return []
