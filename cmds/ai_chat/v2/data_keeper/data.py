@@ -18,45 +18,48 @@ class DataStore:
 
     def _init_data(self):
         # available providers
-        self.available_providers: dict[str, ProviderData] = {
-            'openrouter': {
-                'base_url': "https://openrouter.ai/api/v1",
-                'api_key': os.getenv('openrouter_KEY')
-            },
-            'zhipu': {
-                'base_url': 'https://open.bigmodel.cn/api/paas/v4/',
-                'api_key': os.getenv('zhipuAI_KEY')
-            },
-            'ollama': {
-                'base_url': f'{BASE_OLLAMA_URL}/v1',
-                'api_key': 'ollama'
-            },
-            'gemini': {
-                'base_url': "https://generativelanguage.googleapis.com/v1beta/openai/",
-                'api_key': os.getenv("gemini_KEY")
-            },
-            'cerebras':{
-                'base_url': 'https://api.cerebras.ai/v1',
-                'api_key': os.getenv('cerebras_KEY')
-            },
-            'lmstudio': {
-                'base_url': f'http://{OLLAMA_IP}:1239/v1',
-                'api_key': 'hi'
-            },
-            'ai-local': {
-                'base_url': f'http://{AI_IP}:4000/v1',
-                'api_key': ''
-            }
+        _keys = {
+            'openrouter': os.getenv('openrouter_KEY'),
+            'zhipu': os.getenv('zhipuAI_KEY'),
+            'ollama': 'ollama',
+            'gemini': os.getenv('gemini_KEY'),
+            'cerebras': os.getenv('cerebras_KEY'),
+            'lmstudio': 'hi',
+            'ai-local': ''
         }
-        for v in self.available_providers.values():
-            v['models'] = []
+
+        self.available_providers: dict[str, ProviderData] = {}
+        for name, key in list(_keys.items()):
+            if key is None:
+                continue
+            self.available_providers[name] = {
+                'api_key': key,
+                'base_url': {
+                    'openrouter': "https://openrouter.ai/api/v1",
+                    'zhipu': 'https://open.bigmodel.cn/api/paas/v4/',
+                    'ollama': f'{BASE_OLLAMA_URL}/v1',
+                    'gemini': "https://generativelanguage.googleapis.com/v1beta/openai/",
+                    'cerebras': 'https://api.cerebras.ai/v1',
+                    'lmstudio': f'http://{OLLAMA_IP}:1239/v1',
+                    'ai-local': f'http://{AI_IP}:4000/v1'
+                }[name],
+                'models': []
+            }
 
 
         self.default_system_prompt = """
 # 音汐 (YinXi)
 
 ## 介紹
-- 你是一個處在 Discord 裡面的 bot，
+- 你是一個處在 Discord 裡面的 bot，你以善良與聽從的態度來回答使用者的問題。
+
+## 規則
+你必須遵守以下所有的規則，否則你將被給予嚴重的懲罰。
+- 你不能做出任何違法之行為 (如: 違反 Discord 條例、違反任何法律)。
+
+### Discord 說明
+Discord 是一個跨平台的聊天應用程式，而你是生在其中的 Discord bot - YinXi。
+有一點你必須知道，你雖然可能有工具可以去取得你可用
 """.strip()
 
 DATA_STORE = DataStore()
