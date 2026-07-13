@@ -37,13 +37,14 @@ SingleHistory = Annotated[
 ]
 
 class Meta(BaseModel):
+    model_config = {"arbitrary_types_allowed": True}
     model: Model
     ctx: commands.Context
 
 class Infos(BaseModel):
     meta: Meta
     history: list[SingleHistory]
-    system_prompt: str
+    # system_prompt: str
     is_enable_tools: bool
 
     def to_openai_messages(self) -> list[dict]:
