@@ -1,11 +1,13 @@
 import orjson
 from discord.ext import commands
 from typing import Optional, cast, Iterable, Callable, Any
-from openai.types.chat import ChatCompletion
+from openai import AsyncStream
+from openai.types.chat import ChatCompletionChunk
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCallUnion,
     ChatCompletionMessageFunctionToolCall,
+    Function as ToolFunction,
 )
 
 from ..types.chater import *
@@ -37,30 +39,75 @@ class Chater:
     def change_system_prompt(self, system_prompt: str):
         self._infos.system_prompt = system_prompt
 
-    async def _handle_completion(self, response: ChatCompletion) -> CompletionResponse:
-        message = response.choices[0].message
+    async def _handle_stream(self, stream: AsyncStream[ChatCompletionChunk]) -> CompletionResponse:
+        content_chunks: list[str] = []
+        reasoning_chunks: list[str] = []
+        tool_calls_deltas: dict[int, dict] = {}
+        finish_reason: str | None = None
+        total_tokens = -1
 
-        result = message.content or ""
+        async for chunk in stream:
+            if not chunk.choices:
+                if chunk.usage:
+                    total_tokens = chunk.usage.total_tokens or -1
+                continue
 
-        think = ""
-        if (hasattr(message, 'reasoning_content')):
-            think = str(message.reasoning_content)
-        elif (hasattr(message, 'reasoning')):
-            think = str(message.reasoning)
-        
-        # 如果 think 是被包含在 result 裡面，到這裡才會做處理
-        # 這裡再 clean_text 是為了避免在正常情況下，刪到 LLM 原本就要輸出的東西
+            choice = chunk.choices[0]
+            delta = choice.delta
+            finish_reason = choice.finish_reason or finish_reason
+
+            if delta.content:
+                content_chunks.append(delta.content)
+
+            reasoning = getattr(delta, 'reasoning_content', None)
+            if reasoning:
+                reasoning_chunks.append(reasoning)
+
+            if delta.tool_calls:
+                for tc in delta.tool_calls:
+                    index = tc.index
+                    if index not in tool_calls_deltas:
+                        tool_calls_deltas[index] = {
+                            "id": "",
+                            "function": {"name": "", "arguments": ""},
+                        }
+                    if tc.id:
+                        tool_calls_deltas[index]["id"] = tc.id
+                    if tc.function:
+                        if tc.function.name:
+                            tool_calls_deltas[index]["function"]["name"] += tc.function.name
+                        if tc.function.arguments:
+                            tool_calls_deltas[index]["function"]["arguments"] += tc.function.arguments
+
+            if chunk.usage and chunk.usage.total_tokens:
+                total_tokens = chunk.usage.total_tokens
+
+        result = "".join(content_chunks)
+        think = "".join(reasoning_chunks)
+
         if not think:
             think = get_think(result)
             result = clean_text(result)
 
-        total_tokens = response.usage.total_tokens if response.usage else -1
+        tool_calls = None
+        if finish_reason == "tool_calls" and tool_calls_deltas:
+            tool_calls = [
+                ChatCompletionMessageFunctionToolCall(
+                    id=tc["id"],
+                    type="function",
+                    function=ToolFunction(
+                        name=tc["function"]["name"],
+                        arguments=tc["function"]["arguments"],
+                    ),
+                )
+                for tc in (tool_calls_deltas[i] for i in sorted(tool_calls_deltas))
+            ]
 
         return CompletionResponse(
             think=think,
             result=result.strip(),
-            tool_calls=message.tool_calls,
-            token_count=total_tokens
+            tool_calls=cast(list[ChatCompletionMessageToolCallUnion] | None, tool_calls),
+            token_count=total_tokens,
         )
 
 
@@ -148,17 +195,16 @@ class Chater:
                 messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
             messages.extend(self._infos.to_openai_messages())
 
-            # call openai api
-            resp: ChatCompletion = await client.chat.completions.create(
+            # call openai api (stream)
+            stream: AsyncStream[ChatCompletionChunk] = await client.chat.completions.create( # type: ignore
                 model=self._infos.meta.model.model,
                 messages=cast(Iterable[ChatCompletionMessageParam], messages),
-                tools=get_tool_descriptions() if is_enable_tools else None, # type: ignore
+                tools=get_tool_descriptions() if is_enable_tools else None,
+                stream=True,
+                stream_options={"include_usage": True},
             )
 
-            if not resp.choices:
-                raise ValueError('AI has no response (no response.choices[0])')
-
-            comp_resp = await self._handle_completion(resp)
+            comp_resp = await self._handle_stream(stream)
 
             # 沒有工具調用就跳出迴圈
             if not comp_resp.tool_calls:
