@@ -44,7 +44,7 @@ class Meta(BaseModel):
 class Infos(BaseModel):
     meta: Meta
     history: list[SingleHistory]
-    # system_prompt: str
+    system_prompt: str
     is_enable_tools: bool
 
     def to_openai_messages(self) -> list[dict]:
