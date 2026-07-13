@@ -148,6 +148,7 @@ class Chater:
                 messages.append(SystemMessage(content=self._infos.system_prompt).model_dump(mode="json", exclude_none=True))
             messages.extend(self._infos.to_openai_messages())
 
+            # call openai api
             resp: ChatCompletion = await client.chat.completions.create(
                 model=self._infos.meta.model.model,
                 messages=cast(Iterable[ChatCompletionMessageParam], messages),
