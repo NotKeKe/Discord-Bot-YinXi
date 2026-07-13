@@ -44,7 +44,7 @@ Skill 是封裝特定領域知識與工作流程的可複用模組（Agent Skill
 
 [SYSTEM_PROMPT_DONE]
 """.format(
-    time=datetime.now(tz=timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S %z"),
+    time=datetime.now(tz=timezone(timedelta(hours=8))).strftime("%Y-%m-%d %a %H:%M:%S %z"),
     user=ctx.author.global_name,
     is_multi_channel=ctx.guild is not None,
     skills=_get_format_skill()
