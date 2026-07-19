@@ -1,5 +1,6 @@
 from discord.ext import commands, tasks
 from discord import app_commands, Interaction
+from discord.errors import Forbidden as DiscordForbidden
 import asyncio
 import aiohttp
 import logging
@@ -278,7 +279,10 @@ class SubYT(Cog_Extension):
             # logger.info(f"Fetched video ids for {len(current_video_ids)} YouTube channels. And all {len(current_video_ids)} discord channels.")
 
             for cnlID in all_dc_channel_id:
-                channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
+                try:
+                    channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
+                except DiscordForbidden as e:
+                    channel = None
                 if not channel: continue
 
                 # get prefer lang
