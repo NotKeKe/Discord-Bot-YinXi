@@ -281,7 +281,9 @@ class SubYT(Cog_Extension):
             for cnlID in all_dc_channel_id:
                 try:
                     channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
-                except DiscordForbidden as e:
+                # except DiscordForbidden as e:
+                #     channel = None
+                except:
                     channel = None
                 if not channel: continue
 
