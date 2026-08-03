@@ -97,10 +97,10 @@ class AIChannelTwo(Cog_Extension):
             timeout = await view.wait()
             if timeout: await msg.edit(view=None)
         except openai.BadRequestError as e:
-            logger.error('Error accured at on_msg_chat_human', exc_info=True)
-            await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
+            logger.error('Error occurred at on_msg_chat_human', exc_info=True)
+            await ctx.send(f'Error occurred :<\n{str(e)}', ephemeral=True)
         except:
-            logger.error('Error accured at on_msg_chat_human', exc_info=True)
+            logger.error('Error occurred at on_msg_chat_human', exc_info=True)
             await msg.channel.send(await get_translate('send_on_msg_chat_human_error', ctx))
 
     async def on_msg_ai_channel(self, msg: discord.Message):
@@ -151,10 +151,10 @@ class AIChannelTwo(Cog_Extension):
             timeout = await view.wait()
             if timeout: await msg.edit(view=None)
         except openai.BadRequestError as e:
-            logger.error('Error accured at on_msg_ai_channel', exc_info=True)
-            await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
+            logger.error('Error occurred at on_msg_ai_channel', exc_info=True)
+            await ctx.send(f'Error occurred :<\n{str(e)}', ephemeral=True)
         except:
-            logger.error('Error accured at on_msg_ai_channel', exc_info=True)
+            logger.error('Error occurred at on_msg_ai_channel', exc_info=True)
             await msg.channel.send(await get_translate('send_on_msg_ai_channel_error', ctx))
 
     @commands.hybrid_command(name=locale_str('set_ai_channel'), description=locale_str('set_ai_channel'))
@@ -195,7 +195,7 @@ class AIChannelTwo(Cog_Extension):
                 await ctx.send((await get_translate('send_set_ai_channel_success', ctx)).format(model=model))
                 # await ctx.send('good')
         except:
-            logger.error('Error accured at set_ai_channel command', exc_info=True)
+            logger.error('Error occurred at set_ai_channel command', exc_info=True)
 
     @commands.hybrid_command(name=locale_str('cancel_ai_channel'), description=locale_str('cancel_ai_channel'))
     @commands.has_permissions(administrator=True)
@@ -241,7 +241,7 @@ class AIChannelTwo(Cog_Extension):
 
                 await ctx.send(embed=eb, view=view)
         except:
-            logger.error('Error accured at cancel_ai_channel', exc_info=True)
+            logger.error('Error occurred at cancel_ai_channel', exc_info=True)
 
     @commands.hybrid_command(name=locale_str('change_ai_channel_model'), description=locale_str('change_ai_channel_model'))
     @commands.has_permissions(administrator=True)
@@ -276,7 +276,7 @@ class AIChannelTwo(Cog_Extension):
                 
                 await ctx.send((await get_translate('send_change_ai_channel_model_successfully_change_model', ctx)).format(model=model))
         except:
-            logger.error('Error accured at change_ai_channel_model: ', exc_info=True)
+            logger.error('Error occurred at change_ai_channel_model: ', exc_info=True)
 
     @commands.hybrid_command(name=locale_str('change_ai_channel_system_prompt'), description=locale_str('change_ai_channel_system_prompt'))
     @commands.has_permissions(administrator=True)
@@ -293,7 +293,7 @@ class AIChannelTwo(Cog_Extension):
                 
                 await ctx.send((await get_translate('send_change_ai_channel_system_prompt_successfully_change_system_prompt', ctx)).format(system_prompt=system_prompt))
         except:
-            logger.error('Error accured at change_ai_channel_system_prompt: ', exc_info=True)
+            logger.error('Error occurred at change_ai_channel_system_prompt: ', exc_info=True)
 
     @commands.hybrid_command(name=locale_str('show_ai_channel_model'), description=locale_str('show_ai_channel_model'))
     async def model_show(self, ctx: commands.Context):
@@ -309,7 +309,7 @@ class AIChannelTwo(Cog_Extension):
                 
                 await ctx.send((await get_translate('send_show_ai_channel_model_model', ctx)).format(model=model))
         except:
-            logger.error('Error accured at show_ai_channel_model: ', exc_info=True)
+            logger.error('Error occurred at show_ai_channel_model: ', exc_info=True)
 
     @commands.hybrid_command(name=locale_str('set_chat_human'), description=locale_str('set_chat_human'))
     @commands.has_permissions(administrator=True)
@@ -334,7 +334,7 @@ class AIChannelTwo(Cog_Extension):
                 # await ctx.send(locale_str('send_set_chat_human_success').format(model))
                 await ctx.send('good')
         except:
-            logger.error('Error accured at set_chat_human command', exc_info=True)
+            logger.error('Error occurred at set_chat_human command', exc_info=True)
 
     @commands.hybrid_command(name=locale_str('cancel_chat_human'), description=locale_str('cancel_chat_human'))
     @commands.has_permissions(administrator=True)
@@ -380,7 +380,7 @@ class AIChannelTwo(Cog_Extension):
 
                 await ctx.send(embed=eb, view=view)
         except:
-            logger.error('Error accured at cancel_chat_human', exc_info=True)
+            logger.error('Error occurred at cancel_chat_human', exc_info=True)
 
 async def setup(bot):
     await bot.add_cog(AIChannelTwo(bot))

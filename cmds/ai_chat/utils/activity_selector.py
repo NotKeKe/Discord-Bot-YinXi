@@ -86,7 +86,7 @@ class ActivitySelector:
                                     await db.execute('INSERT INTO data (txt) VALUES (?)', (resp.text,))
                                     await db.commit()
                         except:
-                            logger.error('Error accured at activity_select', exc_info=True)
+                            logger.error('Error occurred at activity_select', exc_info=True)
 
                     # or generate from model
                     else:

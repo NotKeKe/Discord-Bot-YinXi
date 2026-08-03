@@ -172,7 +172,7 @@ class Donwloader:
             logger.debug(f'XDownloader raise TimeoutError: {str(e)}')
             return f'Cannot find any video/img, please try again later or check the provided url (`{url}`).'
         except Exception as e:
-            logger.warning(f'Error accured at x Downloader, run: (error: {str(e)})')
+            logger.warning(f'Error occurred at x Downloader, run: (error: {str(e)})')
         finally:
             if page:
                 await page.close()

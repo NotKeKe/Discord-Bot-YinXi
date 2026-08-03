@@ -14382,7 +14382,7 @@ $5.78
  61 |             except TypeError:
  62 |                 ...
  63 |             except Exception as e:
- 64 |                 print(f'An error accured at world_chat: {e}')
+ 64 |                 print(f'An error occurred at world_chat: {e}')
  65 | 
  66 |         user_said = msg.content if not attachments else f"{f'{msg.content} | 'if msg.content else ''}{' '.join(attachments)}"
  67 |             

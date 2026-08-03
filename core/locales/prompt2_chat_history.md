@@ -6911,7 +6911,7 @@ $1.80
  62 |             except TypeError:
  63 |                 ...
  64 |             except Exception as e:
- 65 |                 print(f'An error accured at world_chat: {e}')
+ 65 |                 print(f'An error occurred at world_chat: {e}')
  66 | 
  67 |         user_said = msg.content if not attachments else f"{f'{msg.content} | 'if msg.content else ''}{' '.join(attachments)}"
  68 |             
@@ -17900,7 +17900,7 @@ $6.61
  72 |             except TypeError:
  73 |                 ...
  74 |             except Exception as e:
- 75 |                 print(f'An error accured at world_chat: {e}')
+ 75 |                 print(f'An error occurred at world_chat: {e}')
  76 | 
  77 |         user_said = msg.content if not attachments else f"{f'{msg.content} | 'if msg.content else ''}{' '.join(attachments)}"
  78 |             
@@ -27294,7 +27294,7 @@ $10.75
  72 |             except TypeError:
  73 |                 ...
  74 |             except Exception as e:
- 75 |                 print(f'An error accured at world_chat: {e}')
+ 75 |                 print(f'An error occurred at world_chat: {e}')
  76 | 
  77 |         user_said = msg.content if not attachments else f"{f'{msg.content} | 'if msg.content else ''}{' '.join(attachments)}"
  78 |             
@@ -28443,7 +28443,7 @@ cmds/AIsTwo/vector/
  72 |             except TypeError:
  73 |                 ...
  74 |             except Exception as e:
- 75 |                 print(f'An error accured at world_chat: {e}')
+ 75 |                 print(f'An error occurred at world_chat: {e}')
  76 | 
  77 |         user_said = msg.content if not attachments else f"{f'{msg.content} | 'if msg.content else ''}{' '.join(attachments)}"
  78 |             
