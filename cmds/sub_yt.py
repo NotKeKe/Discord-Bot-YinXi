@@ -77,7 +77,7 @@ async def fetch_video_ids(urls: Iterable) -> dict[str, list[str]]:
             if not videos: continue
             video_ids: list[str] = [video["videoId"] async for video in videos] + [short["videoId"] async for short in shorts]
             current_video_ids[url] = video_ids
-        except:
+        except Exception as e:
             continue
         finally:
             await asyncio.sleep(1)
@@ -161,7 +161,7 @@ async def add_to_all(url: str):
     try:
         collection = db['ALL']
         await collection.update_one({'urls': {'$exists': True}}, {'$addToSet': {'urls': url}}, upsert=True)
-    except:
+    except Exception as e:
         logger.error(f'Error while add {url} to sub_yt ALL: ', exc_info=True)
 
 class SubYT(Cog_Extension):
@@ -283,8 +283,9 @@ class SubYT(Cog_Extension):
                     channel = self.bot.get_channel(int(cnlID)) or await self.bot.fetch_channel(int(cnlID))
                 # except DiscordForbidden as e:
                 #     channel = None
-                except:
+                except Exception as e:
                     channel = None
+                    logger.info(f'Skipped channel: {cnlID} due to `{e}`')
                 if not channel: continue
 
                 # get prefer lang
