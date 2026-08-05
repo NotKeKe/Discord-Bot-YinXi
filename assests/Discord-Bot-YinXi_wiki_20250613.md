@@ -2775,7 +2775,7 @@ await ctx.invoke(self.bot.get_command('errorresponse'), 檔案名稱=__name__, �
 ```python
 # cmds/AIsTwo/others/decide.py
 except:
-    print('An error accured when decide if save to knowledge bases.\n')
+    print('An error occurred when decide if save to knowledge bases.\n')
     traceback.print_exc()
 ```
 

@@ -106,11 +106,11 @@ class AIChat(Cog_Extension):
             timeout = await view.wait()
             if timeout: await msg.edit(view=None)
         except openai.BadRequestError as e:
-            logger.error('Error accured at chat command', exc_info=True)
-            await ctx.send(f'Error accured :<\n{str(e)}', ephemeral=True)
+            logger.error('Error occurred at chat command', exc_info=True)
+            await ctx.send(f'Error occurred :<\n{str(e)}', ephemeral=True)
         except:
-            logger.error('Error accured at chat command', exc_info=True)
-            await ctx.send('Error accured :<', ephemeral=True)
+            logger.error('Error occurred at chat command', exc_info=True)
+            await ctx.send('Error occurred :<', ephemeral=True)
 
     @commands.hybrid_command(name=locale_str('image_generate'), description=locale_str('image_generate'))
     @app_commands.choices(

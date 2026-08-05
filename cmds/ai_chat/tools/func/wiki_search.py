@@ -58,5 +58,5 @@ async def wiki_searh(query: str) -> str:
         # print(len(pages)) # 1
         return '\n\n\n'.join([pages[page_id].get('extract', '') for page_id in pages])
     except Exception as e:
-        logger.error(f'Error accured {str(e)}: ', exc_info=True)
+        logger.error(f'Error occurred {str(e)}: ', exc_info=True)
         return NO_RESULT

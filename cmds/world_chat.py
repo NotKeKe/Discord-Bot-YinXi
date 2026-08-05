@@ -73,7 +73,7 @@ class WorldChat(Cog_Extension):
             except TypeError:
                 ...
             except Exception as e:
-                print(f'An error accured at world_chat: {e}')
+                print(f'An error occurred at world_chat: {e}')
 
         user_said = msg.content if not attachments else f"{f'{msg.content} | 'if msg.content else ''}{' '.join(attachments)}"
             

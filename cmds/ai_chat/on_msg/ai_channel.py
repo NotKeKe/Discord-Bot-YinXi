@@ -34,7 +34,7 @@ async def save_history(ctx: commands.Context, history: list):
         }, 
         upsert=True)
     except:
-        logger.error('Error accured at save_history', exc_info=True)
+        logger.error('Error occurred at save_history', exc_info=True)
 
 
 async def ai_channel_chat(ctx: commands.Context, prompt: str, model: str, system_prompt: str = None, urls: list = None) -> Tuple[str, str, list]:
