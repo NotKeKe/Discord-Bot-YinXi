@@ -1617,15 +1617,15 @@ wheels = [
 
 [[package]]
 name = "pytubefix"
-version = "10.0.1"
+version = "10.11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "nodejs-wheel-binaries" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/5f/9e0ad176816361b1b0f86c3688c24585662f4752fa6c5c4120804dc5922b/pytubefix-10.0.1.tar.gz", hash = "sha256:78cecbc4d015894cfb9714c057d34172fdd39174e0d15b5be3395c904ac95be2", size = 1502481, upload-time = "2025-10-20T11:43:05.34Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/33/12/7c8bcedf3cb60a310420c8eabfbdeec81ba7fa4c11fa71e9c5a330539732/pytubefix-10.11.0.tar.gz", hash = "sha256:7fdba0a641aaf72b33df4983ddf26f5798f7e81e5fa72ae00d39bce99c821a99", size = 1523498, upload-time = "2026-07-29T02:11:40.86Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/06/454dde76a1c8ca926e84726266d53e29991373d60dc17bb9267495e36e8a/pytubefix-10.0.1-py3-none-any.whl", hash = "sha256:63f23d5f459e1e9933104e321824e7c2eb900092e15ca8433b5fe3b70e16765b", size = 1513687, upload-time = "2025-10-20T11:43:01.021Z" },
+    { url = "https://files.pythonhosted.org/packages/62/c6/b202c03110cf35b129483042692a7471da435d14d9d2b508963afaad9f90/pytubefix-10.11.0-py3-none-any.whl", hash = "sha256:d1b0a01f38853e9cdf3e047c91e82d022c9054650340e19f65fe4cb4af65d7f1", size = 1531538, upload-time = "2026-07-29T02:11:37.43Z" },
 ]
 
 [[package]]
@@ -2241,11 +2241,11 @@ dev = [
 
 [[package]]
 name = "yt-dlp"
-version = "2026.3.17"
+version = "2026.7.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8b/34/7c6b4e3f89cb6416d2cd7ab6dab141a1df97ab0fb22d15816db2c92148c9/yt_dlp-2026.3.17.tar.gz", hash = "sha256:ba7aa31d533f1ffccfe70e421596d7ca8ff0bf1398dc6bb658b7d9dec057d2c9", size = 3119221, upload-time = "2026-03-17T23:43:00.244Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/c5/9972af4b472b0d55badf841ebafd2f98944cb0ae0f46e11d01f363ea5b91/yt_dlp-2026.7.4.tar.gz", hash = "sha256:b094813404f87a9dd2186f00815231df32e5fd8a5403be0f807b3bb2d21a4432", size = 3049326, upload-time = "2026-07-04T22:42:14.837Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/13/5093bcb954878e50f7217fd2ab94282b53934022e4e4a03265582da83bf5/yt_dlp-2026.3.17-py3-none-any.whl", hash = "sha256:32992db94303a8a5d211a183f2174834fe7f8c29d83ed2e7a324eae97a8f26d8", size = 3315134, upload-time = "2026-03-17T23:42:57.863Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/8a/cd4c9b02c10c563adfe78118310129641900e1cd6de888cfae2452072696/yt_dlp-2026.7.4-py3-none-any.whl", hash = "sha256:f11f2b11d5a8ac4059f9bdf29fa4407dc7c6bb00c5097e95ca22a7a9db518266", size = 3184705, upload-time = "2026-07-04T22:42:12.989Z" },
 ]
 
 [[package]]
