@@ -13,7 +13,7 @@ services:
       - LRCAPI_URL=http://lrcapi:28883
     volumes:
       - ..:/app
-      - /app/.venv
+      - bot_venv_data:/app/.venv
     deploy:
       resources:
         limits:
@@ -86,3 +86,4 @@ volumes:
   mongodb:
     driver: local
   yinxi-dc-redis_data:
+  bot_venv_data:
