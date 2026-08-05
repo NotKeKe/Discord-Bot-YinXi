@@ -202,7 +202,7 @@ class SubYT(Cog_Extension):
                 
                 mapping = {video_id: current_timestamp for video_id in initial_video_ids}
                 await redis_client.zadd(redis_key, mapping)
-        except:
+        except Exception:
             logger.error('Error occurred at sub_yt: ', exc_info=True)
             await ctx.send('Warning: Unable to initialize video_ids for this channel, etc. may send 10 messages at once (this exception will only occur this time)')
 
@@ -217,7 +217,7 @@ class SubYT(Cog_Extension):
                 d = await collection.find_one_and_delete({'sub_url': ytb})
 
                 await ctx.send((await get_translate('send_sub_yt_cancel_successfully', ctx)).format(name=d.get('channelName'), url=d.get('sub_url')))
-            except:
+            except Exception:
                 logger.error('Error occurred at sub_yt_cancel: ', exc_info=True)
                 await ctx.send('Cannot cancel the YouTuber, please /report this issue')
 
