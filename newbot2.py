@@ -18,6 +18,7 @@ from core.translator import i18n, MockInteraction
 from core.setup_log import setup_logging, StreamToLogger
 from cmds.ai_chat.utils.activity_selector import ActivitySelector
 from core.classes import set_bot, Cog_Extension
+from core.mongodb import MongoDB_DB
 
 # get env
 load_dotenv()
@@ -108,6 +109,11 @@ async def on_message(message):
         await bot.process_commands(message)
 
 class UpdateStatus(Cog_Extension):
+    def __init__(self, bot: commands.Bot):
+        super().__init__(bot)
+        from cmds.bot_status import handle_bot_status_string
+        self._handle_bot_activity_string = handle_bot_status_string
+
     async def cog_load(self):
         print('已載入「UpdateStatus」')
         self.update_status.start()
@@ -169,6 +175,14 @@ class UpdateStatus(Cog_Extension):
     @tasks.loop(hours=1)
     async def change_activity(self):
         try:
+            db = MongoDB_DB.bot_collect_stats
+            coll = db["stats"]
+
+            data = await coll.find_one({"type": "custom", "name": "Status String"})
+            status = data.get('data', {}).get('bot') # type: ignore
+            if status == 'maintenance': 
+                return await self._handle_bot_activity_string(status, self, self.bot)
+
             # from cmds.AIsTwo.others.decide import ActivitySelector
             activity = await ActivitySelector.activity_select()
             await self.bot.change_presence(activity=activity)

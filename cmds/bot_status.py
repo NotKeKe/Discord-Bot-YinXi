@@ -66,6 +66,24 @@ def find_top_3_command(data: dict[str, dict[str, int]]) -> dict[str, int]:
     return {k: v for k, v in top_three}
 
 
+async def handle_bot_status_string(status: str, update_status_cog: commands.Cog, bot: commands.Bot):
+    if status == 'operational':
+        if not update_status_cog.change_activity.is_running(): # type: ignore
+            update_status_cog.change_activity.start() # type: ignore
+    else:
+        if update_status_cog.change_activity.is_running(): # type: ignore
+            update_status_cog.change_activity.cancel() # type: ignore
+
+        await bot.change_presence(
+            activity=discord.Game(
+                name=(
+                    '🛠️ 維護中... '
+                    'Bot可能會在這段時間頻繁下線或不能使用，很抱歉造成您的不便。'
+                )
+            )
+        )
+
+
 class Status(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -129,21 +147,7 @@ class Status(commands.Cog):
             )
 
             if where == 'bot' and (update_status_cog := self.bot.get_cog("UpdateStatus")):
-                if status == 'operational':
-                    if not update_status_cog.change_activity.is_running(): # type: ignore
-                        update_status_cog.change_activity.start() # type: ignore
-                else:
-                    if update_status_cog.change_activity.is_running(): # type: ignore
-                        update_status_cog.change_activity.cancel() # type: ignore
-
-                    await self.bot.change_presence(
-                        activity=discord.Game(
-                            name=(
-                                '🛠️ 維護中... '
-                                'Bot可能會在這段時間頻繁下線或不能使用，很抱歉造成您的不便。'
-                            )
-                        )
-                    )
+                await handle_bot_status_string(status, update_status_cog, self.bot)
 
 
             ori_status: str = ori_data.get("data", {}).get(where, "Unknown")
