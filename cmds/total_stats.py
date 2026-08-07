@@ -18,6 +18,7 @@ from core.functions import (
     create_basic_embed,
     is_testing_guild,
     secondToReadable,
+    START_TIME
 )
 from core.translator import locale_str, load_translated, get_translate
 
@@ -235,7 +236,6 @@ class BotStats(Cog_Extension):
     )
     async def machine_stats(self, ctx: commands.Context):
         await ctx.defer()
-        from newbot2 import start_time
 
         discord_version = discord.__version__
         process = psutil.Process(os.getpid())
@@ -259,7 +259,7 @@ class BotStats(Cog_Extension):
         bot_info_name = field_1.get("name")
         bot_info_value = field_1.get("value").format(
             discord_version=discord_version,
-            time=secondToReadable(datetime.now().timestamp() - start_time),
+            time=secondToReadable(datetime.now().timestamp() - START_TIME),
         )
         field_2 = fields[1]
         system_info_name = field_2.get("name")
