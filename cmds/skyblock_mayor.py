@@ -140,7 +140,7 @@ class skyblock_mayor(Cog_Extension):
                 embed.add_field(name=minister, value=f'{minister_info}\n- {cleaned_minister_perks_info}', inline=False)
             embed.set_footer(text=f"訊息更新時間: {lastUpdated}")
         except Exception as e:
-            print("Error from skyblock_mayor / tasksloop, update_embed_task: ", e)
+            return print("Error from skyblock_mayor / tasksloop, update_embed_task: ", e)
 
         for cnl in events_channels:
             channel = self.bot.get_channel(int(cnl))
