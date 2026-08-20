@@ -165,7 +165,7 @@ class SuggestReport(commands.Cog):
 
     @commands.hybrid_command()
     @commands.is_owner()
-    async def set_report_status(self, ctx: commands.Context, report_uuid: str, status: ReportStatusType, reason: str):
+    async def set_report_status(self, ctx: commands.Context, report_uuid: str, status: ReportStatusType, reason: str = "PLACE_HOLDER"):
         data = await self.REPORT_COLL.find_one({'uuid': report_uuid})
         if not data:
             await ctx.send(f"Report `{report_uuid}` not found.", ephemeral=True)
