@@ -3,6 +3,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.functions import BASE_OLLAMA_URL, OLLAMA_IP, mongo_db_client, AI_IP
 
+DEFAULT_MODEL = "ai-local:gemma4-26b"
+
 openrouter_KEY = os.getenv('openrouter_KEY')
 zhipu_KEY = os.getenv('zhipuAI_KEY')
 hugging_KEY = os.getenv('huggingFace_KEY')

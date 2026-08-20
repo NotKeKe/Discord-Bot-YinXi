@@ -14,6 +14,7 @@ from cmds.ai_chat.chat.chat import Chat
 from cmds.ai_chat.chat import gener_title
 from cmds.ai_chat.tools.map import image_generate, video_generate
 from cmds.ai_chat.utils import model, chat_history_autocomplete, model_autocomplete, add_history_button, add_think_button
+from cmds.ai_chat.utils.config import DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class AIChat(Cog_Extension):
             self, 
             ctx: commands.Context, 
             prompt: str, 
-            model: str = 'ai-local:gemma4-12b', 
+            model: str = DEFAULT_MODEL, 
             history: Optional[str] = None, 
             enable_tools: bool = True, 
             image: Optional[discord.Attachment] = None, 

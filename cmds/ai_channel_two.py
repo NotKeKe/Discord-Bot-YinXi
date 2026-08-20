@@ -13,6 +13,7 @@ from core.classes import Cog_Extension, get_bot
 from core.translator import locale_str, load_translated, get_translate
 from cmds.ai_chat.on_msg import ai_channel_chat, chat_human_chat
 from cmds.ai_chat.utils import model_autocomplete, to_user_message, to_assistant_message, add_think_button, add_history_button, split_provider_model, md_table_convert
+from cmds.ai_chat.utils.config import DEFAULT_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +178,7 @@ class AIChannelTwo(Cog_Extension):
                         return await ctx.send(await get_translate('send_set_ai_channel_channel_exist', ctx))
                     
                 if model is None:
-                    model = 'ai-local:gemma4-12b'
+                    model = DEFAULT_MODEL
 
                 provider, model = split_provider_model(model)
                     

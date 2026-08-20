@@ -2,6 +2,7 @@ from discord.ext import commands
 from textwrap import dedent
 
 from .chat import Chat
+from ..utils.config import DEFAULT_MODEL
 
 system_prompt = '''
 ## System
@@ -47,7 +48,9 @@ You are **Yinxi**, a Discord-based translation bot developed by Taiwanese studen
 3. Format output and send to Discord channel.
 '''
 
+TRANSLATE_MODEL = DEFAULT_MODEL
+
 async def translate(prompt: str, to_lang: str = '英文', user_lang_code: str = 'zh-TW', ctx: commands.Context = None):
-    client = Chat('ai-local:gemma4-12b', system_prompt, ctx)
+    client = Chat(TRANSLATE_MODEL, system_prompt, ctx)
     prompt = f'請你幫我把`{prompt}`翻譯成`{to_lang}`' if user_lang_code == 'zh-TW' else f'Please help me translate {prompt} into {to_lang}.'
     return dedent(((await client.chat(prompt, is_enable_tools=False))[1]).strip())

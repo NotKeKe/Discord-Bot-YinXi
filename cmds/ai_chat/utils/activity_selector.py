@@ -61,7 +61,7 @@ class ActivitySelector:
 {status}
 ```
 '''.format(status = orjson.dumps(cls.past_status[-10:], option=orjson.OPT_INDENT_2).decode()).strip()
-        # model = 'ai-local:gemma4-12b'
+        # model = 'ai-local:gemma4-26b'
         model = 'zhipu:glm-4-flash'
 
         logger.info(f'Status will go to `{status}`, matching...')

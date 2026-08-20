@@ -1,4 +1,5 @@
 from .chat import Chat
+from ..utils.config import DEFAULT_MODEL
 
 gener_title_prompt = '''
 # Role
@@ -23,9 +24,11 @@ User: {{user_message}}
 Assistant:
 '''
 
+GENER_TITLE_MODEL = DEFAULT_MODEL
+
 async def gener_title(history: list, length: int = 15):
     try:
-        client = Chat(model='ai-local:gemma4-12b', system_prompt=gener_title_prompt)
+        client = Chat(model=GENER_TITLE_MODEL, system_prompt=gener_title_prompt)
 
         # process prompt
         prompt_ls = ['The following is a conversation between a user and an AI. Please generate a title for the conversation.']
