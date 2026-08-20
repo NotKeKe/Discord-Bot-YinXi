@@ -10,6 +10,7 @@ zhipu_KEY = os.getenv('zhipuAI_KEY')
 hugging_KEY = os.getenv('huggingFace_KEY')
 gemini_KEY = os.getenv("gemini_KEY")
 cerebras_KEY = os.getenv('cerebras_KEY')
+ai_local_KEY = os.getenv('ai_local_KEY')
 
 base_url_options = {
     'openrouter': {
@@ -38,7 +39,7 @@ base_url_options = {
     },
     'ai-local': {
         'base_url': f'http://{AI_IP}:4000/v1',
-        'api_key': ''
+        'api_key': ai_local_KEY
     }
 }
 
