@@ -189,15 +189,19 @@ class SuggestReport(commands.Cog):
         if current:
             query = {'uuid': {'$regex': current, '$options': 'i'}}
 
-        cursor = self.REPORT_COLL.find(query).limit(25)
+        resolved_or_closed = {ReportStatusType.RESOLVED.value, ReportStatusType.CLOSED.value}
+
+        cursor = self.REPORT_COLL.find(query).limit(50)
         choices = []
         async for data in cursor:
             uuid = data.get('uuid', '')
             text = data.get('text', '')
-            name = f"{uuid[:5]}...{uuid[-5:]} ({text[:5]})"
-            choices.append(app_commands.Choice(name=name, value=uuid))
+            status = data.get('status', '').lower()
+            name = f"{uuid[:5]}...{uuid[-5:]} ({text[:5]} | {status})"
+            choices.append((status in resolved_or_closed, app_commands.Choice(name=name, value=uuid)))
 
-        return choices
+        choices.sort(key=lambda item: item[0])
+        return [choice for _, choice in choices][:25]
 
 
 async def setup(bot: commands.Bot):
