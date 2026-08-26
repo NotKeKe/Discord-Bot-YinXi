@@ -93,7 +93,11 @@ async def extract_info(video_url: str) -> dict:
                 result = {'audio_url': ''}
 
             # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多進程 但為了統一 我還是用了)
-            if not result["audio_url"] or not (await check_audio_url_alive(result["audio_url"])) or 'm3u8' in result["audio_url"]: 
+            if (
+                not result["audio_url"] 
+                or not (await check_audio_url_alive(result["audio_url"])) 
+                or 'm3u8' in result["audio_url"]
+            ):
                 logger.info('yt-dlp returned a failed audio_url, using pytubefix')
                 result = await loop.run_in_executor(executor, extract_info_pytube, video_url)
 
