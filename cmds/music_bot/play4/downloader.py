@@ -40,7 +40,7 @@ def extract_info_yt_dlp(video_url: str):
         }
     
 def extract_info_pytube(video_url: str):
-    yt = YouTube(video_url)
+    yt = YouTube(video_url, client="WEB")
     video_id = get_video_id(video_url)
     thumbnail_url = f'https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg'
 
@@ -83,23 +83,27 @@ def extract_info_pytube(video_url: str):
     }
 
 async def extract_info(video_url: str) -> dict:
-    loop = asyncio.get_running_loop()
-    with ProcessPoolExecutor() as executor:
-        try:
-            result = await loop.run_in_executor(executor, extract_info_yt_dlp, video_url)
-        except:
-            logger.info('yt-dlp failed, cause some err')
-            result = {'audio_url': ''}
+    try:
+        loop = asyncio.get_running_loop()
+        with ProcessPoolExecutor() as executor:
+            try:
+                result = await loop.run_in_executor(executor, extract_info_yt_dlp, video_url)
+            except:
+                logger.info('yt-dlp failed, cause some err')
+                result = {'audio_url': ''}
 
-        # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多進程 但為了統一 我還是用了)
-        if not result["audio_url"] or not (await check_audio_url_alive(result["audio_url"])) or 'm3u8' in result["audio_url"]: 
-            logger.info('yt-dlp returned a failed audio_url, using pytubefix')
-            result = await loop.run_in_executor(executor, extract_info_pytube, video_url)
+            # check if audio url from yt-dlp is available, else use pytubefix (其實不需要用到多進程 但為了統一 我還是用了)
+            if not result["audio_url"] or not (await check_audio_url_alive(result["audio_url"])) or 'm3u8' in result["audio_url"]: 
+                logger.info('yt-dlp returned a failed audio_url, using pytubefix')
+                result = await loop.run_in_executor(executor, extract_info_pytube, video_url)
 
-    if not (await check_audio_url_alive(result["audio_url"])): 
-        raise Exception(f'Audio url is not available. | video_url: {video_url} | audio_url: {result["audio_url"]}')
+        if not (await check_audio_url_alive(result["audio_url"])): 
+            raise Exception(f'Audio url is not available. | video_url: {video_url} | audio_url: {result["audio_url"]}')
 
-    return result
+        return result
+    except Exception: 
+        logger.error("Error occurred at extract_info", exc_info=True)
+        return {}
 
 class RedisTemp:
     redis_base_key = 'musics:'
@@ -196,6 +200,9 @@ class Downloader:
         # 基本上 如果是來自播放清單 後面的歌曲，優先級應該要比較低
         await QUEUE.add_task(self.task_id, self.priority, extract_info(self.video_url))
         result = await QUEUE.get_result(self.task_id)
+
+        if not result:
+            raise Exception(f'Audio url is not available. | video_url: {self.video_url}')
 
         # 更新 self 的屬性
         self.audio_url = result["audio_url"]
