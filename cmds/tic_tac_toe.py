@@ -2,8 +2,11 @@
 
 import discord
 from discord.ext import commands
+import logging
 
-from core.translator import locale_str, get_translate
+from core.translator import locale_str, get_translate, load_translated
+
+logger = logging.getLogger(__name__)
 
 class TicTacToeGame:
     def __init__(self):
@@ -29,9 +32,9 @@ class TicTacToeGame:
         return None
 
 class TicTacToe(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.games = {}
+        self.games: dict[int, TicTacToeGame] = {}
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -48,18 +51,18 @@ class TicTacToe(commands.Cog):
         game = self.games[ctx.channel.id]
         '''i18n'''
         i18n_data = await get_translate('embed_tictactoe_game', ctx)
-        i18n_data = i18n_data[0]
+        i18n_data_dict = load_translated(i18n_data)[0]
         ''''''
-        embed = discord.Embed(title=i18n_data['title'], description=game.format_board(), color=discord.Color.blue())
-        embed.add_field(name=i18n_data['field'][0]['name'], value=game.current_player, inline=i18n_data['field'][0].get('inline', True))
+        embed = discord.Embed(title=i18n_data_dict['title'], description=game.format_board(), color=discord.Color.blue())
+        embed.add_field(name=i18n_data_dict['field'][0]['name'], value=game.current_player, inline=i18n_data_dict['field'][0].get('inline', True))
         await ctx.send(embed=embed, view=await self.create_view(ctx, ctx.channel.id))
 
-    async def create_view(self, ctx: commands.Context, channel_id: int):
+    async def create_view(self, ctx: commands.Context | discord.Interaction, channel_id: int):
         view = discord.ui.View()
         
         '''i18n'''
         button_labels = await get_translate('button_tictactoe_labels', ctx)
-        button_labels = button_labels[0]
+        button_labels = load_translated(button_labels)[0]
         ''''''
 
         positions = [
@@ -120,7 +123,7 @@ class TicTacToe(commands.Cog):
                 if winner:
                     '''i18n'''
                     i18n_data = await get_translate('embed_tictactoe_game', interaction)
-                    i18n_data = i18n_data[0]
+                    i18n_data = load_translated(i18n_data)[0]
                     ''''''
                     embed = discord.Embed(title=i18n_data['title'], description=i18n_data['winner_description'].format(winner=winner) + f"\n\n{game.format_board()}", color=discord.Color.green())
                     await interaction.response.edit_message(embed=embed, view=None)
@@ -129,15 +132,15 @@ class TicTacToe(commands.Cog):
                     game.current_player = ":blue_circle:" if game.current_player == ":x:" else ":x:"
                     '''i18n'''
                     i18n_data = await get_translate('embed_tictactoe_game', interaction)
-                    i18n_data = i18n_data[0]
+                    i18n_data = load_translated(i18n_data)[0]
                     ''''''
                     embed = discord.Embed(title=i18n_data['title'], description=game.format_board(), color=discord.Color.blue())
                     embed.add_field(name=i18n_data['field'][0]['name'], value=game.current_player, inline=i18n_data['field'][0].get('inline', True))
-                    ctx = await self.bot.get_context(interaction)
-                    await interaction.response.edit_message(embed=embed, view=await self.create_view(ctx, channel_id))
+                    await interaction.response.edit_message(embed=embed, view=await self.create_view(interaction, channel_id))
             else:
                 await interaction.response.send_message(await get_translate('send_tictactoe_position_taken', interaction), ephemeral=True)
-        except: pass
+        except Exception:
+            logger.error('TicTacToe on_interaction error', exc_info=True)
 
 async def setup(bot):
     await bot.add_cog(TicTacToe(bot))
