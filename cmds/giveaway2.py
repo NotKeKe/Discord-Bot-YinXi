@@ -190,12 +190,14 @@ class Utils:
                 view=None
             )
 
+            await message.reply(winner_field_value)
+
             await COLL.delete_one({
                 'channel_id': channel_id,
                 'message_id': message_id
             })
         except Exception:
-            pass
+            logger.error(f'Wait task failed | Channel:`{channel_id}` | Message:`{message_id}`', exc_info=True)
 
 
 
@@ -346,5 +348,10 @@ class Giveaway2(commands.Cog):
                 end_time=end_time_dt,
                 winners_total=winners
             )
+
+            await Utils.wait_task(delay, ctx.channel.id, message.id)
         except Exception as e:
             pass # todo
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(Giveaway2(bot))

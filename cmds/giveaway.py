@@ -241,5 +241,5 @@ class Giveaway(Cog_Extension):
 
 
 
-async def setup(bot):
-    await bot.add_cog(Giveaway(bot))
+# async def setup(bot):
+#     await bot.add_cog(Giveaway(bot))
