@@ -247,6 +247,8 @@ class ApiCog(Cog_Extension):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(f'http://numbersapi.com/{number}?json') as response:
+                    if not response.ok:
+                        return await ctx.send(f"We're sorry, but `https://numbersapi.com` is currently down. Please try again later.")
                     data = await response.json()
             if not data['found']:
                 return await ctx.send((await get_translate('send_number_history_not_found', ctx)).format(number=number))
