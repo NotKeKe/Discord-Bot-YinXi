@@ -373,6 +373,7 @@
         "send_giveaway_joined": "You have successfully joined the giveaway!",
         "send_giveaway_no_winner": "No one participated in the giveaway...",
         "send_giveaway_ended_message": "🎉 **Giveaway has ended** 🎉\nhosted by: {mention}\nLucky winner: {winner}",
+        "send_giveaway_not_exist": "That giveaway information does not exist.",
         "embed_giveaway_start": [{
             "author": "Giveaway",
             "fields": [

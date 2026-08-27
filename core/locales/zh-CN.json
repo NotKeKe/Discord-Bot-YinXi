@@ -374,6 +374,7 @@
         "send_giveaway_joined": "已成功参加抽奖！",
         "send_giveaway_no_winner": "没有人参加抽奖...",
         "send_giveaway_ended_message": "🎉 **抽奖已结束** 🎉\n发起人: {mention}\n幸运中奖者: {winner}",
+        "send_giveaway_not_exist": "该抽奖信息不存在",
         "embed_giveaway_start": [{
             "author": "抽奖活动",
             "fields": [
