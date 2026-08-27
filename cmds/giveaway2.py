@@ -28,7 +28,7 @@ class Utils:
             await interaction.response.send_message(await get_translate('send_giveaway_not_exist', interaction), ephemeral=True); return
 
         # 避免使用者在結束後的計算過程中點擊按鈕
-        if data['end_time'] < datetime.now(timezone.utc):
+        if datetime.fromisoformat(data['end_time']) < datetime.now(timezone.utc):
             await interaction.response.send_message(await get_translate('send_giveaway_not_exist', interaction), ephemeral=True); return
 
         # 獲取Embed訊息
@@ -126,8 +126,6 @@ class Utils:
                 'message_id': message_id
             })
 
-        host_user = message.user
-
         try:
             # 取得 data
             data = await COLL.find_one({
@@ -137,8 +135,13 @@ class Utils:
 
             if not data: return
 
+            try:
+                host_user = await _bot.fetch_user(data['hosted_user_id'])
+            except Exception:
+                host_user = message.author
+
             # 隨機選取中獎者
-            winner_ids = random.sample(data['participant_ids'], data['winners_total'])
+            winner_ids = random.sample(data['participant_ids'], min(data['winners_total'], len(data['participant_ids'])))
 
             # 將 winners 更新至 mongodb
             await COLL.update_one(
@@ -206,17 +209,74 @@ class Giveaway2(commands.Cog):
             self._resumed_message_ids = set()
 
         try:
+            translator = self.bot.tree.translator
+            assert translator
+
             async for doc in COLL.find({}):
                 message_id = doc['message_id']
                 if message_id in self._resumed_message_ids:
                     continue
                 self._resumed_message_ids.add(message_id)
 
-                end_time = datetime.fromisoformat(doc['end_time'])
-                delay = (end_time - datetime.now(timezone.utc)).total_seconds()
+                try:
+                    channel = self.bot.get_channel(doc['channel_id'])
+                    if channel is None:
+                        channel = await self.bot.fetch_channel(doc['channel_id'])
+                    message = await channel.fetch_message(message_id)
+                except Exception:
+                    logger.error(f'Giveaway message `{message_id}` not found, removing record', exc_info=True)
+                    await COLL.delete_one({'channel_id': doc['channel_id'], 'message_id': message_id})
+                    continue
+
+                try:
+                    end_time = datetime.fromisoformat(doc['end_time'])
+                    delay = (end_time - datetime.now(timezone.utc)).total_seconds()
+                except Exception:
+                    logger.error(f'Failed to parse end_time for giveaway message {message_id}', exc_info=True)
+                    continue
+
+                try:
+                    lang_code = message.guild.preferred_locale.value if message.guild and message.guild.preferred_locale else None
+                except Exception:
+                    lang_code = None
+
+                '''i18n'''
+                eb_template = translator.get_translate('embed_giveaway_start', lang_code)
+                eb_data = load_translated(eb_template)[0]
+                author_text = eb_data.get('author')
+                fields_data = eb_data.get('fields', [])
+                winners_field_name = fields_data[0].get('name')
+                participants_field_name = fields_data[1].get('name')
+                note_field_name = fields_data[2].get('name')
+                note_field_value = fields_data[2].get('value')
+                footer_text = eb_data.get('footer')
+                ''''''
+
+                embed = discord.Embed(
+                    title=f'**{doc["prize"]}**',
+                    color=message.author.color,
+                    timestamp=end_time
+                )
+                embed.set_author(name=author_text)
+                embed.add_field(name=winners_field_name, value=doc['winners_total'], inline=False)
+                embed.add_field(name=participants_field_name, value=str(len(doc['participant_ids'])), inline=False)
+                embed.add_field(name=note_field_name, value=note_field_value, inline=False)
+                embed.set_footer(text=footer_text)
+
+                button = discord.ui.Button(label='🎉', custom_id=f'giveaway-{message_id}')
+                button.callback = Utils.button_callback  # type: ignore
+
+                view = discord.ui.View(timeout=None)
+                view.add_item(button)
+
+                try:
+                    await message.edit(embed=embed, view=view)
+                except Exception:
+                    logger.error(f'Failed to edit giveaway message {message_id}', exc_info=True)
+                    continue
 
                 self.bot.loop.create_task(
-                    Utils.wait_task(max(delay, 0), doc['channel_id'], doc['message_id'])
+                    Utils.wait_task(max(delay, 0), doc['channel_id'], message_id)
                 )
         except Exception:
             logger.error('Giveaway on_ready recovery failed', exc_info=True)
@@ -269,10 +329,10 @@ class Giveaway2(commands.Cog):
 
             # Button
             button = discord.ui.Button(label="🎉")
-            button.callback = button_callback # type: ignore
+            button.callback = Utils.button_callback # type: ignore
             
             # View
-            view = discord.ui.View()
+            view = discord.ui.View(timeout=None)
             view.add_item(button)
 
             message = await ctx.send(embed=embed, view=view)
