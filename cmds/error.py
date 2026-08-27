@@ -13,10 +13,10 @@ class ErrorHandler(Cog_Extension):
         user = await self.bot.fetch_user(int(KeJCID)) if KeJCID else None
 
         if traceback.format_exc().strip() not in ('NoneType: None', 'None'):
-            error = traceback.format_exc()
+            error: str = traceback.format_exc()
         else: error = exception
 
-        string = f'有個在「{檔案名稱} {指令名稱}」的錯誤: 「{error}」，{ctx.author.id} used `{ctx.args}` and `{ctx.kwargs}`'
+        string = f'有個在「{檔案名稱} {指令名稱}」的錯誤({type(exception)}): 「{error}」，{ctx.author.id} used `{ctx.args}` and `{ctx.kwargs}`'
         logging.error(string, exc_info=True)
 
         await ctx.send(content=await get_translate('send_error_occurred', ctx), ephemeral=ephemeral)

@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands, tasks
+from discord import app_commands
 from discord.errors import HTTPException as discord_HTTPException
 # from pretty_help import PrettyHelp
 import json
@@ -85,9 +86,16 @@ async def before_invoke(ctx: commands.Context):
 
 # 錯誤追蹤
 @bot.event
-async def on_command_error(ctx: commands.Context, error):
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     if ctx.command is None: return
-    await ctx.invoke(bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=error, user_send=False, ephemeral=True)
+    # 對於一個 hybrid command，如果是來自 app_command 類別的錯誤，會被重新包裝為 HybridCommandError，要透過 original 取得原始錯誤
+    orig = error.original if isinstance(error, commands.HybridCommandError) else error
+
+    if isinstance(orig, commands.MissingPermissions) or isinstance(orig, app_commands.MissingPermissions):
+        missing = ', '.join(orig.missing_permissions)
+        return await ctx.send(f"You are missing the following permissions: `{missing}`")
+
+    await ctx.invoke(bot.get_command('errorresponse'), 檔案名稱=__name__, 指令名稱=ctx.command.name, exception=orig, user_send=False, ephemeral=True)
 
 #上線通知
 @bot.event
