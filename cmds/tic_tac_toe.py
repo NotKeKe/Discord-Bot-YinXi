@@ -77,7 +77,12 @@ class TicTacToe(commands.Cog):
             (button_labels['bottom_right'], 2, 2)
         ]
         for label, row, col in positions:
-            view.add_item(discord.ui.Button(label=label, style=discord.ButtonStyle.primary, custom_id=f"{channel_id}-{row}-{col}"))
+            view.add_item(discord.ui.Button(
+                label=label, 
+                style=discord.ButtonStyle.primary, 
+                custom_id=f"{channel_id}-{row}-{col}",
+                row=row
+            ))
         return view
 
     @commands.Cog.listener()
