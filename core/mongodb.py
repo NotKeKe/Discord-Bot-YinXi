@@ -12,3 +12,4 @@ class MongoDB_DB:
     pjsk = mongo_db_client['pjsk']
     music = mongo_db_client['music']
     cambrdige = mongo_db_client['cambrdige']
+    giveaway = mongo_db_client['giveaway']
