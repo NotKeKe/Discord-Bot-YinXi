@@ -28,7 +28,10 @@ def lrc_to_plain_text(lrc_content: str) -> str:
     return plain_text
 
 async def search_lyrics(query: str, artist: str = None, lrc: bool = False) -> str | bool:
-    query = await async_translate(query, 'zh-TW', 'zh-CN')
+    try:
+        query = await async_translate(query, 'zh-TW', 'zh-CN')
+    except Exception:
+        pass
 
     async with aiohttp.ClientSession() as session:
         async with session.get(f'{LRCURL}/jsonapi', params={'title': query, **({'artist': artist} if artist else {})}) as resp:
