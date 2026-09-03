@@ -74,7 +74,7 @@ class Counting(Cog_Extension):
 
         if preUserID == userID:
             if str(content) == '6': return
-            await message.add_reaction('❌')
+            await message.add_reaction('⚠️')
             eb = create_basic_embed(eb_data.get('double_input'), color=message.author.color, time=False)
             userID = 0
             count = 0
