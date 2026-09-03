@@ -323,7 +323,10 @@ class Giveaway2(commands.Cog):
 
             # Embed
             embed=discord.Embed(title=f'**{prize}**', color=ctx.author.color, timestamp=end_time_dt)
-            embed.set_author(name=author_text, icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
+            embed.set_author(
+                name=author_text.format(mention=ctx.author.global_name or ctx.author.name), 
+                icon_url=ctx.author.avatar.url if ctx.author.avatar else None
+            )
             embed.add_field(name=winners_field_name, value=winners, inline=False)
             embed.add_field(name=participants_field_name, value=participants_field_value, inline=False)
             embed.add_field(name=note_field_name, value=note_field_value, inline=False)
@@ -351,7 +354,7 @@ class Giveaway2(commands.Cog):
 
             await Utils.wait_task(delay, ctx.channel.id, message.id)
         except Exception as e:
-            pass # todo
+            logger.error(f'Giveaway error: {e}', exc_info=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Giveaway2(bot))

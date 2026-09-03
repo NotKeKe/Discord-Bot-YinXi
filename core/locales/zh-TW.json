@@ -375,7 +375,7 @@
         "send_giveaway_ended_message": "🎉 **抽獎已結束** 🎉\n發起人: {mention}\n幸運中獎者: {winner}",
         "send_giveaway_not_exist": "該抽獎資訊不存在",
         "embed_giveaway_start": [{
-            "author": "抽獎活動",
+            "author": "抽獎活動 (發起人: {mention})",
             "fields": [
                 { "name": "中獎人數:" },
                 { "name": "目前參加人數:", "value": "0" },

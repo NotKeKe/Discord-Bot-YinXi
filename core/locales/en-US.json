@@ -375,7 +375,7 @@
         "send_giveaway_ended_message": "🎉 **Giveaway has ended** 🎉\nhosted by: {mention}\nLucky winner: {winner}",
         "send_giveaway_not_exist": "That giveaway information does not exist.",
         "embed_giveaway_start": [{
-            "author": "Giveaway",
+            "author": "Giveaway (hosted by: {mention})",
             "fields": [
                 { "name": "Number of winners:" },
                 { "name": "Current participants:", "value": "0" },
