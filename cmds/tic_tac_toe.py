@@ -88,7 +88,7 @@ class TicTacToe(commands.Cog):
     @commands.Cog.listener()
     async def on_interaction(self, interaction: discord.Interaction):
         try:
-            if interaction.data["component_type"] != 2:  # 確保是按鈕互動
+            if interaction.data.get('component_type') != 2:  # 確保是按鈕互動
                 return
 
             custom_id = interaction.data["custom_id"]
