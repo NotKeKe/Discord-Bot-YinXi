@@ -6,9 +6,12 @@ from datetime import datetime, timedelta
 import asyncio
 import re
 from dotenv import load_dotenv
+import logging
 
 from cmds.skyblock_commands_foldor import skyblock_commands
 from core.classes import Cog_Extension
+
+logger = logging.getLogger(__name__)
 
 # get env
 load_dotenv()
@@ -116,7 +119,7 @@ class skyblock_mayor(Cog_Extension):
         with open(f"{current_directory}/cmds/data.json/skyblock_events_channels.json", "r") as file: # 讀取events_channels
             events_channels = json.load(file)
         
-        try:
+        def get_embed() -> discord.Embed:
             mayor, minister, lastUpdated = sb.get_mayor()
             mayor_info = sb.get_mayor_information()
             minister_info = sb.get_minister_information()
@@ -139,8 +142,14 @@ class skyblock_mayor(Cog_Extension):
             if minister is not None:
                 embed.add_field(name=minister, value=f'{minister_info}\n- {cleaned_minister_perks_info}', inline=False)
             embed.set_footer(text=f"訊息更新時間: {lastUpdated}")
+
+            return embed
+
+        try:
+            embed = await asyncio.to_thread(get_embed)
         except Exception as e:
-            return print("Error from skyblock_mayor / tasksloop, update_embed_task: ", e)
+            logger.error(f'Error occurred at skyblock_mayor | update_embed_task: {e}', exc_info=True)
+            return
 
         for cnl in events_channels:
             channel = self.bot.get_channel(int(cnl))
