@@ -72,7 +72,7 @@ class _KeepUtils:
             return
 
         if freq_str:
-            if not freq_int or freq_int <= 0:
+            if not isinstance(freq_int, int) or freq_int <= 0:
                 await inter.followup.send(invalid_format, ephemeral=True)
                 return
             if freq_str == 'yearly' and freq_int * 31557600 > 31557600000:
@@ -333,7 +333,7 @@ async def create_KeepTask():
                 keep_time = datetime.fromtimestamp(e['sendAt'])
                 freq_str = e.get('freq_str')
                 freq_int = e.get('freq_int')
-                if freq_str and (freq_int is None or freq_int <= 0):
+                if freq_str and (not isinstance(freq_int, int) or freq_int <= 0):
                     freq_str = None
                 _KeepUtils.schedule(collection, channel, user, event, keep_time, u, freq_str, freq_int)
                 count += 1
