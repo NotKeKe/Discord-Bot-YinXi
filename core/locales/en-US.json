@@ -273,7 +273,8 @@
         "send_keep_invalid_format": "You entered an incorrect format",
         "send_keep_time_passed": "{}, the time you specified has already passed, please choose a future time.",
         "send_keep_too_far": "You set a time 1000 years in the future?? I won't even be alive then, how dare you :sob:",
-        "send_keep_dm_check": "✅ Test successful! YinXi will send your reminders to you via DM.",
+        "send_keep_dm_check": "✅ Test successful! YinXi will send your reminders to you via DM.\n> Reminder: {event}\n> Start time: {keep_time}",
+        "send_keep_dm_check_freq": "✅ Test successful! YinXi will send your reminders to you via DM.\n> Reminder: {event}\n> Frequency: every {freq_int} {freq_label}\n> Start time: {keep_time}",
         "send_keep_dm_forbidden": "Your DMs are disabled, so YinXi cannot DM you. Reminder creation failed!",
         "send_qrcode_generator_invalid_url": "This feature is currently unavailable or your link is problematic, please try again later",
         "embed_keep_created": [{

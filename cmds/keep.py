@@ -84,8 +84,20 @@ class _KeepUtils:
                 await inter.followup.send(too_far)
                 return
 
-        dm_check = await get_translate('send_keep_dm_check', inter)
         dm_forbidden = await get_translate('send_keep_dm_forbidden', inter)
+
+        if freq_str:
+            dm_check = (await get_translate('send_keep_dm_check_freq', inter)).format(
+                event=event,
+                freq_int=freq_int,
+                freq_label=await get_translate(f'keep_frequency_{freq_str}', inter),
+                keep_time=keep_time.strftime('%Y-%m-%d %H:%M')
+            )
+        else:
+            dm_check = (await get_translate('send_keep_dm_check', inter)).format(
+                event=event,
+                keep_time=keep_time.strftime('%Y-%m-%d %H:%M')
+            )
 
         try:
             await inter.user.send(dm_check)
