@@ -20,7 +20,7 @@ from textwrap import dedent
 import logging
 
 from core.classes import Cog_Extension, get_bot
-from core.functions import create_basic_embed, current_time, is_testing_guild, mongo_db_client, UnixToReadable
+from core.functions import create_basic_embed, current_time, is_testing_guild, mongo_db_client, UnixToReadable, is_KeJC
 from core.translator import load_translated, locale_str, get_translate
 
 from cmds.ai_chat.utils.config import base_url_options
@@ -472,6 +472,7 @@ class Keep(Cog_Extension):
     @commands.command()
     @is_testing_guild()
     async def check_keepdata(self, ctx: commands.Context):
+        if not is_KeJC(ctx.author.id): return
         await ctx.send(str(reminder_tasks))
 
 async def setup(bot):
