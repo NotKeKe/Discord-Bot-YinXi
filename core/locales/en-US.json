@@ -1,6 +1,7 @@
 {
     "name": {
         "keep": "remind",
+        "keep_frequency": "remind_frequency",
         "translate": "translate",
         "qrcode_generator": "qrcode_generator",
         "botinfo": "botinfo",
@@ -102,6 +103,7 @@
         "join_leave_message": "Set the channel to send a message when a user joins or leaves the server.",
         "delete_spam_messages": "Delete messages sent by a specific user within a specific time frame",
         "keep": "Have the bot remind you at a specified time",
+        "keep_frequency": "Have the bot remind you at a fixed interval",
         "rank": "Check your chat rank in this server",
         "levels": "View the chat rank leaderboard for this server",
         "owner_id": "Get the server owner's ID",
@@ -181,6 +183,9 @@
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
+        "keep_frequency_time": "Enter when the first reminder should happen, AI will determine the time",
+        "keep_frequency_freq_str": "Choose the frequency unit",
+        "keep_frequency_freq_int": "Frequency multiplier (e.g. hourly + 5 = every 5 hours)",
         "translate_content": "Enter the text you want to translate",
         "translate_target": "Select the target language (default is zh-TW)",
         "qrcode_generator_url": "Enter the link here",
@@ -204,6 +209,7 @@
         "delete_spam_messages_hours": "How many hours ago to delete messages",
         "delete_spam_messages_user": "The user whose messages to delete",
         "keep_event": "The event to be reminded of",
+        "keep_frequency_event": "The event to be reminded of",
         "repeat_text": "The text for the bot to repeat",
         "avatar_member": "The user to get the avatar of (can be left blank)",
         "convert_timestamp_timestamp": "Unix timestamp (seconds)",
@@ -276,6 +282,20 @@
             }],
             "footer": "Time: {keep_time}"
         }],
+        "embed_keep_frequency_created": [{
+            "title": "Reminder Event:",
+            "field": [{
+                "name": "Note: ",
+                "value": "1. Remember to enable mention notifications for this channel so you don't miss any reminders!\n2. The 'only you can see these' feature cannot be used when sending notifications (they will be visible when you are reminded QAQ)"
+            }],
+            "footer": "First reminder: {keep_time} | Frequency: {freq_label} x {freq_int}"
+        }],
+        "keep_frequency_minutely": "every minute",
+        "keep_frequency_hourly": "hourly",
+        "keep_frequency_daily": "daily",
+        "keep_frequency_weekly": "weekly",
+        "keep_frequency_monthly": "monthly",
+        "keep_frequency_yearly": "yearly",
         "embed_qrcode_generator_1": [{
             "author": "QR Code Generator"
         }],

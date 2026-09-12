@@ -9,7 +9,8 @@ from discord.app_commands import Choice
 import asyncio
 import orjson
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from typing import List, cast
 from openai import AsyncOpenAI
 from openai.types.chat.chat_completion_message_tool_call import ChatCompletionMessageToolCall
@@ -34,6 +35,128 @@ DB = mongo_db_client[DB_KEY]
 PROVIDER = 'zhipu'
 MODEL = 'glm-4.5-flash'
 OPENAI_CLIENT = AsyncOpenAI(api_key=base_url_options[PROVIDER]['api_key'], base_url=base_url_options[PROVIDER]['base_url'])
+
+class _KeepUtils:
+    @staticmethod
+    async def call_ai(messages: list[dict[str, str]], tools: list[dict]) -> ChatCompletionMessageToolCall:
+        response = await OPENAI_CLIENT.chat.completions.create(
+            model=MODEL,
+            messages=messages, # type: ignore
+            tools=tools, # type: ignore
+            tool_choice='required'
+        )
+        if not response.choices: raise ValueError('AI沒有回應')
+        if not response.choices[0].message.tool_calls: raise ValueError('AI沒有調用工具')
+        return response.choices[0].message.tool_calls[0]
+
+    @staticmethod
+    async def create(collection, inter, event, raw_time, freq_str=None, freq_int=None):
+        invalid_format = await get_translate('send_keep_invalid_format', inter)
+        time_passed = await get_translate('send_keep_time_passed', inter)
+        too_far = await get_translate('send_keep_too_far', inter)
+
+        try:
+            keep_time = datetime.strptime(f'{raw_time}', '%Y-%m-%d %H:%M')
+        except Exception:
+            await inter.followup.send(invalid_format, ephemeral=True)
+            return
+
+        delay = (keep_time - datetime.now()).total_seconds()
+
+        if delay <= 0:
+            await inter.followup.send(time_passed.format(inter.user.mention))
+            return
+
+        if delay > 31557600000:
+            await inter.followup.send(too_far)
+            return
+
+        if freq_str:
+            if not freq_int or freq_int <= 0:
+                await inter.followup.send(invalid_format, ephemeral=True)
+                return
+            if freq_str == 'yearly' and freq_int * 31557600 > 31557600000:
+                await inter.followup.send(too_far)
+                return
+            try:
+                _KeepUtils.next_send_at(keep_time, freq_str, freq_int)
+            except OverflowError:
+                await inter.followup.send(too_far)
+                return
+
+        u = str(uuid.uuid4())
+        doc = {
+            'createAt': datetime.now().timestamp(),
+            'sendAt': keep_time.timestamp(),
+            'channelID': inter.channel.id if inter.channel else -1,
+            'event': event,
+            'uuid': u
+        }
+        if freq_str:
+            doc |= {'freq_str': freq_str, 'freq_int': freq_int}
+        await collection.insert_one(doc)
+
+        embed_key = 'embed_keep_frequency_created' if freq_str else 'embed_keep_created'
+        embed_translated: dict = (load_translated(await get_translate(embed_key, inter)))[0]
+
+        title = embed_translated.get('title')
+        field_1 = (embed_translated.get('field'))[0] # type: ignore
+
+        embed = create_basic_embed(title=title, description=f'**{event}**', color=inter.user.color, time=False)
+        embed.set_author(name=inter.user.name, icon_url=inter.user.avatar.url if inter.user.avatar else None)
+        embed.add_field(name=field_1.get('name'), value=field_1.get('value'), inline=True)
+
+        footer = embed_translated.get('footer')
+        if freq_str:
+            freq_label = await get_translate(f'keep_frequency_{freq_str}', inter)
+            embed.set_footer(text=str(footer).format(keep_time=keep_time, freq_label=freq_label, freq_int=freq_int))
+        else:
+            embed.set_footer(text=str(footer).format(keep_time=keep_time))
+
+        await inter.followup.send(embed=embed)
+
+        _KeepUtils.schedule(collection, inter.channel, inter.user, event, keep_time, u, freq_str, freq_int)
+
+    @staticmethod
+    def schedule(collection, channel, user, event, keep_time, u, freq_str=None, freq_int=None):
+        if u in reminder_tasks and not reminder_tasks[u].done():
+            return
+        delay = (keep_time - datetime.now()).total_seconds()
+        if delay <= 0: delay = 1
+        if freq_str:
+            task = bot.loop.create_task(keepFrequencyMessage(collection, channel, user, event, delay, u, freq_str, freq_int, keep_time)) # type: ignore
+        else:
+            task = bot.loop.create_task(keepMessage(collection, channel, user, event, delay, u))
+        reminder_tasks[u] = task
+
+    @staticmethod
+    async def send_reminder(channel, user, event):
+        lang_code = None
+        if channel.guild:
+            lang_code = channel.guild.preferred_locale.value if channel.guild.preferred_locale else None
+
+        bot = get_bot()
+        try:
+            await channel.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
+        except dc_errors.Forbidden:
+            try:
+                await user.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
+            except dc_errors.Forbidden:
+                ...
+            except Exception as e:
+                logger.error(f'Cannot send keep message with DM: {e}', exc_info=True)
+        except Exception as e:
+            logger.error(f'Cannot send keep message with channel: {e}', exc_info=True)
+
+    @staticmethod
+    def next_send_at(current, freq_str, freq_int):
+        if freq_str == 'minutely': return current + timedelta(minutes=freq_int)
+        if freq_str == 'hourly': return current + timedelta(hours=freq_int)
+        if freq_str == 'daily': return current + timedelta(days=freq_int)
+        if freq_str == 'weekly': return current + timedelta(weeks=freq_int)
+        if freq_str == 'monthly': return current + relativedelta(months=freq_int)
+        if freq_str == 'yearly': return current + relativedelta(years=freq_int)
+        raise ValueError(f'unknown freq_str: {freq_str}')
 
 class RunKeep:
     def __init__(self, time: str, event: str, inter: Interaction):
@@ -72,17 +195,7 @@ class RunKeep:
             {'role': 'system', 'content': self.system_prompt},
             {'role': 'user', 'content': self.prompt}
         ]
-        response = await self.client.chat.completions.create(
-            model=self.model, 
-            messages=messages, # type: ignore
-            tools=self.tool_descrip, # type: ignore
-            tool_choice='required'
-        )
-        if not response.choices: raise ValueError('AI沒有回應')
-        if not response.choices[0].message.tool_calls: raise ValueError('AI沒有調用工具')
-
-        tool_call = response.choices[0].message.tool_calls[0]
-        return tool_call
+        return await _KeepUtils.call_ai(messages, self.tool_descrip)
 
     async def run(self):
         try:
@@ -96,86 +209,97 @@ class RunKeep:
             traceback.print_exc()
 
     async def func(self, time: str, event: str):
-        '''格式為'%Y-%m-%d %H:%M' '''
-        inter = self.inter
-        channelID = inter.channel.id if inter.channel else -1
+        await _KeepUtils.create(self.collection, self.inter, event, time)
 
-        '''i18n'''
-        invalid_format = await get_translate('send_keep_invalid_format', inter)
-        time_passed = await get_translate('send_keep_time_passed', inter)
-        too_far = await get_translate('send_keep_too_far', inter)
-        ''''''
 
-        try:        #如果使用者輸入錯誤的格式，則返回訊息並結束keep command
-            keep_time = datetime.strptime(f'{time}', '%Y-%m-%d %H:%M')
-        except Exception:
-            await inter.followup.send(invalid_format, ephemeral=True)
-            return
-        
-        now = datetime.now()
-        delay = (keep_time - now).total_seconds()
+class RunKeepFrequency:
+    def __init__(self, time: str, event: str, inter: Interaction, freq_str: str, freq_int: int):
+        self.system_prompt = '''你是一個專門解析使用者第一次提醒時間的AI，你必須使用你的function calling能力，呼叫keep_frequency_time函數，來協助使用者完成這件事。time部分，如果使用者沒有特別指定準確的小時與分鐘，就使用當前時間。**現在的時間為: {}**'''.format(current_time())
+        self.tool_descrip = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "keep_frequency_time",
+                    "description": "此工具用來記錄使用者第一次提醒的時間。",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "time": {
+                                "type": "string",
+                                "description": "格式為 `%Y-%m-%d %H:%M`，例如 `2023-10-05 14:30`，表示在2023年10月5日的下午2點30分提醒。不要使用markdown格式，使用24小時制，另外注意凌晨24點(或0點)，需要表示為00:00。"
+                            }
+                        },
+                        "required": ["time"]
+                    }
+                }
+            }
+        ]
+        self.prompt = f'我想要設定一個每 {freq_int} {freq_str} 的週期性提醒，內容是 `{event}`，第一次提醒時間是 `{time}`'
+        self.freq_str = freq_str
+        self.freq_int = freq_int
+        self.event = event
+        self.collection = DB[str(inter.user.id)]
+        self.inter = inter
 
-        if delay <= 0:      #如果使用者輸入現在或過去的時間，則返回訊息並結束keep command
-            await inter.followup.send(time_passed.format(inter.user.mention))
-            return
-        
-        if delay > 31557600000:
-            await inter.followup.send(too_far)
-            return
+    async def chat(self) -> ChatCompletionMessageToolCall:
+        messages = [
+            {'role': 'system', 'content': self.system_prompt},
+            {'role': 'user', 'content': self.prompt}
+        ]
+        return await _KeepUtils.call_ai(messages, self.tool_descrip)
 
-        u = str(uuid.uuid4())
-        await self.collection.insert_one({
-            'createAt': datetime.now().timestamp(),
-            'sendAt': keep_time.timestamp(),
-            'channelID': channelID,
-            'event': event,
-            'uuid': u
-        })
+    async def run(self):
+        try:
+            tool_call = await self.chat()
+            tool_name = tool_call.function.name
+            arguments = tool_call.function.arguments
+            args = orjson.loads(arguments) if not isinstance(arguments, dict) else arguments
+            print(f'{tool_name}: {args}')
+            await self.func(args['time'], self.event)
+        except:
+            traceback.print_exc()
 
-        '''i18n'''
-        embed_translated = await get_translate('embed_keep_created', inter)
-        embed_translated: dict = (load_translated(embed_translated))[0]
-
-        title = embed_translated.get('title')
-        field_1 = (embed_translated.get('field'))[0] # type: ignore
-        ''''''
-        embed = create_basic_embed(title=title, description=f'**{event}**', color=inter.user.color, time=False)
-        embed.set_author(name=inter.user.name, icon_url=inter.user.avatar.url if inter.user.avatar else None)
-        embed.add_field(name=field_1.get('name'), value=field_1.get('value'), inline=True)
-        embed.set_footer(text=str(embed_translated.get('footer')).format(keep_time=keep_time))
-
-        await inter.followup.send(embed=embed)
-
-        task = bot.loop.create_task(keepMessage(self.collection, inter.channel, inter.user, event, delay, u))
-        reminder_tasks[u] = task
+    async def func(self, time: str, event: str):
+        await _KeepUtils.create(self.collection, self.inter, event, time, self.freq_str, self.freq_int)
 
 
 async def keepMessage(collection: AsyncIOMotorCollection, channel, user, event: str, delay: float, uuid: str):
     await asyncio.sleep(delay)
 
-    lang_code = None
-    if channel.guild:
-        lang_code = channel.guild.preferred_locale.value if channel.guild.preferred_locale else None
-    
-    bot = get_bot()
-    try:
-        await channel.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
-    except dc_errors.Forbidden:
-        try:
-            await user.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
-        except dc_errors.Forbidden:
-            ...
-        except Exception as e:
-            logger.error(f'Cannot send keep message with DM: {e}', exc_info=True)
-    except Exception as e:
-        logger.error(f'Cannot send keep message with channel: {e}', exc_info=True)
+    await _KeepUtils.send_reminder(channel, user, event)
 
     reminder_tasks.pop(uuid)
 
     await collection.find_one_and_delete({
         'uuid': uuid,
         'channelID': channel.id
-    })        
+    })
+
+async def keepFrequencyMessage(collection: AsyncIOMotorCollection, channel, user, event: str, delay: float, uuid: str, freq_str: str, freq_int: int, send_at: datetime):
+    current = send_at
+    try:
+        while True:
+            await asyncio.sleep(max(delay, 0))
+
+            await _KeepUtils.send_reminder(channel, user, event)
+
+            try:
+                nxt = _KeepUtils.next_send_at(current, freq_str, freq_int)
+            except Exception as e:
+                logger.error(f'Cannot compute next send time for keep task: {e}', exc_info=True)
+                break
+            now = datetime.now()
+            while nxt <= now:
+                nxt = _KeepUtils.next_send_at(nxt, freq_str, freq_int)
+            delay = (nxt - now).total_seconds()
+            current = nxt
+
+            await collection.update_one(
+                {'uuid': uuid, 'channelID': channel.id},
+                {'$set': {'sendAt': nxt.timestamp()}}
+            )
+    finally:
+        reminder_tasks.pop(uuid, None)
 
 async def create_KeepTask():
     ''' A init task for on_ready
@@ -190,8 +314,6 @@ async def create_KeepTask():
             user = await bot.fetch_user(int(userID))
 
             async for e in collection.find():
-                delaySecond = e['sendAt'] - datetime.now().timestamp()
-                if delaySecond <= 0: delaySecond = 1
                 channelID = e['channelID']
                 event = e['event']
                 u = e['uuid']
@@ -208,9 +330,12 @@ async def create_KeepTask():
                     logger.error(f'Unexpected error: {str(e)}', exc_info=True)
                     continue
 
-                task = bot.loop.create_task(keepMessage(collection, channel, user, event, delaySecond, u)) 
-                
-                reminder_tasks[u] = task
+                keep_time = datetime.fromtimestamp(e['sendAt'])
+                freq_str = e.get('freq_str')
+                freq_int = e.get('freq_int')
+                if freq_str and (freq_int is None or freq_int <= 0):
+                    freq_str = None
+                _KeepUtils.schedule(collection, channel, user, event, keep_time, u, freq_str, freq_int)
                 count += 1
 
         print(f'已新增 {count} 個 keep 任務')
@@ -262,14 +387,17 @@ class Keep(Cog_Extension):
 
     @app_commands.command(name=locale_str('keep_frequency'), description=locale_str('keep_frequency'))
     @app_commands.choices(freq_str=[
+        Choice(name=locale_str('keep_frequency_minutely'), value='minutely'),
+        Choice(name=locale_str('keep_frequency_hourly'), value='hourly'),
         Choice(name=locale_str('keep_frequency_daily'), value='daily'),
         Choice(name=locale_str('keep_frequency_weekly'), value='weekly'),
         Choice(name=locale_str('keep_frequency_monthly'), value='monthly'),
         Choice(name=locale_str('keep_frequency_yearly'), value='yearly'),
     ])
-    @app_commands.describe(freq_str=locale_str('keep_frequency_freq_str'), freq_int=locale_str('keep_frequency_freq_int'), event=locale_str('keep_frequency_event'))
-    async def keep_frequency(self, inter: Interaction, freq_str: str, freq_int: int, *, event: str):
-        pass
+    @app_commands.describe(time=locale_str('keep_frequency_time'), freq_str=locale_str('keep_frequency_freq_str'), freq_int=locale_str('keep_frequency_freq_int'), event=locale_str('keep_frequency_event'))
+    async def keep_frequency(self, inter: Interaction, time: str, freq_str: str, freq_int: int, *, event: str):
+        await inter.response.defer(ephemeral=True, thinking=True)
+        await RunKeepFrequency(time, event, inter, freq_str, freq_int).run()
 
     @app_commands.command(name=locale_str('del_keep'), description=locale_str('del_keep'))
     @app_commands.autocomplete(keep_event=keep_event_autocomplete)
@@ -291,8 +419,9 @@ class Keep(Cog_Extension):
             'channelID': channelID
         })
 
-        task = reminder_tasks.pop(uuid)
-        task.cancel()
+        task = reminder_tasks.pop(uuid, None)
+        if task:
+            task.cancel()
 
         await inter.followup.send( (await get_translate('send_del_keep_cancel_success', inter) ).format(
                 event=doc.get('event', ''), 

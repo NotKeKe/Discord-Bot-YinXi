@@ -21,6 +21,7 @@ dependencies = [
     "Pillow==11.2.1",
     "playwright>=1.54.0",
     "psutil>=7.1.0",
+    "python-dateutil>=2.9.0",
     "python-dotenv>=1.1.0",
     "pytubefix>=10.0.1",
     "pyzbar>=0.1.9",

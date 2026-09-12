@@ -1,6 +1,7 @@
 {
     "name": {
         "keep": "記事",
+        "keep_frequency": "週期記事",
         "translate": "翻譯",
         "qrcode_generator": "qrcode生成器",
         "botinfo": "機器人資訊",
@@ -102,6 +103,7 @@
         "join_leave_message": "設定當使用者加入或離開伺服器時，要在哪個頻道發送訊息。",
         "delete_spam_messages": "刪除特定使用者在特定時間內發送的訊息",
         "keep": "讓機器人在指定時間提醒你",
+        "keep_frequency": "讓機器人每間隔一段時間提醒你",
         "rank": "查看你在此伺服器的聊天等級",
         "levels": "查看此伺服器的聊天等級排行榜",
         "owner_id": "取得伺服器擁有者的ID",
@@ -181,6 +183,9 @@
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
+        "keep_frequency_time": "輸入第一次提醒的時間，會用AI判斷時間",
+        "keep_frequency_freq_str": "選擇提醒的頻率單位",
+        "keep_frequency_freq_int": "頻率倍數 (例如: 單位為每小時、倍數5 = 每5小時)",
         "translate_content": "輸入你要翻譯的文字",
         "translate_target": "選擇目標語言（你希望翻譯成哪種語言，預設為zh-TW）",
         "qrcode_generator_url": "在此輸入連結",
@@ -204,6 +209,7 @@
         "delete_spam_messages_hours": "要刪除幾小時前的訊息",
         "delete_spam_messages_user": "要刪除訊息的使用者",
         "keep_event": "要提醒的事項",
+        "keep_frequency_event": "要提醒的事項",
         "repeat_text": "要讓機器人重複的文字",
         "avatar_member": "要取得頭像的使用者 (可留空)",
         "convert_timestamp_timestamp": "Unix 時間戳 (秒)",
@@ -276,6 +282,20 @@
             }],
             "footer": "時間: {keep_time}"
         }],
+        "embed_keep_frequency_created": [{
+            "title": "提醒事件:",
+            "field": [{
+                "name": "注意事項: ",
+                "value": "1. 記得開啟此頻道的mentions通知 以免錯過提醒!\n2. 傳送通知時無法使用 `只有您才能看到這些` 的功能窩 (被提醒的時候會被看到 QAQ)"
+            }],
+            "footer": "首次提醒時間: {keep_time}｜頻率: {freq_label} x {freq_int}"
+        }],
+        "keep_frequency_minutely": "每分鐘",
+        "keep_frequency_hourly": "每小時",
+        "keep_frequency_daily": "每天",
+        "keep_frequency_weekly": "每週",
+        "keep_frequency_monthly": "每月",
+        "keep_frequency_yearly": "每年",
         "embed_qrcode_generator_1": [{
             "author": "QRcode生成器"
         }],
