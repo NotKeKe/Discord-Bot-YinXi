@@ -260,6 +260,17 @@ class Keep(Cog_Extension):
         await inter.response.defer(ephemeral=True, thinking=True)
         await RunKeep(time, event, inter).run()
 
+    @app_commands.command(name=locale_str('keep_frequency'), description=locale_str('keep_frequency'))
+    @app_commands.choices(freq_str=[
+        Choice(name=locale_str('keep_frequency_daily'), value='daily'),
+        Choice(name=locale_str('keep_frequency_weekly'), value='weekly'),
+        Choice(name=locale_str('keep_frequency_monthly'), value='monthly'),
+        Choice(name=locale_str('keep_frequency_yearly'), value='yearly'),
+    ])
+    @app_commands.describe(freq_str=locale_str('keep_frequency_freq_str'), freq_int=locale_str('keep_frequency_freq_int'), event=locale_str('keep_frequency_event'))
+    async def keep_frequency(self, inter: Interaction, freq_str: str, freq_int: int, *, event: str):
+        pass
+
     @app_commands.command(name=locale_str('del_keep'), description=locale_str('del_keep'))
     @app_commands.autocomplete(keep_event=keep_event_autocomplete)
     async def del_keep(self, inter: Interaction, keep_event: str):
