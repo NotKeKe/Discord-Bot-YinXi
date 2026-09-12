@@ -273,12 +273,14 @@
         "send_keep_invalid_format": "你輸入了錯誤的格式",
         "send_keep_time_passed": "{}, 你指定的時間已經過去了，請選擇一個未來的時間。",
         "send_keep_too_far": "你設置了1000年後的時間??\n 我都活不到那時候你憑什麼:sob:",
+        "send_keep_dm_check": "✅ 測試成功，音汐之後的提醒都會透過私訊發送",
+        "send_keep_dm_forbidden": "你的私訊功能沒有開啟，音汐無法私訊你，記事建立失敗!",
         "send_qrcode_generator_invalid_url": "該功能目前無法使用 或你的連結有問題，請稍後再試",
         "embed_keep_created": [{
             "title": "提醒事件:",
             "field": [{
                 "name": "注意事項: ",
-                "value": "1. 記得開啟此頻道的mentions通知 以免錯過提醒!\n2. 傳送通知時無法使用 `只有您才能看到這些` 的功能窩 (被提醒的時候會被看到 QAQ)"
+                "value": "1. 提醒訊息會以私訊的方式發送給你!\n2. 若你之後關閉了私訊功能，提醒將無法送達!"
             }],
             "footer": "時間: {keep_time}"
         }],
@@ -286,7 +288,7 @@
             "title": "提醒事件:",
             "field": [{
                 "name": "注意事項: ",
-                "value": "1. 記得開啟此頻道的mentions通知 以免錯過提醒!\n2. 傳送通知時無法使用 `只有您才能看到這些` 的功能窩 (被提醒的時候會被看到 QAQ)"
+                "value": "1. 提醒訊息會以私訊的方式發送給你!\n2. 若你之後關閉了私訊功能，提醒將無法送達!"
             }],
             "footer": "首次提醒時間: {keep_time}｜頻率: 每 {freq_int} {freq_label}"
         }],

@@ -274,12 +274,14 @@
         "send_keep_invalid_format": "你输入了错误的格式",
         "send_keep_time_passed": "{}, 你指定的时间已经过去了，请选择一个未来的时间。",
         "send_keep_too_far": "你设置了1000年后的时间??\n 我都活不到那时候你凭什么:sob:",
+        "send_keep_dm_check": "✅ 测试成功，音汐之后的提醒都会通过私信发送",
+        "send_keep_dm_forbidden": "你的私信功能没有开启，音汐无法私信你，记事创建失败!",
         "send_qrcode_generator_invalid_url": "该功能目前无法使用 或你的链接有问题，请稍后再试",
         "embed_keep_created": [{
             "title": "提醒事件:",
             "field": [{
                 "name": "注意事项: ",
-                "value": "1. 记得开启此频道的mentions通知 以免错过提醒!\n2. 传送通知时无法使用 `只有您才能看到这些` 的功能窝 (被提醒的时候会被看到 QAQ)"
+                "value": "1. 提醒消息会以私信的方式发送给你!\n2. 若你之后关闭了私信功能，提醒将无法送达!"
             }],
             "footer": "时间: {keep_time}"
         }],
@@ -287,7 +289,7 @@
             "title": "提醒事件:",
             "field": [{
                 "name": "注意事项: ",
-                "value": "1. 记得开启此频道的mentions通知 以免错过提醒!\n2. 传送通知时无法使用 `只有您才能看到这些` 的功能窝 (被提醒的时候会被看到 QAQ)"
+                "value": "1. 提醒消息会以私信的方式发送给你!\n2. 若你之后关闭了私信功能，提醒将无法送达!"
             }],
             "footer": "首次提醒时间: {keep_time}｜频率: 每 {freq_int} {freq_label}"
         }],

@@ -84,6 +84,17 @@ class _KeepUtils:
                 await inter.followup.send(too_far)
                 return
 
+        dm_check = await get_translate('send_keep_dm_check', inter)
+        dm_forbidden = await get_translate('send_keep_dm_forbidden', inter)
+
+        try:
+            await inter.user.send(dm_check)
+        except dc_errors.Forbidden:
+            await inter.followup.send(dm_forbidden, ephemeral=True)
+            return
+        except Exception as e:
+            logger.error(f'Unexpected error while checking DM: {e}', exc_info=True)
+
         u = str(uuid.uuid4())
         doc = {
             'createAt': datetime.now().timestamp(),
@@ -132,21 +143,14 @@ class _KeepUtils:
     @staticmethod
     async def send_reminder(channel, user, event):
         lang_code = None
-        if channel.guild:
+        if channel and channel.guild:
             lang_code = channel.guild.preferred_locale.value if channel.guild.preferred_locale else None
 
         bot = get_bot()
         try:
-            await channel.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
-        except dc_errors.Forbidden:
-            try:
-                await user.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
-            except dc_errors.Forbidden:
-                ...
-            except Exception as e:
-                logger.error(f'Cannot send keep message with DM: {e}', exc_info=True)
+            await user.send((bot.tree.translator.get_translate('send_keep_remind', lang_code)).format(mention=user.mention, event=event)) # type: ignore
         except Exception as e:
-            logger.error(f'Cannot send keep message with channel: {e}', exc_info=True)
+            logger.error(f'Cannot send keep message with DM: {e}', exc_info=True)
 
     @staticmethod
     def next_send_at(current, freq_str, freq_int):
