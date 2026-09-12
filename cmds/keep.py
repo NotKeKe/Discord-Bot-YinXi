@@ -358,9 +358,12 @@ async def keep_event_autocomplete(interaction: Interaction, current: str) -> Lis
     )
     get_guild_name = lambda channelID: _get_guild_name(channelID)[1]
 
+    label_once = await get_translate('keep_autocomplete_once', interaction)
+    label_freq = await get_translate('keep_autocomplete_freq', interaction)
+
     result = [
         (
-            f"{item.get('event', '')} | {datetime.fromtimestamp(item.get('sendAt', 0))} | {get_channel_name(item.get('channelID', 0))} | {get_guild_name(item.get('channelID', 0))}",
+            f"{item.get('event', '')} | {datetime.fromtimestamp(item.get('sendAt', 0))} | {get_channel_name(item.get('channelID', 0))} | {get_guild_name(item.get('channelID', 0))} | {label_freq if item.get('freq_str') else label_once}",
             orjson.dumps((item.get('uuid', ''), item.get('channelID', ''))).decode('utf-8')
         )
         async for item in collection.find()

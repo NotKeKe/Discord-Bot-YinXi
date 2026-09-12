@@ -288,14 +288,16 @@
                 "name": "Note: ",
                 "value": "1. Remember to enable mention notifications for this channel so you don't miss any reminders!\n2. The 'only you can see these' feature cannot be used when sending notifications (they will be visible when you are reminded QAQ)"
             }],
-            "footer": "First reminder: {keep_time} | Frequency: {freq_label} x {freq_int}"
+            "footer": "First reminder: {keep_time} | Frequency: every {freq_int} {freq_label}"
         }],
-        "keep_frequency_minutely": "every minute",
-        "keep_frequency_hourly": "hourly",
-        "keep_frequency_daily": "daily",
-        "keep_frequency_weekly": "weekly",
-        "keep_frequency_monthly": "monthly",
-        "keep_frequency_yearly": "yearly",
+        "keep_frequency_minutely": "minute(s)",
+        "keep_frequency_hourly": "hour(s)",
+        "keep_frequency_daily": "day(s)",
+        "keep_frequency_weekly": "week(s)",
+        "keep_frequency_monthly": "month(s)",
+        "keep_frequency_yearly": "year(s)",
+        "keep_autocomplete_once": "once",
+        "keep_autocomplete_freq": "recurring",
         "embed_qrcode_generator_1": [{
             "author": "QR Code Generator"
         }],

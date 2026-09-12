@@ -288,14 +288,16 @@
                 "name": "注意事項: ",
                 "value": "1. 記得開啟此頻道的mentions通知 以免錯過提醒!\n2. 傳送通知時無法使用 `只有您才能看到這些` 的功能窩 (被提醒的時候會被看到 QAQ)"
             }],
-            "footer": "首次提醒時間: {keep_time}｜頻率: {freq_label} x {freq_int}"
+            "footer": "首次提醒時間: {keep_time}｜頻率: 每 {freq_int} {freq_label}"
         }],
-        "keep_frequency_minutely": "每分鐘",
-        "keep_frequency_hourly": "每小時",
-        "keep_frequency_daily": "每天",
-        "keep_frequency_weekly": "每週",
-        "keep_frequency_monthly": "每月",
-        "keep_frequency_yearly": "每年",
+        "keep_frequency_minutely": "分鐘",
+        "keep_frequency_hourly": "小時",
+        "keep_frequency_daily": "天",
+        "keep_frequency_weekly": "週",
+        "keep_frequency_monthly": "月",
+        "keep_frequency_yearly": "年",
+        "keep_autocomplete_once": "普通",
+        "keep_autocomplete_freq": "頻率",
         "embed_qrcode_generator_1": [{
             "author": "QRcode生成器"
         }],

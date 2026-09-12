@@ -289,14 +289,16 @@
                 "name": "注意事项: ",
                 "value": "1. 记得开启此频道的mentions通知 以免错过提醒!\n2. 传送通知时无法使用 `只有您才能看到这些` 的功能窝 (被提醒的时候会被看到 QAQ)"
             }],
-            "footer": "首次提醒时间: {keep_time}｜频率: {freq_label} x {freq_int}"
+            "footer": "首次提醒时间: {keep_time}｜频率: 每 {freq_int} {freq_label}"
         }],
-        "keep_frequency_minutely": "每分钟",
-        "keep_frequency_hourly": "每小时",
-        "keep_frequency_daily": "每天",
-        "keep_frequency_weekly": "每周",
-        "keep_frequency_monthly": "每月",
-        "keep_frequency_yearly": "每年",
+        "keep_frequency_minutely": "分钟",
+        "keep_frequency_hourly": "小时",
+        "keep_frequency_daily": "天",
+        "keep_frequency_weekly": "周",
+        "keep_frequency_monthly": "月",
+        "keep_frequency_yearly": "年",
+        "keep_autocomplete_once": "普通",
+        "keep_autocomplete_freq": "频率",
         "embed_qrcode_generator_1": [{
             "author": "QRcode生成器"
         }],
