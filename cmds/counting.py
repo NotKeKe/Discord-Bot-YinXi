@@ -110,7 +110,7 @@ class Counting(Cog_Extension):
     async def counting(self, ctx: commands.Context):
         async with ctx.typing():
             '''i18n'''
-            already_counting_str = await get_translate('send_counting_already_counting', ctx)
+            remove_success_str = await get_translate('send_counting_remove_success', ctx)
             set_success_str = await get_translate('send_counting_set_success', ctx)
             ''''''
 
@@ -121,8 +121,9 @@ class Counting(Cog_Extension):
 
             channelID = str(ctx.channel.id)
             if channelID in data:
-                count_data = data[channelID].get('count', 0)
-                return await ctx.send(already_counting_str.format(count=count_data))
+                del data[channelID]
+                self.writeData(data)
+                return await ctx.send(remove_success_str)
             
             data[channelID] = {
                 'user': 0,

@@ -362,7 +362,7 @@
         }],
         "send_checkin_already_checked_in": "You have already checked in today.",
         "send_checkin_success": "You have checked in at \"{time}\", total check-ins: {times}",
-        "send_counting_already_counting": "This channel is already counting, the current number is {count}.",
+        "send_counting_remove_success": "This channel has been successfully removed from counting.",
         "send_counting_set_success": "This channel has been successfully set as a counting channel.",
         "embed_counting_error": [{
             "double_input": "❌ You just entered a number, you can't enter twice in a row!\nThe next number is **1**",

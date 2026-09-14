@@ -362,7 +362,7 @@
         }],
         "send_checkin_already_checked_in": "你今天已經簽到過了。",
         "send_checkin_success": "您已在「{time}」時簽到, 目前總簽到次數為: {times}",
-        "send_counting_already_counting": "此頻道已經在數數了，目前的數字是 {count}。",
+        "send_counting_remove_success": "此頻道已成功取消數數。",
         "send_counting_set_success": "此頻道已成功設定為數數頻道。",
         "embed_counting_error": [{
             "double_input": "❌ 你剛剛輸入過數字了，不能連續輸入！\n下一個數字為 **1**",

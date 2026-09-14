@@ -363,7 +363,7 @@
         }],
         "send_checkin_already_checked_in": "你今天已经签到过了。",
         "send_checkin_success": "你已在「{time}」时签到, 目前总签到次数为: {times}",
-        "send_counting_already_counting": "此频道已经在数数了，目前的数字是 {count}。",
+        "send_counting_remove_success": "此频道已成功取消数数。",
         "send_counting_set_success": "此频道已成功设定为数数频道。",
         "embed_counting_error": [{
             "double_input": "❌ 你刚刚输入过数字了，不能连续输入！\n下一个数字为 **1**",
