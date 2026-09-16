@@ -92,7 +92,10 @@ class TicTacToe(commands.Cog):
                 return
 
             custom_id = interaction.data["custom_id"]
-            channel_id, row, col = map(int, custom_id.split("-"))
+            try:
+                channel_id, row, col = map(int, custom_id.split("-"))
+            except ValueError: # not sure if this is from the autual tic tac toe player, but whatever, just except it:)
+                return
 
             if channel_id not in self.games:
                 await interaction.response.send_message(await get_translate('send_tictactoe_no_game', interaction), ephemeral=True)
