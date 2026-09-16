@@ -150,7 +150,11 @@ class AIChannelTwo(Cog_Extension):
                 traceback.print_exc()
             
             timeout = await view.wait()
-            if timeout: await msg.edit(view=None)
+            if timeout: 
+                try:
+                    await msg.edit(view=None)
+                except discord.Forbidden: # im not sure why this happens
+                    pass
         except openai.BadRequestError as e:
             logger.error('Error occurred at on_msg_ai_channel', exc_info=True)
             await ctx.send(f'Error occurred :<\n{str(e)}', ephemeral=True)
