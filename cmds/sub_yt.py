@@ -216,6 +216,9 @@ class SubYT(Cog_Extension):
                 collection = db[str(ctx.channel.id)]
                 d = await collection.find_one_and_delete({'sub_url': ytb})
 
+                if not d:
+                    raise Exception('Cannot find the YouTuber in this channel')
+
                 await ctx.send((await get_translate('send_sub_yt_cancel_successfully', ctx)).format(name=d.get('channelName'), url=d.get('sub_url')))
             except Exception:
                 logger.error('Error occurred at sub_yt_cancel: ', exc_info=True)
