@@ -1,9 +1,18 @@
 import os
+import httpx
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from core.functions import BASE_OLLAMA_URL, OLLAMA_IP, mongo_db_client, AI_IP
 
 DEFAULT_MODEL = "ai-local:gemma4-26b"
+
+# connect 20s, read/write/pool 60s (read 超過 1 分鐘沒收到資料就視為卡住)
+DEFAULT_TIMEOUT = httpx.Timeout(timeout=60, connect=20.0)
+
+# 當 DEFAULT_MODEL 的 provider 無法連線/逾時/5xx 時，依序嘗試的模型
+FALLBACK_MODELS = [
+    "zhipu:glm-4-flash",
+]
 
 openrouter_KEY = os.getenv('openrouter_KEY')
 zhipu_KEY = os.getenv('zhipuAI_KEY')

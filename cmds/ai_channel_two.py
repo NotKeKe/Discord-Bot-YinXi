@@ -124,7 +124,7 @@ class AIChannelTwo(Cog_Extension):
                 system_prompt = init_data.get('system_prompt')
                 urls = get_attachment(msg)
 
-                final_model = f'{provider}:{model}'
+                final_model = f'{provider}:{model}' if provider and model else None
 
                 think, result, complete_history = await ai_channel_chat(ctx, msg.content, final_model, system_prompt, urls)
 
@@ -182,9 +182,9 @@ class AIChannelTwo(Cog_Extension):
                         return await ctx.send(await get_translate('send_set_ai_channel_channel_exist', ctx))
                     
                 if model is None:
-                    model = DEFAULT_MODEL
-
-                provider, model = split_provider_model(model)
+                    provider, model = None, None
+                else:
+                    provider, model = split_provider_model(model)
                     
                 await collection.insert_one(
                     {
@@ -197,7 +197,7 @@ class AIChannelTwo(Cog_Extension):
                         'createAt': UnixNow()
                     }
                 )
-                await ctx.send((await get_translate('send_set_ai_channel_success', ctx)).format(model=model))
+                await ctx.send((await get_translate('send_set_ai_channel_success', ctx)).format(model=model or DEFAULT_MODEL))
                 # await ctx.send('good')
         except:
             logger.error('Error occurred at set_ai_channel command', exc_info=True)
@@ -312,7 +312,7 @@ class AIChannelTwo(Cog_Extension):
                     return await ctx.send(await get_translate('send_show_ai_channel_model_channel_not_found', ctx))
                 model = data.get('model')
                 
-                await ctx.send((await get_translate('send_show_ai_channel_model_model', ctx)).format(model=model))
+                await ctx.send((await get_translate('send_show_ai_channel_model_model', ctx)).format(model=model or DEFAULT_MODEL))
         except:
             logger.error('Error occurred at show_ai_channel_model: ', exc_info=True)
 

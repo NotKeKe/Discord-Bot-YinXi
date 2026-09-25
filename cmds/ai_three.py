@@ -44,7 +44,7 @@ class AIChat(Cog_Extension):
             self, 
             ctx: commands.Context, 
             prompt: str, 
-            model: str = DEFAULT_MODEL, 
+            model: Optional[str] = None, 
             history: Optional[str] = None, 
             enable_tools: bool = True, 
             image: Optional[discord.Attachment] = None, 
@@ -85,7 +85,7 @@ class AIChat(Cog_Extension):
             ''''''
 
             embed = create_basic_embed(title=eb_title, description=result, color=ctx.author.color)
-            embed.set_footer(text=f'Powered by {model}')
+            embed.set_footer(text=f'Powered by {client.used_model or DEFAULT_MODEL}')
 
             msg = await ctx.send(embed=embed)
 

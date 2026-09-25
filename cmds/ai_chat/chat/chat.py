@@ -3,15 +3,19 @@ from discord.ext import commands
 from typing import Tuple, Union, AsyncGenerator, Optional
 from openai import (
     NotFoundError as OpenAINotFoundError,
-    RateLimitError as OpenAIRateLimitError
+    RateLimitError as OpenAIRateLimitError,
+    APIConnectionError as OpenAIAPIConnectionError,
+    APITimeoutError as OpenAIAPITimeoutError,
+    InternalServerError as OpenAIInternalServerError
 )
 from openai.types.chat import ChatCompletionChunk, ChatCompletion, ChatCompletionMessage
 import orjson
+import httpx
 import logging
 import re
 
 from ..utils import model_select, to_system_message, to_user_message, get_think, clean_text, split_provider_model
-from ..utils.config import base_system_prompt, summarize_history_system_prompt
+from ..utils.config import base_system_prompt, summarize_history_system_prompt, DEFAULT_MODEL, FALLBACK_MODELS, DEFAULT_TIMEOUT
 
 # tool
 from ..tools import tool_description, tool_map
@@ -26,8 +30,9 @@ MODEL_WITHOUT_TOOLS = []
 
 class Chat:
     def __init__(self, model: Optional[str] = None, system_prompt: str = '', ctx: Optional[commands.Context] = None):
-        if not model: model = 'zhipu:glm-4-flash'
-        self.model = model.strip()
+        self.is_default_model = not model
+        self.model = (model or DEFAULT_MODEL).strip()
+        self.used_model: Optional[str] = None
         self.ctx = ctx
         self.userID: Optional[int] = ctx.author.id if ctx else None
 
@@ -42,6 +47,7 @@ class Chat:
             model (str): 傳入模型名稱
         """        
         self.model = model
+        self.is_default_model = False
         self.client = await model_select(model)
 
     def re_system_prompt(self, system_prompt: str) -> bool:
@@ -262,7 +268,7 @@ class Chat:
             is_enable_tools: bool = True,
             top_p: float = 1.0,
             delete_tools: Optional[Union[str, list]] = None,
-            timeout: Optional[float] = None,
+            timeout: Optional[Union[float, httpx.Timeout]] = DEFAULT_TIMEOUT,
             url: Optional[list] = None,
             image: Optional[discord.Attachment] = None,
             text_file: Optional[discord.Attachment] = None,
@@ -277,20 +283,12 @@ class Chat:
         # Model & self.client
         if model:
             await self.re_model(model)
-        else:
-            self.client = await model_select(self.model)
 
         logger.info(f'Got model: {self.model}')
 
-        if model in MODEL_WITHOUT_TOOLS: # 強制關閉工具調用
-            is_enable_tools = False
-            tool_choice = None
-
-        provider, self.model = split_provider_model(self.model)
-        if not self.model: return '', f'`{self.model}` is not available.', history
-
-        if not self.client:
-            return '', f'`{provider}` with `{self.model}` is not available.', history
+        candidates = [self.model]
+        if self.is_default_model: # 只有預設模型才使用 fallback
+            candidates += [m for m in FALLBACK_MODELS if m not in candidates]
 
         # System prompt & Message
         extra_user_info = self.get_extra_user_info()
@@ -299,33 +297,63 @@ class Chat:
 
         history += await self.process_user_prompt(prompt, image, text_file, url)
 
-        async def call():
-            """Base on the `chat` params, to call self.client.chat.completions.create."""            
-            resp = await self.client.chat.completions.create( # type: ignore
-                model=self.model,
-                messages=system + history,
-                max_completion_tokens=max_tokens,
-                temperature=temperature,
-                top_p=top_p,
-                stream=False,
-                timeout=timeout,
-                tools=self.process_tool_decrip(delete_tools) if is_enable_tools else None,
-                tool_choice=tool_choice if tool_choice else ('auto' if is_enable_tools else None),
-                **({'reasoning_effort': reasoning_effort} if 'oss' in self.model and 'gpt' in self.model else {})
-            )
-            return resp
+        completion = None
+        provider = ''
 
-        try:
-            completion = await call()
-        except OpenAINotFoundError as e:
-            if 'No endpoints found that support tool use' in str(e): # some of openrouter models not support tool call
+        for i, candidate in enumerate(candidates):
+            provider, model_name = split_provider_model(candidate)
+            if not model_name: continue
+
+            client = await model_select(candidate)
+            if not client: continue
+
+            logger.info(f'Using model: {candidate} (provider: {provider}) | is_fallback: {i > 0}')
+
+            self.client = client
+            self.model = model_name
+
+            if model_name in MODEL_WITHOUT_TOOLS: # 強制關閉工具調用
                 is_enable_tools = False
                 tool_choice = None
-                MODEL_WITHOUT_TOOLS.append(model)
-            else:
-                raise e
-        except OpenAIRateLimitError as e:
-            return '', f'We\'re rate limited by `{provider}`. Please try again later.', history
+
+            async def call():
+                """Base on the `chat` params, to call self.client.chat.completions.create."""            
+                resp = await self.client.chat.completions.create( # type: ignore
+                    model=self.model,
+                    messages=system + history,
+                    max_completion_tokens=max_tokens,
+                    temperature=temperature,
+                    top_p=top_p,
+                    stream=False,
+                    timeout=timeout,
+                    tools=self.process_tool_decrip(delete_tools) if is_enable_tools else None,
+                    tool_choice=tool_choice if tool_choice else ('auto' if is_enable_tools else None),
+                    **({'reasoning_effort': reasoning_effort} if 'oss' in self.model and 'gpt' in self.model else {})
+                )
+                return resp
+
+            try:
+                completion = await call()
+            except (OpenAIAPIConnectionError, OpenAIAPITimeoutError, OpenAIInternalServerError) as e:
+                logger.warning(f'`{candidate}` is unavailable, trying next model. Reason: {e}')
+                completion = None
+                continue
+            except OpenAINotFoundError as e:
+                if 'No endpoints found that support tool use' in str(e): # some of openrouter models not support tool call
+                    is_enable_tools = False
+                    tool_choice = None
+                    MODEL_WITHOUT_TOOLS.append(model_name)
+                    completion = await call()
+                else:
+                    raise e
+            except OpenAIRateLimitError as e:
+                return '', f'We\'re rate limited by `{provider}`. Please try again later.', history
+
+            self.used_model = candidate
+            break
+
+        if completion is None:
+            return '', f'`{self.model}` is not available.', history
 
         call_times = 0
 

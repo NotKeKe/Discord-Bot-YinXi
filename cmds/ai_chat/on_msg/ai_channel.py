@@ -1,6 +1,6 @@
 from discord.ext import commands
 import asyncio
-from typing import Tuple
+from typing import Optional, Tuple
 import logging
 
 from ..chat.chat import Chat
@@ -37,9 +37,9 @@ async def save_history(ctx: commands.Context, history: list):
         logger.error('Error occurred at save_history', exc_info=True)
 
 
-async def ai_channel_chat(ctx: commands.Context, prompt: str, model: str, system_prompt: str = None, urls: list = None) -> Tuple[str, str, list]:
+async def ai_channel_chat(ctx: commands.Context, prompt: str, model: Optional[str], system_prompt: str = None, urls: list = None) -> Tuple[str, str, list]:
     system_prompt = system_prompt or base_system_prompt
-    client = Chat(model, system_prompt, ctx)
+    client = Chat(system_prompt=system_prompt, ctx=ctx, model=model)
 
     history = await get_history(ctx)
 

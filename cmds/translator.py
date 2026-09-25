@@ -5,8 +5,8 @@ from core.classes import Cog_Extension
 from core.functions import create_basic_embed, thread_pool
 from core.translator import load_translated, locale_str, get_translate
 # from cmds.AIsTwo.others.func import translate
-from cmds.ai_chat.utils.model_select import split_provider_model
-from cmds.ai_chat.chat.translate import translate, TRANSLATE_MODEL
+from cmds.ai_chat.utils.config import DEFAULT_MODEL
+from cmds.ai_chat.chat.translate import translate
 
 class Translator(Cog_Extension):
     @commands.Cog.listener()
@@ -28,7 +28,7 @@ class Translator(Cog_Extension):
                 if ctx.guild:
                     user_lang_code = ctx.guild.preferred_locale.value
 
-            translated = await translate(
+            translated, used_model = await translate(
                 prompt=content,
                 to_lang=target, 
                 ctx=ctx,
@@ -37,7 +37,7 @@ class Translator(Cog_Extension):
             
             embed = create_basic_embed(description=translated, 功能=yinxi_translated, color=ctx.author.color)
             embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url if ctx.author.avatar else None)
-            embed.set_footer(text=f'Powered by {split_provider_model(TRANSLATE_MODEL)[1]}')
+            embed.set_footer(text=f'Powered by {used_model or DEFAULT_MODEL}')
 
             await ctx.send(embed=embed)
 
