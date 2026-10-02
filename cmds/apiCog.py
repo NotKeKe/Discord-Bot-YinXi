@@ -7,7 +7,6 @@ import aiohttp
 from pprint import pp
 import traceback
 from datetime import datetime
-from deep_translator import GoogleTranslator
 from typing import Optional, List, cast
 import os
 import asyncio
@@ -19,7 +18,7 @@ import re
 import aiofiles
 from urllib.parse import urlparse, urljoin
 
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable
+from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable, async_translate
 from core.translator import locale_str, load_translated, get_translate
 from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY, testing_guildID
 from core.playwright import get_context, get_page
@@ -93,8 +92,8 @@ class ApiCog(Cog_Extension):
                     joke_text = data['setup']
                     answer_text = data['delivery']
 
-            translated_joke = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, joke_text)
-            translated_answer = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, answer_text)
+            translated_joke = await async_translate(joke_text, source='auto', target='zh-TW')
+            translated_answer = await async_translate(answer_text, source='auto', target='zh-TW')
             
             '''i18n'''
             template = await get_translate('send_joke_template', ctx)
@@ -205,8 +204,8 @@ class ApiCog(Cog_Extension):
                 async with session.get('https://catfact.ninja/fact?max_length=2000') as response:
                     result = await response.json()
             source = result['fact']
-            translated = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, source)
-            
+            translated = await thread_pool(async_translate, source, source='auto', target='zh-TW')
+
             '''i18n'''
             template = await get_translate('send_cat_fact_template', ctx)
             ''''''
@@ -224,7 +223,7 @@ class ApiCog(Cog_Extension):
             url = data['url']
             date = data["date"]
             explanation = data["explanation"]
-            translated_explanation = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, explanation)
+            translated_explanation = await async_translate(explanation, source='auto', target='zh-TW')
 
             await download_image(url, 'nasa_apod.jpg')
             file = discord.File(fp='./cmds/data.json/nasa_apod.jpg', filename='nasa_apod.png')
@@ -254,7 +253,7 @@ class ApiCog(Cog_Extension):
                 return await ctx.send((await get_translate('send_number_history_not_found', ctx)).format(number=number))
             
             text = data["text"]
-            translated = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
+            translated = await async_translate(text, source='auto', target='zh-TW')
             
             '''i18n'''
             template = await get_translate('send_number_history_template', ctx)
@@ -344,7 +343,7 @@ class ApiCog(Cog_Extension):
                     if resp.status != 200:
                         return await ctx.send(await get_translate('send_tiangou_api_error', ctx), ephemeral=True)
                     text = await resp.text()
-                    translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
+                    translated_text = await async_translate(text, source='auto', target='zh-TW')
                     await ctx.send(translated_text)
 
     @commands.hybrid_command(name=locale_str('minecraft_server_status'), description=locale_str('minecraft_server_status'), aliases=['mc_status'])
@@ -466,7 +465,7 @@ class ApiCog(Cog_Extension):
                         return await ctx.send(await get_translate('send_yiyan_api_error', ctx), ephemeral=True)
                     data = await resp.text()
             
-            translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, data)
+            translated_text = await thread_pool(async_translate, data, source='auto', target='zh-TW')
             await ctx.send(translated_text)
 
     @commands.hybrid_command(name=locale_str('toxic_jacket_soup'), description=locale_str('toxic_jacket_soup'), aliases=['毒雞湯'])
@@ -478,7 +477,7 @@ class ApiCog(Cog_Extension):
                         return await ctx.send(await get_translate('send_toxic_soup_api_error', ctx), ephemeral=True)
                     text = await resp.text()
             
-            translated_text = await thread_pool(GoogleTranslator(source='auto', target='zh-TW').translate, text)
+            translated_text = await thread_pool(async_translate, text, source='auto', target='zh-TW')
             await ctx.send(translated_text)
 
     @commands.hybrid_command(name=locale_str('lovelive'), description=locale_str('lovelive'), aliases=['love'])
