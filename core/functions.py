@@ -141,8 +141,12 @@ def secondToReadable(seconds):
     
 def translate(text, source:str='auto', target:str='zh-TW') -> str:
     '''將文本翻譯'''   
-    translator = GoogleTranslator(source=source, target=target)
-    translated_text = translator.translate(text) 
+    try:
+        translator = GoogleTranslator(source=source, target=target)
+        translated_text = translator.translate(text) 
+    except Exception as e:
+        print(f"翻譯失敗: {e}")
+        translated_text = text  # 如果翻譯失敗，返回原始文本
     return translated_text
 
 async def async_translate(text: str, source:str='auto', target:str='zh-TW'):
