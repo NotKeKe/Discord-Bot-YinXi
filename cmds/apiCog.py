@@ -1,28 +1,37 @@
+import asyncio
+import base64
+import io
+import os
+import re
+import traceback
+from datetime import datetime
+from typing import cast
+from urllib.parse import urljoin
+
+import aiofiles
+import aiohttp
 import discord
 from discord import app_commands
 from discord.app_commands import Choice
-from discord.ext import commands, tasks
-
-import aiohttp
-from pprint import pp
-import traceback
-from datetime import datetime
-from typing import Optional, List, cast
-import os
-import asyncio
-import time
-import base64
+from discord.ext import commands
 from PIL import Image
-import io
-import re
-import aiofiles
-from urllib.parse import urlparse, urljoin
 
-from core.functions import thread_pool, read_json, create_basic_embed, download_image, secondToReadable, async_translate
-from core.translator import locale_str, load_translated, get_translate
-from core.functions import nasaApiKEY, NewsApiKEY, unsplashKEY, GIPHYKEY, testing_guildID
-from core.playwright import get_context, get_page
 from core.classes import Cog_Extension
+from core.functions import (
+    GIPHYKEY,
+    NewsApiKEY,
+    async_translate,
+    create_basic_embed,
+    download_image,
+    nasaApiKEY,
+    read_json,
+    secondToReadable,
+    testing_guildID,
+    thread_pool,
+    unsplashKEY,
+)
+from core.playwright import get_context, get_page
+from core.translator import get_translate, load_translated, locale_str
 
 youtube_download_base_url = None
 
@@ -30,7 +39,7 @@ class select_autocomplete:
     countries = cast(dict[str, str], read_json('./cmds/data.json/country.json'))
 
     @staticmethod
-    async def country(_, interaction: discord.Interaction, current: str) -> List[Choice[str]]:
+    async def country(_, interaction: discord.Interaction, current: str) -> list[Choice[str]]:
         try:
             return [
                 Choice(name=name, value=code) 
@@ -42,7 +51,7 @@ class select_autocomplete:
             return []
 
     @staticmethod
-    async def langs_for_gifs(_, interaction: discord.Interaction, current: str) -> List[Choice[str]]:
+    async def langs_for_gifs(_, interaction: discord.Interaction, current: str) -> list[Choice[str]]:
         try:
             langs = {
                 "Arabic": "ar", "Bengali": "bn", "Chinese Simplified": "zh-CN", "Chinese Traditional": "zh-TW",
@@ -134,7 +143,7 @@ class ApiCog(Cog_Extension):
         country=locale_str('news_country'),
         輸出數量=locale_str('news_count')
     )
-    async def news(self, ctx: commands.Context, options: int, question: Optional[str] = None, language: str = 'zh', country: str='tw', 輸出數量: int=3):
+    async def news(self, ctx: commands.Context, options: int, question: str | None = None, language: str = 'zh', country: str='tw', 輸出數量: int=3):
         try:
             async with ctx.typing():
                 if 輸出數量 > 5:
@@ -151,7 +160,6 @@ class ApiCog(Cog_Extension):
                         await interaction.response.defer()
                     async def button2_callback(interaction: discord.Interaction):
                         await interaction.response.send_message(cancel_msg, ephemeral=True)
-                        return
 
                     button1.callback = button1_callback # type: ignore
                     button2.callback = button2_callback # type: ignore
@@ -247,7 +255,7 @@ class ApiCog(Cog_Extension):
             async with aiohttp.ClientSession() as session:
                 async with session.get(f'http://numbersapi.com/{number}?json') as response:
                     if not response.ok:
-                        return await ctx.send(f"We're sorry, but `https://numbersapi.com` is currently down. Please try again later.")
+                        return await ctx.send("We're sorry, but `https://numbersapi.com` is currently down. Please try again later.")
                     data = await response.json()
             if not data['found']:
                 return await ctx.send((await get_translate('send_number_history_not_found', ctx)).format(number=number))
@@ -263,7 +271,7 @@ class ApiCog(Cog_Extension):
 
     @commands.hybrid_command(name=locale_str('unsplash_image'), description=locale_str('unsplash_image'), aliases=['photo', 'image', '看圖'])
     @app_commands.describe(query=locale_str('unsplash_image_query'), num=locale_str('unsplash_image_num'))
-    async def unsplash_image(self, ctx: commands.Context, query: Optional[str] = None, num: int = 1):
+    async def unsplash_image(self, ctx: commands.Context, query: str | None = None, num: int = 1):
         async with ctx.typing():
             urls = []
             async with aiohttp.ClientSession() as session:
@@ -300,7 +308,7 @@ class ApiCog(Cog_Extension):
     @commands.hybrid_command(name=locale_str('get_gifs'), description=locale_str('get_gifs'), aliases=['gif'])
     @app_commands.describe(query=locale_str('get_gifs_query'), num=locale_str('get_gifs_num'), lang=locale_str('get_gifs_lang'))
     @app_commands.autocomplete(lang = select_autocomplete.langs_for_gifs)
-    async def get_gifs(self, ctx: commands.Context, query: Optional[str] = None, num: int = 1, lang: Optional[str] = None):
+    async def get_gifs(self, ctx: commands.Context, query: str | None = None, num: int = 1, lang: str | None = None):
         async with ctx.typing():
             if num > 50:
                 return await ctx.send(await get_translate('send_gif_too_many', ctx), ephemeral=True) 
@@ -501,7 +509,7 @@ class ApiCog(Cog_Extension):
         type=locale_str('yt_downloader_type'),
         quality=locale_str('yt_downloader_quality')
     )
-    async def yt_downloader(self, ctx: commands.Context, url: str, type: str = 'mp3', quality: Optional[str] = None):
+    async def yt_downloader(self, ctx: commands.Context, url: str, type: str = 'mp3', quality: str | None = None):
         try:
             async with ctx.typing():
                 data = {
