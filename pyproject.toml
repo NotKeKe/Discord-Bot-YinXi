@@ -14,7 +14,6 @@ dependencies = [
     "discord.py[voice]",
     "markdown>=3.10",
     "motor>=3.7.1",
-    "ollama==0.4.8",
     "openai>=1.99.1",
     "orjson>=3.10.18",
     "Pillow>=12.3.0",
