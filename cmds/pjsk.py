@@ -192,30 +192,35 @@ class PJSK(commands.Cog):
             if num == 1:
                 eb = await create_info_embed(ctx, cursor)
             else:
-                '''i18n'''
-                eb_text = load_translated(
-                    (await get_translate('embed_pjsk_search_song_short_info', ctx)) 
-                    if ctx.interaction else 
-                    (await get_translate('embed_pjsk_search_song_short_info', ctx))
-                )[0]
-                footer = eb_text.get('footer')
-                descrip = eb_text.get('description')
-                ''''''
+                items = [item async for item in cursor]
 
-                eb = create_basic_embed()
-                eb.description = '\n\n'.join([descrip.format(
-                    song_name = item.get('songName'),
-                    difficulty = '\n'.join([
-                        f"- {diff} | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
-                        for diff, value in item.get('musicDifficulty').items()
-                    ]),
-                    publish_at = UnixToReadable(item.get('publishAt', 0)),
-                    lyricist = item.get('lyricist'),
-                    composer = item.get('composer'),
-                    arranger = item.get('arranger')
-                ) async for item in cursor])
+                if len(items) == 1:
+                    eb = await create_info_embed(ctx, self.collection.aggregate(pipeline))
+                else:
+                    '''i18n'''
+                    eb_text = load_translated(
+                        (await get_translate('embed_pjsk_search_song_short_info', ctx)) 
+                        if ctx.interaction else 
+                        (await get_translate('embed_pjsk_search_song_short_info', ctx))
+                    )[0]
+                    footer = eb_text.get('footer')
+                    descrip = eb_text.get('description')
+                    ''''''
 
-                eb.set_footer(text=footer)
+                    eb = create_basic_embed()
+                    eb.description = '\n\n'.join([descrip.format(
+                        song_name = item.get('songName'),
+                        difficulty = '\n'.join([
+                            f"- {diff} | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
+                            for diff, value in item.get('musicDifficulty').items()
+                        ]),
+                        publish_at = UnixToReadable(item.get('publishAt', 0)),
+                        lyricist = item.get('lyricist'),
+                        composer = item.get('composer'),
+                        arranger = item.get('arranger')
+                    ) for item in items])
+
+                    eb.set_footer(text=footer)
         except:
             logger.error('error:', exc_info=True)
 
