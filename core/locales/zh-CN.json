@@ -793,7 +793,7 @@
         "send_show_keep_channel_text": "在",
         "send_sub_yt_cancel_successfully": "已成功取消 [{name}]({url})",
         "embed_pjsk_global_full_info": [{
-            "description": "## __**{song_name}**__\n🎯 **难易度:**\n{difficulty}\n\n📀 [封面]({image_url}) ｜ 🎬 [影片]({video_url})\n\n📊 **谱面连结:**\n{charts_url}\n\n🏷 **乐团标签:**\n{music_tag}\n\n🗓 **发布时间 (JP)**: {publish_at}\n\n✍ 作词: {lyricist}\n🎼 作曲: {composer}\n🎹 编曲: {arranger}\n\n━━━━━━━━",
+            "description": "## __**{song_name}**__\n🎯 **难易度:**\n{difficulty}\n\n📀 [封面]({image_url}) ｜ 🎬 [影片]({video_url})\n\n🏷 **乐团标签:**\n{music_tag}\n\n🗓 **发布时间 (JP)**: {publish_at}\n\n✍ 作词: {lyricist}\n🎼 作曲: {composer}\n🎹 编曲: {arranger}\n\n━━━━━━━━",
             "footer": "资料来源: sekai.best | 所有素材版权归原著作权人所有"
         }],
         "embed_pjsk_search_song_short_info": [{

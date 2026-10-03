@@ -44,13 +44,13 @@ def get_descrip_of_info_embed(item: dict, descrips: list, descrip_template: str)
         descrip_template (str): 轉換單個 item 的 str template
     """    
     song_name = item.get('songName')
+    music_chart_url = item.get('musicChartUrl')
     difficulty = '\n'.join([
-        f"- {diff} | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
+        f"[{diff}]({music_chart_url.get(diff)}) | Lv.{value.get('level')} | 🎵 {value.get('noteCount')}"
         for diff, value in item.get('musicDifficulty').items()
     ])
     image_url = item.get('imageUrl')
     video_url = item.get('musicVideoUrl')
-    charts_url = '\n'.join([f'* [{diff}]({val})' for diff, val in item.get('musicChartUrl').items()])
     music_tag = '\n'.join(item.get('musicTag'))
     publish_at = UnixToReadable(item.get('publishAt', 0))
     lyricist = item.get('lyricist')
@@ -62,7 +62,6 @@ def get_descrip_of_info_embed(item: dict, descrips: list, descrip_template: str)
         difficulty=difficulty,
         image_url=image_url,
         video_url=video_url,
-        charts_url=charts_url,
         music_tag=music_tag,
         publish_at=publish_at,
         lyricist=lyricist,

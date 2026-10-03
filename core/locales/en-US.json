@@ -792,7 +792,7 @@
         "send_show_keep_channel_text": "At",
         "send_sub_yt_cancel_successfully": "Successfully unsubscribed from [{name}]({url})",
         "embed_pjsk_global_full_info": [{
-            "description": "## __**{song_name}**__\n🎯 **Difficulty:**\n{difficulty}\n\n📀 [Cover]({image_url}) ｜ 🎬 [Video]({video_url})\n\n📊 **Chart Link:**\n{charts_url}\n\n🏷 **Band Tag:**\n{music_tag}\n\n🗓 **Release Date (JP)**: {publish_at}\n\n✍ Lyrics: {lyricist}\n🎼 Composer: {composer}\n🎹 Arranger: {arranger}\n\n━━━━━━━━",
+            "description": "## __**{song_name}**__\n🎯 **Difficulty:**\n{difficulty}\n\n📀 [Cover]({image_url}) ｜ 🎬 [Video]({video_url})\n\n🏷 **Band Tag:**\n{music_tag}\n\n🗓 **Release Date (JP)**: {publish_at}\n\n✍ Lyrics: {lyricist}\n🎼 Composer: {composer}\n🎹 Arranger: {arranger}\n\n━━━━━━━━",
             "footer": "Source: sekai.best | All materials copyrighted by their original owners"
         }],
         "embed_pjsk_search_song_short_info": [{
