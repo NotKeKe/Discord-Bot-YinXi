@@ -1,21 +1,20 @@
-import discord
-from discord import app_commands, Interaction
-from discord.app_commands import Choice
-from discord.ext import commands, tasks
-import aiohttp
-import logging
-from collections import defaultdict
-from typing import Any
-from pymongo import UpdateOne
-from textwrap import dedent
-from datetime import datetime
 import asyncio
-from motor.motor_asyncio import AsyncIOMotorCursor
+import logging
 import re
+from collections import defaultdict
+from datetime import datetime
+from typing import Any, Optional
 
+import aiohttp
+import discord
+from discord import Interaction, app_commands
+from discord.ext import commands, tasks
+from motor.motor_asyncio import AsyncIOMotorCursor
+from pymongo import UpdateOne
+
+from core.functions import UnixToReadable, create_basic_embed
 from core.mongodb import MongoDB_DB
-from core.translator import locale_str, load_translated, get_translate
-from core.functions import create_basic_embed, UnixToReadable
+from core.translator import get_translate, load_translated, locale_str
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +102,15 @@ class PJSK(commands.Cog):
 
     async def cog_load(self):
         print(f'已載入「{__name__}」')
+        try:
+            await self.collection.create_index(
+                'musicId',
+                unique=True,
+                partialFilterExpression={'musicId': {'$type': 'number'}},
+                name='musicId_unique',
+            )
+        except:
+            logger.error('Failed to create unique index on pjsk songs `musicId`', exc_info=True)
         self.update_pjsk_songs.start()
 
     async def cog_unload(self):
@@ -122,7 +130,7 @@ class PJSK(commands.Cog):
         level=locale_str('pjsk_search_song_level'), 
         combo=locale_str('pjsk_search_song_combo')
     )
-    async def search_song(self, ctx: commands.Context, name: str = None, num: int = 5, level: int = None, combo: int = None):
+    async def search_song(self, ctx: commands.Context, name: Optional[str] = None, num: int = 5, level: Optional[int] = None, combo: Optional[int] = None):
         if not (name or level or combo): return await ctx.send(await get_translate('send_pjsk_search_song_no_param', ctx))
         await ctx.defer()
         
@@ -299,7 +307,7 @@ class PJSK(commands.Cog):
             music_video_url: str = music_video_urls.get(music_id, {}).get('videoLink')
             music_chart_url = { # 譜面連結
                 diff: f"https://storage.sekai.best/sekai-music-charts/jp/{str(music_id).zfill(4)}/{diff}.png"
-                for diff in music_difficulty.keys()
+                for diff in music_difficulty
             }
             music_tag: list[str] = music_tags.get(music_id) # type: ignore
 
@@ -337,7 +345,7 @@ class PJSK(commands.Cog):
             if find_one_result and ( (find_one_result | {'_id': ''}) == (item | {'_id': ''}) ): continue
             updated_to_db.append(item)
         
-        if send_to_dc:
+        if send_to_dc and len(send_to_dc) < 10: # 避免一次發送太多
             async for item in self.send_channels_collection.find(): # 取得要發送倒的 channel id
                 try:
                     channelID: int = item.get('channelID')
