@@ -8,6 +8,7 @@ import asyncio
 import aiosqlite
 import io
 from typing import Optional
+import headpat_gif
 
 from cmds.ai_chat.tools.ai_func import image_read
 
@@ -230,6 +231,14 @@ class Main(Cog_Extension):
     async def _random_uuid(self, ctx: commands.Context):
         async with ctx.typing():
             await ctx.send(str(uuid.uuid4()))
+
+    @commands.hybrid_command(name=locale_str('petpet'), description=locale_str('petpet'))
+    async def petpet(self, ctx: commands.Context, image: Optional[discord.Attachment] = None):
+        async with ctx.typing():
+            if not image: return await ctx.send(await get_translate('send_petpet_no_image', ctx), ephemeral=True)
+            final = await asyncio.to_thread(headpat_gif.petpet, await image.read())
+
+            await ctx.send(file=discord.File(final, 'petpet.gif'))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Main(bot))
