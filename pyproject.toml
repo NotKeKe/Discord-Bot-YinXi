@@ -12,7 +12,7 @@ dependencies = [
     "deep_translator>=1.11.4",
     "discord.py>=2.6.4",
     "discord.py[voice]",
-    "headpat-gif>=0.1.0",
+    "headpat-gif>=0.2.0",
     "markdown>=3.10",
     "motor>=3.7.1",
     "openai>=1.99.1",

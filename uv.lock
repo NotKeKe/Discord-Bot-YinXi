@@ -407,14 +407,14 @@ wheels = [
 
 [[package]]
 name = "headpat-gif"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pillow" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/26/b7/c9728c6250f4f228aad4e2326680b608f1e93735ccd97a13ce84fe9f144e/headpat_gif-0.1.0.tar.gz", hash = "sha256:dcf7c9ea7e50ad5dbb92d967337844edf72400890ed6bd0ed419869c864252eb", size = 51614, upload-time = "2026-10-18T04:45:56.85Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/0b/e3f514c272107c9063f26f5d237985cc3f2f1128959c1e2033e4f69770a6/headpat_gif-0.2.0.tar.gz", hash = "sha256:f0eaca5f69883c65825a8a95e98b711b5802e82bbd197395e4b69cf421e928ac", size = 52055, upload-time = "2026-10-20T14:05:05.13Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/68/9c891131f203df409a0a9b1d041f4790d48caa6a943b87c15cccd78b0a70/headpat_gif-0.1.0-py3-none-any.whl", hash = "sha256:74fc60d4740ad58ff0913cecd9a119483d4d4dc048234323aea256820c42c065", size = 37211, upload-time = "2026-10-18T04:45:55.915Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/c8/d638e6a4ed05f303eba2000f309fe15c4083bfa0300229c07da819531124/headpat_gif-0.2.0-py3-none-any.whl", hash = "sha256:eff711c5b9e9a5f69a98b255c5fae74ba541a98a1c2e55c826a2dee01fdbe7c9", size = 37224, upload-time = "2026-10-20T14:05:04.062Z" },
 ]
 
 [[package]]
@@ -1263,7 +1263,7 @@ requires-dist = [
     { name = "deep-translator", specifier = ">=1.11.4" },
     { name = "discord-py", specifier = ">=2.6.4" },
     { name = "discord-py", extras = ["voice"] },
-    { name = "headpat-gif", specifier = ">=0.1.0" },
+    { name = "headpat-gif", specifier = ">=0.2.0" },
     { name = "markdown", specifier = ">=3.10" },
     { name = "motor", specifier = ">=3.7.1" },
     { name = "openai", specifier = ">=1.99.1" },
