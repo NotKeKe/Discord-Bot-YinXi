@@ -3,15 +3,6 @@
 測試與整理 `cmds/` 指令時發現、但**尚未處理**的問題。
 （已修正的項目會直接從本檔移除，例如 locale 缺 key、`play4` 缺 `websockets`。）
 
-## 1. `cmds/world_chat.py`：純文字訊息不會被轉發
-
-- 位置：`cmds/world_chat.py:54-71`
-- 現況：整個「轉發到其他頻道」的區塊都在 `if attachments:` 裡面，
-  **沒有附件的訊息什麼都不送**（只有 `History` 仍會寫入）。
-  有附件的訊息已正常（`send_world_chat` 這個 locale key 已補上）。
-- 影響測試：`test_world_chat.py::test_message_is_forwarded_to_other_channels`
-  以 `xfail(strict=True)` 標記。
-
 ## 2. `cmds/bot_info_help.py`：`/help` 未指定 cog 時的指令自動完成會拋錯
 
 - 位置：`cmds/bot_info_help.py:93-95`
