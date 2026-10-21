@@ -54,6 +54,9 @@ async def test_img_sends_file_and_removes_temp_file(
     qr_cog: Any, module: Any, ctx_factory: Any, tmp_cwd: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     class FakeFile:
+        """用假的 File 是為了讓測試在 Windows 開發機也能跑（discord.File 會鎖住檔案）；
+        正式環境是 Linux，`cmds/qrcode.py` 的實作在那邊沒有問題。"""
+
         def __init__(self, fp: Any, filename: str | None = None, **kwargs: Any) -> None:
             self.fp = fp
             self.filename = filename
