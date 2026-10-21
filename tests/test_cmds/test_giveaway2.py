@@ -13,7 +13,10 @@ from tests.helpers import FakeCollection, make_channel, make_ctx, make_guild, ma
 from tests.helpers import last_call
 
 PRIZE = "Steam key"
-END_TIME = datetime(2099, 1, 1, 12, 0)
+# 明確帶 +08:00，否則 `astimezone(+08:00)` 會先假設「本機時區」，
+# 在 CI（UTC）跑出來的小時就和開發機（+08:00）不同。
+TZ_TAIPEI = timezone(timedelta(hours=8))
+END_TIME = datetime(2099, 1, 1, 12, 0, tzinfo=TZ_TAIPEI)
 
 
 @pytest.fixture
