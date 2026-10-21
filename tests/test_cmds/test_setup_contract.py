@@ -81,10 +81,15 @@ def _setup_modules_on_disk() -> set[str]:
 
 
 def test_all_setup_modules_are_covered() -> None:
-    """避免之後新增模組卻忘了加測試。"""
+    """避免之後新增模組卻忘了加測試。
 
-    covered: set[str] = set(SETUP_MODULES) | UNTESTED_MODULES
-    assert _setup_modules_on_disk() == covered
+    `cmds/cool.py` 是 gitignore 的，乾淨 checkout（CI）不會有這個檔案，
+    所以「未測試模組」只要求存在於磁碟上的才算。
+    """
+
+    on_disk = _setup_modules_on_disk()
+    covered: set[str] = set(SETUP_MODULES) | {name for name in UNTESTED_MODULES if name in on_disk}
+    assert on_disk == covered
 
 
 @pytest.mark.asyncio
