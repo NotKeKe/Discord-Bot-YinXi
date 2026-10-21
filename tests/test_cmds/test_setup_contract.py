@@ -4,8 +4,6 @@
 - `cool.py` 依需求排除。
 - `giveaway.py` 沒有 `setup`。
 - `events_recording.py` 的 `setup` 被註解掉了。
-- `play4.py` 雖然有 `setup`，但目前環境缺少 `websockets` 而無法 import
-  （見 `test_play4_imports_when_websockets_available`）。
 """
 
 from __future__ import annotations
@@ -40,6 +38,7 @@ SETUP_MODULES: dict[str, str] = {
     "cmds.load": "Load",
     "cmds.main": "Main",
     "cmds.pjsk": "PJSK",
+    "cmds.play4": "Music",
     "cmds.qrcode": "QRcode",
     "cmds.skyblock_main": "skyblock_main",
     "cmds.skyblock_mayor": "skyblock_mayor",
@@ -56,8 +55,8 @@ SETUP_MODULES: dict[str, str] = {
 # 這些模組在 import 時會讀 `setting.json`，缺少時直接 skip。
 SETTING_JSON_REQUIRED = {"cmds.skyblock_main", "cmds.skyblock_mayor"}
 
-# 依需求排除 / 目前無法 import 的模組
-UNTESTED_MODULES = {"cmds.cool", "cmds.play4"}
+# 依需求排除的模組
+UNTESTED_MODULES = {"cmds.cool"}
 
 
 def _param(module_name: str) -> Any:
@@ -131,11 +130,3 @@ async def test_setup_contract_does_not_start_cog_load(fake_bot: RecordingBot) ->
 
     assert module.Counting.storage_data_task.is_running() is False
 
-
-def test_play4_imports_when_websockets_available() -> None:
-    pytest.importorskip(
-        "websockets",
-        reason="play4 的 player.py 需要 websockets，但目前 venv 與 uv.lock 都沒有這個套件",
-    )
-
-    import cmds.play4  # noqa: F401

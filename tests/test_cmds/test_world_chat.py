@@ -67,8 +67,8 @@ async def test_message_outside_world_chat_is_ignored(world: Any, bot: Any) -> No
 
 @pytest.mark.xfail(
     strict=True,
-    reason="on_message 把 translations 內的 list 直接丟給 load_translated()，"
-    "轉發時會 AttributeError 並被 except Exception 吞掉（詳見 I-SEE-ERRORS.md）",
+    reason="on_message 只有在有附件時才會轉發；純文字訊息永遠不會被送到其他頻道"
+    "（詳見 I-SEE-ERRORS.md）",
 )
 @pytest.mark.asyncio
 async def test_message_is_forwarded_to_other_channels(
@@ -90,7 +90,7 @@ async def test_message_is_forwarded_to_other_channels(
 
     for channel in targets.values():
         channel.send.assert_awaited_once()
-        embed = last_call(channel.send).kwargs["embed"]
+        embed = channel.send.await_args_list[0].kwargs["embed"]
         assert "Alice" in embed.fields[0].name
     history = module.WorldChat.channels["History"]
     assert len(history) == 1
@@ -98,11 +98,6 @@ async def test_message_is_forwarded_to_other_channels(
     write_json.assert_called_once()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="on_message 把 translations 內的 list 直接丟給 load_translated()，"
-    "轉發時會 AttributeError 並被 except Exception 吞掉（詳見 I-SEE-ERRORS.md）",
-)
 @pytest.mark.asyncio
 async def test_image_attachments_are_forwarded_separately(
     world: Any, module: Any, bot: Any, monkeypatch: pytest.MonkeyPatch
@@ -124,6 +119,9 @@ async def test_image_attachments_are_forwarded_separately(
 
     for channel in targets.values():
         assert channel.send.await_count == 2
+        embed = channel.send.await_args_list[0].kwargs["embed"]
+        assert "Alice" in embed.fields[0].name
+        assert "1" in embed.fields[0].value
         assert channel.send.await_args_list[1].args[0] == attachment.url
     history = module.WorldChat.channels["History"]
     assert attachment.url in history[0]
