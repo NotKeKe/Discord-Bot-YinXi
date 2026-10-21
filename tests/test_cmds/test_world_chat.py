@@ -65,11 +65,6 @@ async def test_message_outside_world_chat_is_ignored(world: Any, bot: Any) -> No
         channel.send.assert_not_awaited()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="on_message 只有在有附件時才會轉發；純文字訊息永遠不會被送到其他頻道"
-    "（詳見 I-SEE-ERRORS.md）",
-)
 @pytest.mark.asyncio
 async def test_message_is_forwarded_to_other_channels(
     world: Any, module: Any, bot: Any, monkeypatch: pytest.MonkeyPatch
@@ -92,6 +87,7 @@ async def test_message_is_forwarded_to_other_channels(
         channel.send.assert_awaited_once()
         embed = channel.send.await_args_list[0].kwargs["embed"]
         assert "Alice" in embed.fields[0].name
+        assert embed.fields[0].value == "hello world"
     history = module.WorldChat.channels["History"]
     assert len(history) == 1
     assert "Alice: hello world" in history[0]
@@ -99,7 +95,7 @@ async def test_message_is_forwarded_to_other_channels(
 
 
 @pytest.mark.asyncio
-async def test_image_attachments_are_forwarded_separately(
+async def test_image_attachments_are_forwarded_in_one_message(
     world: Any, module: Any, bot: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     guild = make_guild()
@@ -118,11 +114,12 @@ async def test_image_attachments_are_forwarded_separately(
     await world.on_message(message)
 
     for channel in targets.values():
-        assert channel.send.await_count == 2
-        embed = channel.send.await_args_list[0].kwargs["embed"]
+        channel.send.assert_awaited_once()
+        kwargs = last_call(channel.send).kwargs
+        embed = kwargs["embed"]
+        assert kwargs["content"] == attachment.url
         assert "Alice" in embed.fields[0].name
         assert "1" in embed.fields[0].value
-        assert channel.send.await_args_list[1].args[0] == attachment.url
     history = module.WorldChat.channels["History"]
     assert attachment.url in history[0]
 
