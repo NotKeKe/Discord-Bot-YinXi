@@ -8,6 +8,14 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from discord.ext import commands
+
+
+class _NamedCommand:
+    """假的 `commands.Command`：只需要 `.name`，而且要可 hash（Bot.commands 是 set）。"""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
 
 
 @pytest.fixture
@@ -20,7 +28,8 @@ def fake_bot() -> SimpleNamespace:
     alpha_commands = [SimpleNamespace(name="alpha_cmd"), SimpleNamespace(name="omega_cmd")]
     return SimpleNamespace(
         cogs={"Beta": object(), "Alpha": object(), "Gamma": object()},
-        commands={name: object() for name in ("ping", "avatar", "help")},
+        # discord.py 的 Bot.commands 是 set[Command]，不是 dict
+        commands={_NamedCommand(name) for name in ("ping", "avatar", "help")},
         get_cog=lambda name: SimpleNamespace(get_commands=lambda: alpha_commands) if name == "Alpha" else None,
     )
 
@@ -65,11 +74,6 @@ async def test_cog_name_autocomplete_handles_error(module: Any, monkeypatch: pyt
     assert await module.cogName_autocomplete(SimpleNamespace(), "") == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="bot.commands 是 dict，[c.name for c in cmds] 會對 key（str）取 .name 而 AttributeError；"
-    "未帶 cog_name 的自動完成目前是壞的（詳見 I-SEE-ERRORS.md）",
-)
 @pytest.mark.asyncio
 async def test_cmd_name_autocomplete_all_commands(
     module: Any, fake_bot: Any, monkeypatch: pytest.MonkeyPatch
@@ -80,6 +84,29 @@ async def test_cmd_name_autocomplete_all_commands(
     choices = await module.cmdName_autocomplete(interaction, "")
 
     assert [choice.name for choice in choices] == ["avatar", "help", "ping"]
+
+
+@pytest.mark.asyncio
+async def test_cmd_name_autocomplete_with_real_bot(
+    module: Any, bot: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`Bot.commands` 是 `set[Command]`（discord.py 2.7 的 property），不是 dict。"""
+
+    async def callback(ctx: Any) -> None:
+        return None
+
+    bot.add_command(commands.Command(callback, name="ping"))
+    bot.add_command(commands.Command(callback, name="avatar"))
+    monkeypatch.setattr(module, "bot", bot)
+    assert all(hasattr(command, "name") for command in bot.commands)
+
+    interaction = SimpleNamespace(namespace=SimpleNamespace(cog_name=None))
+
+    choices = await module.cmdName_autocomplete(interaction, "")
+
+    names = [choice.name for choice in choices]
+    assert "ping" in names and "avatar" in names
+    assert names == sorted(names)
 
 
 @pytest.mark.asyncio
@@ -104,11 +131,6 @@ async def test_cmd_name_autocomplete_unknown_cog(
     assert await module.cmdName_autocomplete(interaction, "") == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="bot.commands 是 dict，[c.name for c in cmds] 會對 key（str）取 .name 而 AttributeError；"
-    "未帶 cog_name 的自動完成目前是壞的（詳見 I-SEE-ERRORS.md）",
-)
 @pytest.mark.asyncio
 async def test_cmd_name_autocomplete_filters(
     module: Any, fake_bot: Any, monkeypatch: pytest.MonkeyPatch
