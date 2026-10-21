@@ -88,7 +88,10 @@
         "add_custom_list": "加入自订播放清单",
         "delete_custom_list": "删除自订播放清单",
         "show_custom_list": "列出自订播放清单的歌曲",
-        "clear_play_web": "清除播放网站"
+        "clear_play_web": "清除播放网站",
+        "change_status_str": "更改状态",
+        "codlin_meme": "梗图",
+        "petpet": "摸头"
     },
     "description": {
         "translate": "翻译一些文字",
@@ -179,7 +182,11 @@
         "add_custom_list": "将歌曲加入进自订的播放清单",
         "delete_custom_list": "删除所选的整个自订播放清单",
         "show_custom_list": "显示单个自订播放清单内的全部歌曲",
-        "clear_play_web": "当你不能通过 `nowplaying` 中的 URL 按钮进入播放网站时，先使用此指令"
+        "clear_play_web": "当你不能通过 `nowplaying` 中的 URL 按钮进入播放网站时，先使用此指令",
+        "change_status_str": "更改机器人在状态页显示的状态字符串（仅拥有者）",
+        "codlin_meme": "从 codlin.me 梗图库搜索并发送梗图",
+        "petpet": "把图片做成摸头 GIF",
+        "tictactoe_description": "在这个频道跟大家玩井字棋"
     },
     "params_desc": {
         "keep_time": "输入你要音汐什么时候提醒，会用AI判断时间",
@@ -267,7 +274,8 @@
         "pjsk_search_song_level": "歌曲的等级 (可以是任意难度(如:master, append) 的等级)",
         "pjsk_search_song_num": "搜寻结果的数量 (预设为5) | 如果设定为1的话，可以该歌曲更详细的资讯。",
         "pjsk_search_song_combo": "歌曲的 combo (连击) 数",
-        "add_custom_list_list_name": "若要建立新的播放清单，请直接输入你想要的清单名称"
+        "add_custom_list_list_name": "若要建立新的播放清单，请直接输入你想要的清单名称",
+        "lang_lang": "要使用的语言"
     },
     "components": {
         "yin_xi": "音汐",
@@ -821,7 +829,16 @@
         "send_play_custom_list_already_playing_left_first": "要先让我离开，才能播你的自定播放清单窝~",
         "send_play_not_in_guild": "你必须在服务器中才能播放音乐。",
         "send_clear_play_web_success": "已成功从 API 删除播放器",
-        "send_clear_play_web_error": "从 API 删除 player 失败：`{err}`"
+        "send_clear_play_web_error": "从 API 删除 player 失败：`{err}`",
+        "qrcode_scanner_invalid_image": "上传的文件不是图片，请上传 PNG 或 JPEG 图片。",
+        "send_petpet_no_image": "请附上一张图片，我才能做成摸头 GIF。",
+        "send_report_trace_not_exist": "找不到这个 UUID 的报告，请再确认一次。",
+        "send_world_chat": [{
+            "field": [{
+                "name": "**:speech_balloon: {author_name}: **",
+                "value": "使用者发送了 {count} 张图片"
+            }]
+        }]
 
     }
 }

@@ -88,7 +88,10 @@
         "add_custom_list": "加入自訂播放清單",
         "delete_custom_list": "刪除自訂播放清單",
         "show_custom_list": "列出自訂播放清單的歌曲",
-        "clear_play_web": "清除播放網站"
+        "clear_play_web": "清除播放網站",
+        "change_status_str": "更改狀態",
+        "codlin_meme": "梗圖",
+        "petpet": "摸頭"
     },
     "description": {
         "translate": "翻譯一些文字",
@@ -179,7 +182,11 @@
         "add_custom_list": "將歌曲加入進自訂的播放清單",
         "delete_custom_list": "刪除所選的整個自訂播放清單",
         "show_custom_list": "顯示單個自訂播放清單內的全部歌曲",
-        "clear_play_web": "當你不能透過 `nowplaying` 中的 URL 按鈕進入播放網站時，先使用此指令"
+        "clear_play_web": "當你不能透過 `nowplaying` 中的 URL 按鈕進入播放網站時，先使用此指令",
+        "change_status_str": "更改機器人在狀態頁顯示的狀態字串（僅擁有者）",
+        "codlin_meme": "從 codlin.me 梗圖庫搜尋並發送梗圖",
+        "petpet": "把圖片做成摸頭 GIF",
+        "tictactoe_description": "在這個頻道跟大家玩圈圈叉叉"
     },
     "params_desc": {
         "keep_time": "輸入你要音汐什麼時候提醒，會用AI判斷時間",
@@ -266,7 +273,8 @@
         "pjsk_search_song_level": "歌曲的等級 (可以是任意難度(如:master, append) 的等級)",
         "pjsk_search_song_num": "搜尋結果的數量 (預設為5) | 如果設定為1的話，可以該歌曲更詳細的資訊。",
         "pjsk_search_song_combo": "歌曲的 combo (連擊) 數",
-        "add_custom_list_list_name": "若要建立新的播放清單，請直接輸入你想要的清單名稱"
+        "add_custom_list_list_name": "若要建立新的播放清單，請直接輸入你想要的清單名稱",
+        "lang_lang": "要使用的語言"
     },
     "components": {
         "yin_xi": "音汐",
@@ -821,6 +829,15 @@
         "send_play_custom_list_already_playing_left_first": "要先讓我離開，才能播你的自定播放清單窩~",
         "send_play_not_in_guild": "你必須在伺服器中才能播放音樂。",
         "send_clear_play_web_success": "已成功從 API 刪除播放器",
-        "send_clear_play_web_error": "從 API 刪除 player 失敗：`{err}`"
+        "send_clear_play_web_error": "從 API 刪除 player 失敗：`{err}`",
+        "qrcode_scanner_invalid_image": "上傳的檔案不是圖片，請上傳 PNG 或 JPEG 圖片。",
+        "send_petpet_no_image": "請附上一張圖片，我才能做成摸頭 GIF。",
+        "send_report_trace_not_exist": "找不到這個 UUID 的回報，請再確認一次。",
+        "send_world_chat": [{
+            "field": [{
+                "name": "**:speech_balloon: {author_name}: **",
+                "value": "使用者傳送了 {count} 張圖片"
+            }]
+        }]
     }
 }
