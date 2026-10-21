@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 import traceback
 
-from core.classes import Cog_Extension
+from core.classes import Cog_Extension, get_bot
 from core.functions import create_basic_embed, read_json, write_json
 from core.translator import locale_str, load_translated, get_translate
 
@@ -45,7 +45,7 @@ class WorldChat(Cog_Extension):
         ]
 
         eb = create_basic_embed(color=msg.author.color)
-        
+
         for cnl in channels['channels']:
             try:
                 if msg.channel.id == cnl: continue
@@ -54,8 +54,7 @@ class WorldChat(Cog_Extension):
                 if attachments:
                     '''i18n'''
                     locale = channel.guild.preferred_locale.value if channel.guild else 'zh-TW'
-                    translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
-                    eb_template_str = translations.get('components', {}).get('embed_world_chat', '[{}]')
+                    eb_template_str = self.bot.tree.translator.get_translate('send_world_chat', locale) # type: ignore
                     eb_data = load_translated(eb_template_str)[0]
                     field = eb_data['field'][0]
                     field_name_template = field['name']
