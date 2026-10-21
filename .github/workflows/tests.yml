@@ -1,0 +1,27 @@
+# .github/workflows/tests.yml
+name: Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+  workflow_dispatch:  # 允許手動觸發
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13.5"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run tests
+        run: uv run --frozen pytest -m "not integration" -q
