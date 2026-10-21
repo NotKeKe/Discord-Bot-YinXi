@@ -233,10 +233,19 @@ class Main(Cog_Extension):
             await ctx.send(str(uuid.uuid4()))
 
     @commands.hybrid_command(name=locale_str('petpet'), description=locale_str('petpet'))
-    async def petpet(self, ctx: commands.Context, image: Optional[discord.Attachment] = None):
+    async def petpet(
+        self, 
+        ctx: commands.Context, 
+        image: Optional[discord.Attachment] = None, 
+        duration: Optional[float] = None,
+        loop: bool = True,
+        overlay_scale: Optional[float] = None,
+        overlay_offset_x: Optional[float] = None,
+        overlay_offset_y: Optional[float] = None,
+    ):
         async with ctx.typing():
             if not image: return await ctx.send(await get_translate('send_petpet_no_image', ctx), ephemeral=True)
-            final = await asyncio.to_thread(headpat_gif.petpet, await image.read())
+            final = await asyncio.to_thread(headpat_gif.petpet, await image.read(), duration=duration, loop=loop, overlay_scale=overlay_scale, overlay_offset=(overlay_offset_x or 0.0, overlay_offset_y or 0.0))
 
             await ctx.send(file=discord.File(final, 'petpet.gif'))
 
