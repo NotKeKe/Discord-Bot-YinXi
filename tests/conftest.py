@@ -26,7 +26,14 @@ _ENV_DEFAULTS = {
     "unsplash_api_access_KEY": "test-unsplash-key",
     "GIPHY_KEY": "test-giphy-key",
     "GENIUS_ACCESS_TOKEN": "test-genius-token",
+    # `cmds/ai_chat/utils/client.py` 會在 import 時替所有 provider 建 OpenAI client，
+    # 少任何一個 key 都會在 collection 階段炸掉（CI 沒有 .env，所以這裡一定要補齊）。
     "zhipuAI_KEY": "test-zhipu-key",
+    "openrouter_KEY": "test-openrouter-key",
+    "huggingFace_KEY": "test-huggingface-key",
+    "gemini_KEY": "test-gemini-key",
+    "cerebras_KEY": "test-cerebras-key",
+    "ai_local_KEY": "test-ai-local-key",
     "yinxi_base_url": "https://example.invalid",
 }
 
