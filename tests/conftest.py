@@ -40,6 +40,7 @@ _ENV_DEFAULTS = {
 for _key, _value in _ENV_DEFAULTS.items():
     os.environ.setdefault(_key, _value)
 
+import json
 from typing import Any, Callable, Iterator
 from unittest.mock import AsyncMock
 
@@ -56,6 +57,29 @@ from tests.helpers import RecordingBot, make_ctx
 
 LOCALES_DIR = PROJECT_ROOT / "core" / "locales"
 LOCALES = ("en-US", "zh-TW", "zh-CN")
+
+# 乾淨 checkout（CI）沒有 .gitignore 掉的資料檔，但有些模組在 import 時就會讀：
+# - core/functions.py 需要 ./cmds/data.json/admins.json，否則 `admins` 不會被定義
+# - cmds/testtemp.py 在 import 時會 open('./setting.json')
+_DATA_DIR = PROJECT_ROOT / "cmds" / "data.json"
+_DATA_DIR.mkdir(parents=True, exist_ok=True)
+_ADMINS_FILE = _DATA_DIR / "admins.json"
+if not _ADMINS_FILE.exists():
+    _ADMINS_FILE.write_text('{"admins": []}', encoding="utf-8")
+
+_SETTING_FILE = PROJECT_ROOT / "setting.json"
+if not _SETTING_FILE.exists():
+    _SETTING_FILE.write_text(
+        json.dumps(
+            {
+                "testing_guildID": 123456789,
+                "DEVICE_IP": "127.0.0.1",
+                "OLLAMA_IP": "127.0.0.1",
+                "AI_IP": "127.0.0.1",
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 @pytest.fixture(scope="session")
