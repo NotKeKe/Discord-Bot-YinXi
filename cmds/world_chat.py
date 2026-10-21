@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 import traceback
 
-from core.classes import Cog_Extension
+from core.classes import Cog_Extension, get_bot
 from core.functions import create_basic_embed, read_json, write_json
 from core.translator import locale_str, load_translated, get_translate
 
@@ -45,31 +45,28 @@ class WorldChat(Cog_Extension):
         ]
 
         eb = create_basic_embed(color=msg.author.color)
-        
+
         for cnl in channels['channels']:
             try:
                 if msg.channel.id == cnl: continue
                 channel = self.bot.get_channel(cnl)
 
+                '''i18n'''
+                locale = channel.guild.preferred_locale.value if channel.guild else 'zh-TW'
+                eb_template_str = self.bot.tree.translator.get_translate('send_world_chat', locale) # type: ignore
+                eb_data = load_translated(eb_template_str)[0]
+                field = eb_data['field'][0]
+                field_name_template = field['name']
+                field_value_template = field.get('value', '')
+                ''''''
+                field_name = field_name_template.format(author_name=msg.author.global_name)
+
                 if attachments:
-                    '''i18n'''
-                    locale = channel.guild.preferred_locale.value if channel.guild else 'zh-TW'
-                    translations = self.bot.tree.translator.translations.get(locale, self.bot.tree.translator.translations.get('zh-TW', {}))
-                    eb_template_str = translations.get('components', {}).get('embed_world_chat', '[{}]')
-                    eb_data = load_translated(eb_template_str)[0]
-                    field = eb_data['field'][0]
-                    field_name_template = field['name']
-                    field_value_template = field.get('value', '')
-                    ''''''
-                    field_name = field_name_template.format(author_name=msg.author.global_name)
-                    if attachments:
-                        eb.add_field(name=field_name, value=field_value_template.format(count=len(attachments)), inline=True)
-                        await channel.send(embed=eb)
-                        for a in attachments:
-                            await channel.send(a)
-                    else:
-                        eb.add_field(name=field_name, value=msg.content, inline=True)
-                        await channel.send(embed=eb)
+                    eb.add_field(name=field_name, value=field_value_template.format(count=len(attachments)), inline=True)
+                    await channel.send(content="\n".join(attachments), embed=eb)
+                else:
+                    eb.add_field(name=field_name, value=msg.content, inline=True)
+                    await channel.send(embed=eb)
             except TypeError:
                 ...
             except Exception as e:

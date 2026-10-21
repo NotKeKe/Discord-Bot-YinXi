@@ -29,6 +29,7 @@ dependencies = [
     "scrapetube[async]",
     "selenium>=4.38.0",
     "tenacity==9.0.0",
+    "websockets>=17.3",
     "yt-dlp",
     "zai-sdk>=0.0.3.4",
 ]

@@ -14,6 +14,7 @@ extract_info, extract_info_pytube, extract_info_yt_dlp = asyncio.run(_import_mod
 TEST_URL = 'https://youtu.be/jNQXAC9IVRw'
 
 
+@pytest.mark.integration
 def test_extract_info_yt_dlp():
     result = extract_info_yt_dlp(TEST_URL)
 
@@ -24,6 +25,7 @@ def test_extract_info_yt_dlp():
     assert isinstance(result['subtitles'], dict)
 
 
+@pytest.mark.integration
 def test_extract_info_pytube():
     result = extract_info_pytube(TEST_URL)
 
@@ -34,6 +36,7 @@ def test_extract_info_pytube():
     assert isinstance(result['subtitles'], dict)
 
 
+@pytest.mark.integration
 @pytest.mark.skipif(
     sys.platform == 'win32',
     reason='extract_info 使用 ProcessPoolExecutor，在 Windows spawn 的 child process 會重新 import utils.py，'

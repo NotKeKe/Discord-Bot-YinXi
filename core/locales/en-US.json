@@ -88,7 +88,10 @@
         "add_custom_list": "add_custom_list",
         "delete_custom_list": "delete_custom_list",
         "show_custom_list": "show_custom_list",
-        "clear_play_web": "clear_play_website"
+        "clear_play_web": "clear_play_website",
+        "change_status_str": "change_status",
+        "codlin_meme": "codlin_meme",
+        "petpet": "petpet"
     },
     "description": {
         "translate": "Translate some text",
@@ -179,7 +182,11 @@
         "add_custom_list": "Add songs to a custom playlist",
         "delete_custom_list": "Delete the entire selected custom playlist",
         "show_custom_list": "Show all songs in a single custom playlist",
-        "clear_play_web": "Clear the player's web uuid from the API, when you cannot enter the web from `nowplaying` button."
+        "clear_play_web": "Clear the player's web uuid from the API, when you cannot enter the web from `nowplaying` button.",
+        "change_status_str": "Change the status string shown on the status page (owner only)",
+        "codlin_meme": "Search memes from codlin.me and send them",
+        "petpet": "Turn an image into a petpet GIF",
+        "tictactoe_description": "Play tic-tac-toe with everyone in this channel"
     },
     "params_desc": {
         "keep_time": "Enter when you want YinXi to remind you, AI will be used to determine the time",
@@ -266,7 +273,8 @@
         "pjsk_search_song_level": "Song Level (can be any difficulty level like: master, append)",
         "pjsk_search_song_num": "Search results count (default 5); set to 1 for detailed song info",
         "pjsk_search_song_combo": "Song Combo (Note) Count",
-        "add_custom_list_list_name": "To create a new playlist, simply enter the desired playlist name."
+        "add_custom_list_list_name": "To create a new playlist, simply enter the desired playlist name.",
+        "lang_lang": "Language to use"
     },
     "components": {
         "yin_xi": "YinXi",
@@ -820,6 +828,15 @@
         "send_play_custom_list_already_playing_left_first": "You must leave first before you can play your custom playlist.",
         "send_play_not_in_guild": "You must be in a guild to play music.",
         "send_clear_play_web_success": "Successfully deleted player from API.",
-        "send_clear_play_web_error": "Failed to delete player from API: `{err}`"
+        "send_clear_play_web_error": "Failed to delete player from API: `{err}`",
+        "qrcode_scanner_invalid_image": "The uploaded file is not an image. Please upload a PNG or JPEG image.",
+        "send_petpet_no_image": "Please attach an image so I can make a petpet GIF.",
+        "send_report_trace_not_exist": "No report found for that UUID. Please check it again.",
+        "send_world_chat": [{
+            "field": [{
+                "name": "**:speech_balloon: {author_name}: **",
+                "value": "User sent {count} image(s)"
+            }]
+        }]
     }
 }
