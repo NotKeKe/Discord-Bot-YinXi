@@ -8,6 +8,8 @@ logs/
 .git
 *.example
 *.sh
+.env
+setting.json
 
 api_server/
 mongodb-bot_stats-migration/

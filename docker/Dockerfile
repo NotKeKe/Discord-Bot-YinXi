@@ -6,7 +6,9 @@ ENV PYTHONPYCACHEPREFIX=/tmp/pycache
 RUN ln -sf /usr/share/zoneinfo/Asia/Taipei /etc/localtime && \
     echo "Asia/Taipei" > /etc/timezone
 
+WORKDIR /app
+
 COPY . .
 
 # 執行
-CMD ["uv", "run", "newbot2.py"]
+CMD ["/opt/venv/bin/python", "newbot2.py"]

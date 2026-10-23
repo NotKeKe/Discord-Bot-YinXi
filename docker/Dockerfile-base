@@ -20,6 +20,7 @@ COPY pyproject.toml uv.lock ./
 
 # install deps
 ENV UV_LINK_MODE=copy
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project
 
@@ -30,16 +31,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.13.17-slim-bookworm
 
 # copy deps
-COPY --from=builder /app/.venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH"
+COPY --from=builder /opt/venv /opt/venv
 
 # copy deno (for yt-dlp)
 COPY --from=denoland/deno:bin-2.3.0 /deno /usr/local/bin/deno
 
-# install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-WORKDIR /app
+# env
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright
 
 # install tools and playwright
 RUN apt-get update && \
@@ -48,6 +46,6 @@ RUN apt-get update && \
         libzbar0 \
         libsodium23 \
         libopus0 && \
-    uv run playwright install chromium --with-deps && \
+    /opt/venv/bin/python -m playwright install chromium --with-deps && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
