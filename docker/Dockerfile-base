@@ -1,7 +1,7 @@
 # ----- build -----
 
 # pull python
-FROM python:3.13.5-slim-bookworm AS builder
+FROM python:3.13.17-slim-bookworm AS builder
 
 # install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ----- run -----
 
 # pull python
-FROM python:3.13.5-slim-bookworm
+FROM python:3.13.17-slim-bookworm
 
 # copy deps
 COPY --from=builder /app/.venv /app/.venv
